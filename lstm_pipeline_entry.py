@@ -222,7 +222,6 @@ if __name__ == "__main__":
 
     print("\nStarting LSTM Training")
     try:
-        # Run LSTM training
         training_results = run_lstm_training(
             training_data_dir=training_data_dir,
             output_dir=os.path.join(run_folder, "lstm_results"),  

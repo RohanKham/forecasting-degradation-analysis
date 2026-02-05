@@ -134,21 +134,16 @@ class InfluxDBDataExporter:
             List of silicon module names
         """
         return [
-            "Sanyo_1-1", "Sanyo_1_1",
-            "Sanyo_2-1", "Sanyo_2_1", 
-            "Sanyo_3-1", "Sanyo_3_1",
-            "Sanyo_4-1", "Sanyo_4_1",
-            "Sanyo_5-1", "Sanyo_5_1",
-            "Solon_1-1", "Solon_1_1",
-            "Solon_1-2", "Solon_1_2",  
-            "Solon_2-1", "Solon_2_1",
-            "Solon_2-2", "Solon_2_2",
-            "Solon_3-1", "Solon_3_1",
-            "Solon_3-2", "Solon_3_2",
-            "Solon_4-1", "Solon_4_1",
-            "Solon_4-2", "Solon_4_2",
+            "Atersa_1_1", "Atersa_2_1", "Atersa_3_1", "Atersa_4_1", "Atersa_5_1", "Atersa_6_1",
+            "Atersa_1-1", "Atersa_2-1", "Atersa_3-1", "Atersa_4-1", "Atersa_5-1", "Atersa_6-1", 
+            "Sanyo_1_1", "Sanyo_2_1", "Sanyo_3_1", "Sanyo_4_1", "Sanyo_5_1", 
+            "Sanyo_1-1", "Sanyo_2-1", "Sanyo_3-1", "Sanyo_4-1", "Sanyo_5-1", 
+            "Solon_1_1","Solon_1_2", "Solon_2_1", "Solon_2_2", "Solon_3_1", "Solon_3_2", "Solon_4_2", 
+            "Solon_1-1","Solon_1-2", "Solon_2-1", "Solon_2-2", "Solon_3-1", "Solon_3-2", "Solon_4-2", 
+            "Sun_Power_1_1", "Sun_Power_2_1", "Sun_Power_3_1", "Sun_Power_4_1", "Sun_Power_5_1",
+            "Sun_Power_1-1", "Sun_Power_2-1", "Sun_Power_3-1", "Sun_Power_4-1", "Sun_Power_5-1"
         ]
-    
+
     def get_psc_modules(self) -> List[str]:
         """
         Returns:

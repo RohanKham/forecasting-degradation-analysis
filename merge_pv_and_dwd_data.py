@@ -1,3 +1,4 @@
+#Version: 1.0 
 import pandas as pd
 import numpy as np
 import os
@@ -63,7 +64,8 @@ class PVDWDDataMerger:
                 break
 
         if period_name is None:
-            return dwd_irradiance
+            #New: return zero if no scaling factor
+            return 0.0
 
         key = f"{doy:03d}-{period_name}"
         factor_entry = self.scaling_factors.get("dayofyear_period", {}).get(key)
@@ -353,21 +355,19 @@ class PVDWDDataMerger:
             print("DataFrame must have datetime index")
             return result_df
 
-        # Initialize bad_day
+        # Initialize bad_day column
         if "bad_day" not in result_df.columns:
             result_df["bad_day"] = 0
 
-        pv_cols = ["P", "I", "U", "Temp"]
+        pv_cols = ["P", "P_normalised", "I", "U", "Temp"] #add P_normalised here if that is target
         available_pv_cols = [c for c in pv_cols if c in result_df.columns]
 
         print(f"PV columns affected: {available_pv_cols}")
 
-        # Normalize ranges to UTC timestamps
-        ranges = [
-            (pd.to_datetime(start).tz_localize("UTC"),
-            pd.to_datetime(end).tz_localize("UTC"))
-            for start, end in exclude_ranges
-        ]
+        #Normalize ranges to UTC timestamps
+        ranges = [(pd.to_datetime(start).tz_localize("UTC"), 
+                   pd.to_datetime(end).tz_localize("UTC")) 
+                   for start, end in exclude_ranges]
 
         for start, end in ranges:
             mask = (result_df.index >= start) & (result_df.index <= end)
@@ -390,7 +390,7 @@ class PVDWDDataMerger:
             print("bad_day column missing")
             return result_df
 
-        pv_cols = ["P", "I", "U", "Temp"]
+        pv_cols = ["P", "P_normalised", "I", "U", "Temp"] #add P_normalised here if that is target
         available_pv_cols = [c for c in pv_cols if c in result_df.columns]
         good_df = result_df[result_df["bad_day"] == 0]
 
@@ -429,6 +429,70 @@ class PVDWDDataMerger:
 
         return result_df
     
+    #NEW
+    def enforce_bounds_and_irradiance(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        - For good days (bad_day == 0):
+            - If a column exists and value is outside bounds : set to 0
+            - If Irr <= 0 : force P, I, U to 0
+        - For bad days (bad_day == 1): leave values unchanged
+        - Missing columns are ignored
+        - bad_day column is untouched
+        """
+
+        if df.empty:
+            return df
+
+        result = df.copy()
+
+        BOUNDS = {
+            "P": (0, 110),
+            "I": (0, 1.4),
+            "U": (40, 100),
+            "P_normalised": (0.0, 1.75), #fo si 1.2 and for psc 1.75
+        }
+        """
+        BOUNDS = {
+            "P": (0, 250),
+            "I": (0, 9),
+            "U": (10, 60),
+        
+            "P": (0, 110),
+            "I": (0, 1.4),
+            "U": (40, 100),
+        }
+        """
+
+        good_day_mask = result["bad_day"] == 0
+        if not good_day_mask.any():
+            print("No good days found, skipping bounds enforcement")
+            return result
+
+        for col, (lo, hi) in BOUNDS.items():
+            if col not in result.columns:
+                continue
+
+            out_of_bounds = ((result[col] < lo) | (result[col] > hi)) & good_day_mask & (result[col] != 0)
+            if out_of_bounds.any():
+                count = out_of_bounds.sum()
+                result.loc[out_of_bounds, col] = 0
+                print(f"Set {count} non-zero out-of-bounds values to 0 for column '{col}' on good days")
+
+        if "Irr" in result.columns:
+            zero_irr_mask = (result["Irr"] <= 0) & good_day_mask            
+            for col in ["P", "P_normalised", "I", "U"]:
+                if col not in result.columns:
+                    continue
+
+                force_zero_mask = zero_irr_mask & (result[col] != 0)
+
+                if force_zero_mask.any():
+                    cnt = force_zero_mask.sum()
+                    result.loc[force_zero_mask, col] = 0
+                    print(f"Set {cnt} non-zero '{col}' values to 0 due to Irr ≤ 0")
+
+        return result
+
     def interpolate_pv_daylight(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Interpolate PV values when:
@@ -438,24 +502,38 @@ class PVDWDDataMerger:
         - gaps <= 1 hour
         - after interpolation: out of range values => 0
         - smooth ramp down to zero for P, I, Temp at end of day
-        - if Irr (irradiance) <= 10, set P, I, U to zero
+        - if Irr (irradiance) <= 0, set P, I, U to zero
         """
 
         if df.empty:
             return df
 
         BOUNDS = {
+            "P": (0, 250),
+            "I": (0, 9),
+            "U": (40, 100),
+            "P_normalised": (0, 1.2),  #for si 1.2 and for psc 1.75
+        }
+
+        """
+        BOUNDS = {
             "P": (0, 110),
             "I": (0, 1.4),
             "U": (40, 100),
             "Temp": (-20, 100),
-        }
 
+            "P": (0, 250),
+            "I": (0, 9),
+            "U": (0, 60),
+            "Temp": (-20, 100),
+        }
+        """
         pv_cols = [c for c in BOUNDS if c in df.columns]
         if not pv_cols:
             return df
 
         result = df.copy().sort_index()
+
         is_day = (result.index.hour >= 4) & (result.index.hour < 22)
         good_day = result["bad_day"] == 0
 
@@ -479,7 +557,7 @@ class PVDWDDataMerger:
                             s.loc[gap_idx[1:-1]] = np.nan
 
                 s = s.interpolate(method="linear", limit_direction="both", limit_area="inside")
-                if col in ["P", "I", "Temp"]:
+                if col in ["P", "I", "U"]:
                     last_valid_idx = s.last_valid_index()
                     if last_valid_idx is not None:
                         tail_idx = s.loc[last_valid_idx:].index
@@ -500,7 +578,7 @@ class PVDWDDataMerger:
                 result.loc[merged.index, col] = merged
 
         if "Irr" in result.columns:
-            low_irr_mask = result["Irr"] <= 10
+            low_irr_mask = result["Irr"] <= 0
             for col in ["P", "I", "U"]:
                 if col in result.columns:
                     result.loc[low_irr_mask, col] = 0
@@ -546,7 +624,7 @@ class PVDWDDataMerger:
         """
         Drop all columns NOT listed in local keep_columns.
         """
-        keep_columns = ["P", "I", "U", "Temp", "Irr", "bad_day", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover"]
+        keep_columns = ["P", "P_normalised", "I", "U", "Temp", "Irr", "bad_day", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover"] ##add P_normalised here if that is target
 
         existing_keep = [c for c in keep_columns if c in df.columns]
         to_drop = [c for c in df.columns if c not in existing_keep]
@@ -560,7 +638,7 @@ class PVDWDDataMerger:
         self,
         df: pd.DataFrame,
         output_dir: str,
-        pv_cols=('P', 'I', 'U', 'Temp', 'Irr', 'bad_day', 'humidity', 'temp_C', 'precip_mm', 'precip_indicator', 'cloud_cover'),
+        pv_cols=('P', 'P_normalised', 'I', 'U', 'Temp', 'Irr', 'bad_day', 'humidity', 'temp_C', 'precip_mm', 'precip_indicator', 'cloud_cover'),
     ):
         if df.empty:
             print("Empty DataFrame.")
@@ -575,9 +653,9 @@ class PVDWDDataMerger:
         os.makedirs(output_dir, exist_ok=True)
 
         df = df.copy()
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_localize(None)
         df = df.sort_values("timestamp")
-        df["month"] = df["timestamp"].dt.to_period("M")
+        df["month"] = df["timestamp"].dt.strftime("%Y-%m")
 
         cols = [c for c in pv_cols if c in df.columns]
         if not cols:
@@ -735,7 +813,7 @@ class PVDWDDataMerger:
         self._plot_correlation_heatmap(day_df, output_dir)
 
     def _plot_correlation_heatmap(self, df: pd.DataFrame, output_dir: str):
-        cols = ["P", "I", "U", "Temp", "Irr", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover",]
+        cols = ["P", "P_normalised", "I", "U", "Temp", "Irr", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover",]
         numeric_cols = [c for c in cols if c in df.columns]
         df = df[numeric_cols].dropna()
 
@@ -837,7 +915,7 @@ class PVDWDDataMerger:
                 continue
 
             times = day_df.index
-            month = times[0].to_period("M")
+            month = times[0].strftime("%Y-%m")
 
             fig, ax1 = plt.subplots(figsize=(10, 4))
 
@@ -919,15 +997,35 @@ class PVDWDDataMerger:
         # Mask maintenance periods as bad days
         print(f"\nSTEP 7: Masking maintenance periods as bad days")
         print("-" * 100)
+        #change as per target: psc / si
         exclude_ranges = [
             ("2024-12-06", "2024-12-14"),
             ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2024-01-03"),
+            ("2025-01-02", "2025-01-03"),
+            ("2025-05-02", "2025-05-13"),
+            ("2025-06-25", "2025-06-30"),
+            ("2025-09-17", "2025-09-26"),
+            ("2025-11-18", "2025-11-26"),
+        ]
+
+        """exclude_ranges [
+        for psc:
+            ("2024-12-06", "2024-12-14"),
+            ("2024-12-30", "2024-12-31"),
+            ("2025-01-02", "2025-01-03"),
+            ("2025-05-02", "2025-05-13"),
+            ("2025-06-25", "2025-06-30"),
+            ("2025-09-17", "2025-09-26"),
+            ("2025-11-18", "2025-11-26"),
+            
+        for si:
+            ("2024-12-06", "2024-12-14"),
             ("2025-05-02", "2025-05-13"),
             ("2025-06-26", "2025-06-30"),
             ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-23"),
-        ]   
+            ("2025-11-16", "2025-11-26"),
+            ("2025-12-21", "2025-12-24"),
+        ]"""
         meaintenance_period_df = self.mark_maintenance_periods(irr_filled_df, exclude_ranges)
         
         # Mask days with P count less than threshold, already night time is set to zero so the threshold is already 36. 
@@ -935,13 +1033,16 @@ class PVDWDDataMerger:
         print("-" * 100)
         high_quality_df = self.mark_low_quality_days_by_p_count(meaintenance_period_df, threshold=70)
 
-        # Interpolate PV data
-        print(f"\nSTEP 9: Interpolating PV data")
-        print("-" * 100)
-        interpolated_df = self.interpolate_pv_daylight(high_quality_df)
+        # Skipping: Interpolate PV data
+        #print(f"\nSTEP 9: Interpolating PV data")
+        #print("-" * 100)
+        #interpolated_df = self.interpolate_pv_daylight(high_quality_df)
+        
+        #NEW : Final bound check and filter
+        enforced_df = self.enforce_bounds_and_irradiance(high_quality_df)
 
         # Remove unwanted columns
-        result_df = self.drop_unwanted_columns(interpolated_df)
+        result_df = self.drop_unwanted_columns(enforced_df)
 
         # Set all nans to zero or as it is
         print(f"\nSTEP 10: Nan handling")

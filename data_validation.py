@@ -1,3 +1,4 @@
+#Version: 1.0 
 from typing import List, Optional
 import pandas as pd
 import numpy as np
@@ -29,11 +30,19 @@ class PVValidationPipeline:
 
     def _init_metadata(self) -> None:
             self.panel_name_fixes = {
+                "Atersa_1-1": "Atersa_1_1",
+                "Atersa_2-1": "Atersa_2_1",
+                "Atersa_3-1": "Atersa_3_1",
+                "Atersa_4-1": "Atersa_4_1",
+                "Atersa_5-1": "Atersa_5_1",
+                "Atersa_6-1": "Atersa_6_1",
+            
                 "Sanyo_1-1": "Sanyo_1_1",
-                "Sanyo_2-1": "Sanyo_2_1", 
+                "Sanyo_2-1": "Sanyo_2_1",
                 "Sanyo_3-1": "Sanyo_3_1",
                 "Sanyo_4-1": "Sanyo_4_1",
                 "Sanyo_5-1": "Sanyo_5_1",
+
                 "Solon_1-1": "Solon_1_1",
                 "Solon_1-2": "Solon_1_2",
                 "Solon_2-1": "Solon_2_1",
@@ -41,23 +50,45 @@ class PVValidationPipeline:
                 "Solon_3-1": "Solon_3_1",
                 "Solon_3-2": "Solon_3_2",
                 "Solon_4-2": "Solon_4_2",
+
+                "Sun_Power_1-1": "Sun_Power_1_1",
+                "Sun_Power_2-1": "Sun_Power_2_1",
+                "Sun_Power_3-1": "Sun_Power_3_1",
+                "Sun_Power_4-1": "Sun_Power_4_1",
+                "Sun_Power_5-1": "Sun_Power_5_1",
+
                 "Perovskite_1": "Perovskite_1_1", 
                 "Perovskite_2": "Perovskite_1_2",
             }
 
             self.install_dates = {
-                "Sanyo_1_1" : "2024-07-26 08:00:00",
-                "Sanyo_2_1" : "2024-07-26 08:00:00", 
-                "Sanyo_3_1" : "2024-07-26 08:00:00",
-                "Sanyo_4_1" : "2024-07-26 08:00:00",
-                "Sanyo_5_1" : "2024-07-26 08:00:00",
-                "Solon_1_1" : "2024-07-26 08:00:00",
-                "Solon_1_2" : "2024-07-26 08:00:00", 
-                "Solon_2_1" : "2024-07-26 08:00:00",
-                "Solon_2_2" : "2024-07-26 08:00:00",
-                "Solon_3_1" : "2024-07-26 08:00:00",
-                "Solon_3_2" : "2024-07-26 08:00:00",
-                "Solon_4_2" : "2024-07-26 08:00:00",
+                "Atersa_1_1": "2024-07-26 00:00:00",
+                "Atersa_2_1": "2024-07-26 00:00:00",
+                "Atersa_3_1": "2024-07-26 00:00:00",
+                "Atersa_4_1": "2024-07-26 00:00:00",
+                "Atersa_5_1": "2024-07-26 00:00:00",
+                "Atersa_6_1": "2024-07-26 00:00:00",
+
+                "Sanyo_1_1" : "2024-07-26 00:00:00",
+                "Sanyo_2_1" : "2024-07-26 00:00:00",
+                "Sanyo_3_1" : "2024-07-26 00:00:00",
+                "Sanyo_4_1" : "2024-07-26 00:00:00",
+                "Sanyo_5_1" : "2024-07-26 00:00:00",
+
+                "Solon_1_1" : "2024-07-26 00:00:00",
+                "Solon_1_2" : "2024-07-26 00:00:00",
+                "Solon_2_1" : "2024-07-26 00:00:00",
+                "Solon_2_2" : "2024-07-26 00:00:00",
+                "Solon_3_1" : "2024-07-26 00:00:00",
+                "Solon_3_2" : "2024-07-26 00:00:00",
+                "Solon_4_2" : "2024-07-26 00:00:00",
+
+                "Sun_Power_1_1": "2024-07-26 00:00:00",
+                "Sun_Power_2_1": "2024-07-26 00:00:00",
+                "Sun_Power_3_1": "2024-07-26 00:00:00",
+                "Sun_Power_4_1": "2024-07-26 00:00:00",
+                "Sun_Power_5_1": "2024-07-26 00:00:00",
+
                 "Perovskite_1_1": "2024-11-28 00:00:00",
                 "Perovskite_1_2": "2024-11-28 00:00:00", 
                 "Perovskite_1_3": "2025-03-29 12:00:00",
@@ -70,6 +101,48 @@ class PVValidationPipeline:
                 "Perovskite_4_1": "2025-07-20 14:00:00",
                 "Perovskite_4_2": "2025-07-20 10:00:00",
                 "Perovskite_4_3": "2025-07-20 10:00:00",
+            }
+
+            self.name_mapping_dict = {
+                "Atersa_1_1":(1, "atersa", "si"),
+                "Atersa_2_1":(2, "atersa", "si"),
+                "Atersa_3_1":(3, "atersa", "si"),
+                "Atersa_4_1":(4, "atersa", "si"),
+                "Atersa_5_1":(5, "atersa", "si"),
+                "Atersa_6_1":(6, "atersa", "si"),
+                
+                "Sanyo_1_1":(1, "sanyo", "si"),
+                "Sanyo_2_1":(2, "sanyo", "si"),
+                "Sanyo_3_1":(3, "sanyo", "si"),
+                "Sanyo_4_1":(4, "sanyo", "si"),
+                "Sanyo_5_1":(5, "sanyo", "si"),
+
+                "Solon_1_1":(1, "solon", "si"),
+                "Solon_1_2":(2, "solon", "si"),
+                "Solon_2_1":(3, "solon", "si"),
+                "Solon_2_2":(4, "solon", "si"),
+                "Solon_3_1":(5, "solon", "si"),
+                "Solon_3_2":(6, "solon", "si"),
+                "Solon_4_2":(7, "solon", "si"),
+
+                "Sun_Power_1_1":(1, "sun_power", "si"),
+                "Sun_Power_2_1":(2, "sun_power", "si"),
+                "Sun_Power_3_1":(3, "sun_power", "si"),
+                "Sun_Power_4_1":(4, "sun_power", "si"),
+                "Sun_Power_5_1":(5, "sun_power", "si"),
+
+                "Perovskite_1_1": (1, "perovskite", "psc"),
+                "Perovskite_1_2": (2, "perovskite", "psc"),
+                "Perovskite_1_3": (3, "perovskite", "psc"),
+                "Perovskite_2_1": (4, "perovskite", "psc"),
+                "Perovskite_2_2": (5, "perovskite", "psc"),
+                "Perovskite_2_3": (6, "perovskite", "psc"),
+                "Perovskite_3_1": (7, "perovskite", "psc"),
+                "Perovskite_3_2": (8, "perovskite", "psc"),
+                "Perovskite_3_3": (9, "perovskite", "psc"),
+                "Perovskite_4_1": (10, "perovskite", "psc"),
+                "Perovskite_4_2": (11, "perovskite", "psc"),
+                "Perovskite_4_3": (12, "perovskite", "psc"),
             }
 
     def _prepare_time_index(self) -> None:
@@ -91,11 +164,18 @@ class PVValidationPipeline:
 
     def clean_module_names(self) -> None:
         print("\nSTEP 1: Cleaning module names")
+        unique_before = self.df["Name"].unique()
+        print(f"\nUnique module names before cleaning ({len(unique_before)}): {unique_before}")
+        print(f"DataFrame size before cleaning: {self.df.shape}")
         self.df["Name"] = self.df["Name"].astype(str).replace(self.panel_name_fixes)
+        unique_after = self.df["Name"].unique()
+        print(f"\nUnique module names after cleaning ({len(unique_after)}): {unique_after}")
+        print(f"DataFrame size after cleaning: {self.df.shape}")
 
     #remove faulty data before installation date
     def align_resample(self) -> None:
         print("\nSTEP 2: Removing pre-install & duplicate data")
+        print(f"Total rows before: {len(self.df):,}")
         filtered = []
 
         for module, sub in self.df.groupby("Name"):
@@ -113,6 +193,7 @@ class PVValidationPipeline:
             filtered.append(sub)
 
         self.df = pd.concat(filtered, ignore_index=True)
+        print(f"Total rows after: {len(self.df):,}")
 
     #create copies of Sanyo_5_1 and Perovskite_1_1 for Irr gap filling
     def create_reference_copies(self)-> None:
@@ -127,7 +208,9 @@ class PVValidationPipeline:
     #drop modules other than validation modules, even the ref modules as their copies are already made with columns _time, Irr columns 
     def drop_non_validation_modules(self):
         print("\nSTEP 3: Drop modules not mentioned in validation modules")
+        print(f"DataFrame size before dropping unwanted modules: {self.df.shape}")
         self.df = self.df[self.df["Name"].isin(self.validation_modules)]
+        print(f"DataFrame size after dropping unwanted modules: {self.df.shape}")
         print("Modules kept:")
         for module, g in self.df.groupby("Name"):
             n_unique_ts = g["_time"].nunique()
@@ -135,67 +218,51 @@ class PVValidationPipeline:
 
     """
         Fill Irradiance gaps in Perovskite_1_1 and apply to all modules:
-        1. Clean both reference modules 
-        2. Process scaling reference module (Perovskite_1_1) using:
-        - It's own cleaned sensor data
-        - Cleaned cross-module reference (Sanyo_5_1) 
-        - Scaled DWD data
-        3. Copy the processed Irr column to all validation modules (exact timestamp match only)
-        4. Fill remaining gaps in other modules using scaled DWD (L4)
-    """
+        1. Load, clean and merge refernce modules.
+        2. Load DWD Irr data.
+        3. Calculate scaling factors.
+        4. Fill gaps within the merged reference dataframe. 
+        5. Copy the processed Irr column to all validation modules (exact timestamp match only orelse nan)
+        6. Fill per-module missing Irr values using scaled DWD
+    """    
     def fill_irradiance_gaps(self, dwd_file, cross_module_ref=None, scaling_ref_module=None):        
-        print("\nSTEP 4 : Fill Irradiance gaps")
-
+        print("\nSTEP 4: Fill Irradiance gaps")
+        print(f"df size before: {self.df.shape}")
+        
         if cross_module_ref:
             self.cross_module_ref = cross_module_ref
         if scaling_ref_module:
             self.scaling_ref_module = scaling_ref_module
 
-        def load_and_clean_cross_module_ref():
-            data = self.original_cross_ref.copy()
+        def load_and_clean_reference_module(module_name, original_data):
+            """Load and clean a reference module's data"""
+            data = original_data.copy()
             if data is None or data.empty:
-                print(f"Cross-module reference '{self.cross_module_ref}' is empty")
+                print(f"Reference module '{module_name}' is empty or not available")
                 return None
+            
             original_count = len(data)
             data["_time"] = pd.to_datetime(data["_time"], utc=True)
             data = data.set_index("_time").sort_index()
             original_na = data["Irr"].isna().sum()
-            #identify outliers
+            
+            # Identify outliers
             outlier_mask = (data["Irr"] <= 0) | (data["Irr"] > 1300)          
             data_clean = data.copy()
-            #mark outlier as Nan
+            # Mark outliers as NaN
             data_clean.loc[outlier_mask, "Irr"] = np.nan  
             final_na = data_clean["Irr"].isna().sum()
             new_outliers_marked = final_na - original_na
-            print(f"\nCross-module ref '{self.cross_module_ref}': "
-                  f"Rows: {original_count}, "
-                  f"Marked {new_outliers_marked} outliers as NaN, "
-                  f"Total NaN: {final_na}")
             
-            return data_clean["Irr"].rename(f"Irr_{self.cross_module_ref}")
+            print(f"Reference module '{module_name}': "
+                f"Rows: {original_count}, "
+                f"Marked {new_outliers_marked} outliers as NaN, "
+                f"Total NaN: {final_na}")
+            
+            return data_clean[["Irr"]]
 
-        def load_and_clean_scaling_ref():
-            data = self.original_scaling_ref.copy()
-            if data is None or data.empty:
-                raise ValueError(f"Scaling reference '{self.scaling_ref_module}' is not available!")
-            original_count = len(data)
-            data["_time"] = pd.to_datetime(data["_time"], utc=True)
-            data = data.set_index("_time").sort_index()
-            original_na = data["Irr"].isna().sum()           
-            outlier_mask = (data["Irr"] <= 0) | (data["Irr"] > 1300)            
-            data_clean = data.copy()
-            data_clean.loc[outlier_mask, "Irr"] = np.nan  
-            final_na = data_clean["Irr"].isna().sum()
-            new_outliers_marked = final_na - original_na   
-            print(f"Scaling ref '{self.scaling_ref_module}': "
-                  f"Rows: {original_count}, "
-                  f"Marked {new_outliers_marked} outliers as NaN, "
-                  f"Total NaN: {final_na}")
-            
-            return data_clean.rename(columns={"Irr": "Irr_ref"})
-        
-        #save DWD irradiance scaling factors to JSON file
         def save_dwd_scaling_factors(doy_period_factors, hourly_fallback):
+            """Save DWD irradiance scaling factors to JSON file"""
             scaling_file = self.results_dir / "dwd_irradiance_scaling_factors.json"
 
             out = {
@@ -219,6 +286,7 @@ class PVValidationPipeline:
             return scaling_file
 
         def plot_month_period_scaling_factors():
+            """Plot monthly period scaling factors"""
             plot_data = pd.DataFrame([
                 {
                     "DayOfYear": doy,
@@ -271,9 +339,61 @@ class PVValidationPipeline:
             self._save_plot(fig, "monthly_period_scaling_factors")
             plt.close(fig)
 
-        #load both references
-        sanyo_ref_clean = load_and_clean_cross_module_ref()
-        scaling_ref_data_clean = load_and_clean_scaling_ref()
+        print("\nLoading and merging reference modules.")        
+        sanyo_data = None
+        perovskite_data = None
+        
+        # Check if Sanyo_5_1 exists
+        if hasattr(self, 'original_cross_ref') and self.original_cross_ref is not None:
+            sanyo_data = load_and_clean_reference_module("Sanyo_5_1", self.original_cross_ref)
+        
+        # Check if Perovskite_1_1 exists
+        if hasattr(self, 'original_scaling_ref') and self.original_scaling_ref is not None:
+            perovskite_data = load_and_clean_reference_module("Perovskite_1_1", self.original_scaling_ref)
+        
+        # Merge reference modules
+        if sanyo_data is None and perovskite_data is None:
+            raise ValueError("Neither Sanyo_5_1 nor Perovskite_1_1 is available. Cannot proceed with gap filling.")
+        
+        if sanyo_data is not None and perovskite_data is not None:
+            print("\nMerging Sanyo_5_1 and Perovskite_1_1 reference data...")
+            # Concatenate both dataframes
+            merged_refs = pd.concat([
+                sanyo_data.rename(columns={"Irr": "Irr_sanyo"}),
+                perovskite_data.rename(columns={"Irr": "Irr_perovskite"})
+            ], axis=1)
+            
+            # For overlapping timestamps, take the mean
+            merged_refs["Irr_ref"] = merged_refs[["Irr_sanyo", "Irr_perovskite"]].mean(axis=1, skipna=True)
+            
+            overlapping = merged_refs[["Irr_sanyo", "Irr_perovskite"]].notna().all(axis=1).sum()
+            sanyo_only = merged_refs["Irr_sanyo"].notna().sum() - overlapping
+            perovskite_only = merged_refs["Irr_perovskite"].notna().sum() - overlapping
+            total_ref_points = merged_refs["Irr_ref"].notna().sum()
+            
+            print(f"Merged reference data: {overlapping} overlapping (averaged), "
+                f"{sanyo_only} Sanyo-only, {perovskite_only} Perovskite-only, "
+                f"Total: {total_ref_points} valid reference points")
+            
+            scaling_ref_data_clean = merged_refs[["Irr_ref"]].copy()
+            
+            # Keep individual modules for plotting
+            sanyo_ref_clean = sanyo_data.rename(columns={"Irr": f"Irr_Sanyo_5_1"})
+            perovskite_ref_clean = perovskite_data.rename(columns={"Irr": f"Irr_Perovskite_1_1"})
+            
+        elif sanyo_data is not None:
+            print("\nUsing only Sanyo_5_1 as reference (Perovskite_1_1 not available)")
+            scaling_ref_data_clean = sanyo_data.rename(columns={"Irr": "Irr_ref"})
+            sanyo_ref_clean = sanyo_data.rename(columns={"Irr": f"Irr_Sanyo_5_1"})
+            perovskite_ref_clean = None
+        else:
+            print("\nUsing only Perovskite_1_1 as reference (Sanyo_5_1 not available)")
+            scaling_ref_data_clean = perovskite_data.rename(columns={"Irr": "Irr_ref"})
+            sanyo_ref_clean = None
+            perovskite_ref_clean = perovskite_data.rename(columns={"Irr": f"Irr_Perovskite_1_1"})
+        
+        print(f"Final scaling reference data shape: {scaling_ref_data_clean.shape}, "
+            f"Non-NaN count: {scaling_ref_data_clean['Irr_ref'].notna().sum()}")
 
         print("\nLoading DWD data file")
         dwd = pd.read_csv(dwd_file)
@@ -292,20 +412,24 @@ class PVValidationPipeline:
             print("Resampling DWD to 10 min")
             dwd = dwd.resample("10min").mean()
 
+        # Align DWD data with scaling reference time range
         scaling_start = scaling_ref_data_clean.index.min()
         scaling_end = scaling_ref_data_clean.index.max()
-        dwd = dwd.loc[scaling_start:scaling_end]  
+        dwd = dwd.loc[scaling_start:scaling_end]
+        print(f"DWD data shape after alignment: {dwd.shape}, Non-NaN count: {dwd['Irr_dwd'].notna().sum()}")
         
+        # Merge scaling reference with DWD
         merged_clean = pd.concat([scaling_ref_data_clean, dwd], axis=1)
-        
-        #doy scaling 
+        print(f"Merged (ref + DWD) shape: {merged_clean.shape}")
+
+        print("\nCalculating DWD scaling factors")
         doy_period_factors = {}
         hourly_fallback = {}
 
         periods = {
-            "morning": range(4, 11),  
-            "midday": range(11, 17),  
-            "evening": range(17, 22)  
+            "morning": range(4, 11),  # 4:00 to 10:59
+            "midday": range(11, 17),  # 11:00 to 16:59
+            "evening": range(17, 22)  # 17:00 to 21:59
         }
 
         for doy in range(1, 366):
@@ -337,9 +461,7 @@ class PVValidationPipeline:
                     "mape": mape
                 }
         
-        plot_month_period_scaling_factors()
-
-        #hr fallback
+        # Calculate hourly fallback factors
         for period_name, hours in periods.items():
             mask = (
                 (merged_clean.index.hour.isin(hours)) &
@@ -354,10 +476,14 @@ class PVValidationPipeline:
                 factor = 0.0
             hourly_fallback[period_name] = factor
 
-
+        print(f"Calculated {len(doy_period_factors)} day-of-year period factors")        
+        # Save and plot scaling factors
         self.dwd_scaling_file = save_dwd_scaling_factors(doy_period_factors, hourly_fallback)
+        plot_month_period_scaling_factors()
 
+        # Define scaling application function
         def apply_doy_period_scaling(ts, dwd_val):
+            """Apply day-of-year and period-based scaling to DWD value"""
             if pd.isna(dwd_val):
                 return np.nan
 
@@ -381,48 +507,40 @@ class PVValidationPipeline:
 
             return dwd_val * factor
 
-        print(f"\nFilling gaps in scaling reference: {self.scaling_ref_module}")
+        print("\nFilling gaps within merged reference data")
         scaling_ref_final = scaling_ref_data_clean.copy()
-        remaining_na = scaling_ref_final["Irr_ref"].isna().sum()
-        print(f"Initial gaps in cleaned scaling ref: {remaining_na}")
+        initial_gaps = scaling_ref_final["Irr_ref"].isna().sum()
+        print(f"Initial gaps in merged reference: {initial_gaps}")
         
-        l2_filled = 0
-        l3_filled = 0
-
-        #1.Cross-module reference filling
-        if sanyo_ref_clean is not None and remaining_na > 0:
-            missing_idx = scaling_ref_final[scaling_ref_final["Irr_ref"].isna()].index
-            sanyo_fill = sanyo_ref_clean.reindex(missing_idx)
-            valid_fill = sanyo_fill.dropna()
-            l2_filled = len(valid_fill)
-            scaling_ref_final.loc[valid_fill.index, "Irr_ref"] = valid_fill
-            remaining_na = scaling_ref_final["Irr_ref"].isna().sum()
-
-        #2.Scaled DWD filling
-        if remaining_na > 0:
+        if initial_gaps > 0:
             missing_idx = scaling_ref_final[scaling_ref_final["Irr_ref"].isna()].index
             dwd_missing = dwd.reindex(missing_idx)
             
+            filled_count = 0
             for ts in dwd_missing.dropna().index:
                 scaled_val = apply_doy_period_scaling(ts, dwd_missing.at[ts, "Irr_dwd"])
                 if not pd.isna(scaled_val):
                     scaling_ref_final.loc[ts, "Irr_ref"] = scaled_val
-                    l3_filled += 1
+                    filled_count += 1
             
-            remaining_na = scaling_ref_final["Irr_ref"].isna().sum()
+            remaining_gaps = scaling_ref_final["Irr_ref"].isna().sum()
+            print(f"Filled {filled_count} gaps using scaled DWD, {remaining_gaps} gaps remaining")
+        else:
+            print("No gaps to fill in merged reference")
+            filled_count = 0
+            remaining_gaps = 0
 
-
+        # Remove remaining NaN values
         scaling_ref_final = scaling_ref_final[scaling_ref_final["Irr_ref"].notna()]
         
-        total_filled = l2_filled + l3_filled
         total_possible = len(scaling_ref_data_clean)
         final_coverage = len(scaling_ref_final) / total_possible * 100 if total_possible > 0 else 0
         
-        print(f"{self.scaling_ref_module}: Total filled {total_filled}, "
-            f"Final coverage: {final_coverage:.1f}% "
-            f"[L2(cross-module): {l2_filled}, L3(DWD): {l3_filled}]")
+        print(f"Merged reference final stats: Total filled {filled_count}, "
+            f"Final coverage: {final_coverage:.1f}%, "
+            f"Total valid points: {len(scaling_ref_final)}")
 
-        print(f"\nCopying processed Irr data to all validation modules")
+        print("\nCopying processed Irr to all validation modules")
 
         irr_reference_df = scaling_ref_final[["Irr_ref"]].reset_index()
         irr_reference_df.columns = ["_time", "Irr_processed"]
@@ -437,7 +555,7 @@ class PVValidationPipeline:
             sub = sub.copy()
             sub["_time"] = pd.to_datetime(sub["_time"], utc=True)
             
-            # merge on exact timestamp only 
+            # Merge on exact timestamp only 
             before_merge = len(sub)
             sub_merged = pd.merge(
                 sub,
@@ -446,7 +564,7 @@ class PVValidationPipeline:
                 how="left"  
             )
             
-            #mismatches remain NaN
+            # Mismatches remain NaN
             sub_merged["Irr"] = sub_merged["Irr_processed"]
             sub_merged = sub_merged.drop(columns=["Irr_processed"])
             
@@ -458,53 +576,78 @@ class PVValidationPipeline:
             print(f"{module}: {exact_matches}/{len(sub_merged)} exact timestamp matches ({match_percentage:.1f}%) - {mismatches} gaps for L4")
             all_processed.append(sub_merged)
 
-        #combine all modules
-        self.df = pd.concat(all_processed, ignore_index=True)
-        
-        print(f"\nL4: Filling all remaining gaps in modules using scaled DWD")
-        
+        # Combine all modules
+        if all_processed:
+            self.df = pd.concat(all_processed, ignore_index=True)
+            print(f"Combined df shape after exact timestamp matching: {self.df.shape}")
+        else:
+            print("WARNING: No validation modules were processed!")
+
+        print("\nFilling remaining per-module gaps using scaled DWD")
+
+        # Pre-compute all scaled DWD values at once
+        print("Pre-computing scaled DWD values...")
+        dwd_scaled = dwd.copy()
+        dwd_scaled["Irr_scaled"] = dwd_scaled.apply(
+            lambda row: apply_doy_period_scaling(row.name, row["Irr_dwd"]),
+            axis=1
+        )
+        print(f"Pre-computed {dwd_scaled['Irr_scaled'].notna().sum()} scaled DWD values")
+
         l4_filled_total = 0
         modules_l4_stats = []
-        
+
         for module in modules_processed:
             module_mask = self.df["Name"] == module
             module_na_before = self.df.loc[module_mask, "Irr"].isna().sum()
             
             if module_na_before > 0:
-                #Get timestamps with missing Irr for this module
-                missing_times = self.df.loc[module_mask & self.df["Irr"].isna(), "_time"]
+                # Get indices where Irr is missing for this module
+                missing_mask = module_mask & self.df["Irr"].isna()
                 
-                l4_filled_module = 0
-                for ts in missing_times:
-                    ts_dt = pd.to_datetime(ts, utc=True)
-                    #Get DWD value for this timestamp
-                    dwd_val = dwd.reindex([ts_dt])["Irr_dwd"].iloc[0] if ts_dt in dwd.index else np.nan
-                    
-                    if not pd.isna(dwd_val):
-                        #Apply hourly scaling
-                        scaled_val = apply_doy_period_scaling(ts_dt, dwd_val)
-                        if not pd.isna(scaled_val):
-                            #Update the value in the dataframe
-                            self.df.loc[(self.df["_time"] == ts) & (self.df["Name"] == module), "Irr"] = scaled_val
-                            l4_filled_module += 1
+                # Create a temporary dataframe with missing timestamps
+                missing_df = self.df.loc[missing_mask, ["_time"]].copy()
+                missing_df["_time"] = pd.to_datetime(missing_df["_time"], utc=True)
+                
+                # Merge with pre-computed scaled DWD values
+                filled = pd.merge(
+                    missing_df,
+                    dwd_scaled[["Irr_scaled"]].reset_index(),
+                    left_on="_time",
+                    right_on="timestamp",
+                    how="left"
+                )
+                
+                # Update only non-NaN scaled values
+                valid_fill_mask = filled["Irr_scaled"].notna()
+                l4_filled_module = valid_fill_mask.sum()
+                
+                if l4_filled_module > 0:
+                    # Get the indices in the original dataframe
+                    fill_indices = self.df.index[missing_mask][valid_fill_mask]
+                    self.df.loc[fill_indices, "Irr"] = filled.loc[valid_fill_mask, "Irr_scaled"].values
                 
                 module_na_after = self.df.loc[module_mask, "Irr"].isna().sum()
                 l4_filled_total += l4_filled_module
                 
                 modules_l4_stats.append((module, module_na_before, l4_filled_module, module_na_after))
-        
+
         for module, na_before, l4_filled, na_after in modules_l4_stats:
             if na_before > 0:
                 coverage_improvement = (l4_filled / na_before * 100) if na_before > 0 else 0
-                print(f"{module}: {na_before} gaps : {l4_filled} filled : {na_after} remaining ({coverage_improvement:.1f}% filled)")
+                print(f"{module}: {na_before} gaps → {l4_filled} filled → {na_after} remaining ({coverage_improvement:.1f}% filled)")
             else:
                 print(f"{module}: No gaps to fill")
-        
+
         print(f"Total L4 gaps filled: {l4_filled_total}")
         
-        #remove any remaining unfillable gaps
+        # Remove any remaining unfillable gaps
+        before_removal = len(self.df)
         self.df = self.df[self.df["Irr"].notna()]
+        removed_rows = before_removal - len(self.df)
+        print(f"Removed {removed_rows} rows with unfillable Irr gaps")
         
+        # Final statistics
         print("\nPer-module timestamp and Irr count after gap filling:")
         for module, g in self.df.groupby("Name"):
             n_rows = len(g)
@@ -517,60 +660,228 @@ class PVValidationPipeline:
                 f"Irr count={n_irr:,}"
             )
 
-        #Plot comparisons between DWD and scaling_ref_module, cross_module_ref
-        self.plot_irradiance_comparison(scaling_ref_final, dwd, sanyo_ref_clean)
+        print(f"\ndf size after: {self.df.shape}")
+        
+        # Plot comparisons
+        print("\nGenerating comparison plots...")
+        # For plotting, prepare the reference data
+        if sanyo_ref_clean is not None and perovskite_ref_clean is not None:
+            # Use the first available for compatibility with plot function
+            plot_ref = sanyo_ref_clean
+        elif sanyo_ref_clean is not None:
+            plot_ref = sanyo_ref_clean
+        else:
+            plot_ref = perovskite_ref_clean
+        
+        self.plot_irradiance_gap_filling_overview(
+            scaling_ref_final=scaling_ref_final,
+            dwd=dwd,
+            sanyo_ref_clean=plot_ref
+        )
         
         return self.df
 
-    def plot_irradiance_comparison(self, scaling_ref_final, dwd, sanyo_ref_clean):
-        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
-        #Plot 1: DWD vs Scaling Reference
-        merged_plot = pd.concat([scaling_ref_final, dwd], axis=1).dropna(subset=["Irr_ref", "Irr_dwd"])
+    #NEW: Plotting function
+    def plot_irradiance_gap_filling_overview(
+        self,
+        scaling_ref_final: pd.DataFrame,
+        dwd: pd.DataFrame,
+        sanyo_ref_clean: pd.Series | None,
+    ):
+        """
+        Overview plots for irradiance gap filling and DWD scaling analysis.
+        Uses raw DOY-hour scaling factors (Irr_ref / Irr_dwd).
+        """
 
-        ax = axes[0]
-        ax.scatter(merged_plot["Irr_dwd"], merged_plot["Irr_ref"], s=10, alpha=0.5, c='blue')
-        max_val = merged_plot["Irr_dwd"].max()
-        ax.plot([0, max_val], [0, max_val], 'r--')
-        ax.set_xlabel("DWD Global Radiation [W/m²]")
-        ax.set_ylabel(f"{self.scaling_ref_module} Irradiance [W/m²]")
-        ax.set_title("DWD vs Final Scaling Reference Module")
-        ax.grid(True)
+        sns.set_style("whitegrid")
+        merged = pd.concat([scaling_ref_final, dwd], axis=1)
+        merged = merged.dropna(subset=["Irr_ref", "Irr_dwd"])
+        merged["hour"] = merged.index.hour
+        merged = merged[(merged["hour"] >= 4) & (merged["hour"] < 22)]
+        merged = merged[merged["Irr_dwd"] > 0]
+        merged["year"] = merged.index.year
+        merged["doy"] = merged.index.dayofyear
+        merged["month"] = merged.index.month
 
-        #Plot 2: DWD vs Cross-Module Reference 
-        ax = axes[1]
+        # Raw scaling factor (NO period aggregation)
+        merged["raw_scaling_factor"] = merged["Irr_ref"] / merged["Irr_dwd"]
+        merged = merged[
+            (merged["raw_scaling_factor"] > 0) &
+            (merged["raw_scaling_factor"] < 3)
+        ]
+        SEASON_MAP = {
+            12: "Winter", 1: "Winter", 2: "Winter",
+            3: "Spring", 4: "Spring", 5: "Spring",
+            6: "Summer", 7: "Summer", 8: "Summer",
+            9: "Autumn", 10: "Autumn", 11: "Autumn",
+        }
+        merged["season"] = merged["month"].map(SEASON_MAP)
+        fig = plt.figure(figsize=(22, 18))
 
+        # 1. DWD vs Scaling reference
+        ax1 = plt.subplot(3, 4, 1)
+        ax1.scatter(merged["Irr_dwd"], merged["Irr_ref"], s=4, alpha=0.4)
+        max_val = merged["Irr_dwd"].max()
+        ax1.plot([0, max_val], [0, max_val], "r--")
+        ax1.set_xlabel("DWD Irradiance [W/m²]")
+        ax1.set_ylabel(f"{self.scaling_ref_module} Irradiance [W/m²]")
+        ax1.set_title("DWD vs Scaling Reference")
+        ax1.grid(True, alpha=0.3)
+
+        # 2. Scaling reference vs Cross-module reference
+        ax2 = plt.subplot(3, 4, 2)
         if sanyo_ref_clean is not None:
-            def ensure_df(obj):
-                return obj.to_frame() if isinstance(obj, pd.Series) else obj
-            sanyo_ref_df = ensure_df(sanyo_ref_clean)
-            dwd_df = ensure_df(dwd)
-            scaling_ref_df = ensure_df(scaling_ref_final)
-
-            sanyo_ref_df.index = sanyo_ref_df.index.round("10min")
-            dwd_df.index = dwd_df.index.round("10min")
-            overlap = sanyo_ref_df.index.intersection(dwd_df.index)
-            merged_cross = sanyo_ref_df.join(dwd_df, how="inner")
-            
-            ax.scatter(
-                merged_cross["Irr_dwd"],
-                merged_cross[f"Irr_{self.cross_module_ref}"],
-                s=10, alpha=0.5, c='green'
-            )
-            max_val2 = merged_cross["Irr_dwd"].max()
-            ax.plot([0, max_val2], [0, max_val2], 'r--')
-
-            ax.set_xlabel("DWD Global Radiation [W/m²]")
-            ax.set_ylabel(f"{self.cross_module_ref} Irradiance [W/m²]")
-            ax.set_title("DWD vs Cross-Module Reference")
-            ax.grid(True)
-
+            ref_cross = pd.concat(
+                [scaling_ref_final["Irr_ref"], sanyo_ref_clean],
+                axis=1
+            ).dropna()
+            ax2.scatter(ref_cross.iloc[:, 0], ref_cross.iloc[:, 1], s=4, alpha=0.4)
+            max_val2 = ref_cross.max().max()
+            ax2.plot([0, max_val2], [0, max_val2], "r--")
+            ax2.set_xlabel("Scaling Ref Irr [W/m²]")
+            ax2.set_ylabel(f"{self.cross_module_ref} Irr [W/m²]")
+            ax2.set_title("Scaling Ref vs Cross-module")
+            ax2.grid(True, alpha=0.3)
         else:
-            ax.text(0.5, 0.5,"No Cross-Module Reference available",
-                    ha='center', va='center', fontsize=12)
-            ax.axis("off")
+            ax2.text(0.5, 0.5, "No cross-module reference",
+                    ha="center", va="center")
+            ax2.axis("off")
 
+        # 3. Raw scaling factor histogram
+        ax3 = plt.subplot(3, 4, 3)
+        ax3.hist(merged["raw_scaling_factor"], bins=60, edgecolor="black", alpha=0.7)
+        ax3.axvline(merged["raw_scaling_factor"].median(),
+                    color="red", linestyle="--",
+                    label=f"Median = {merged['raw_scaling_factor'].median():.3f}")
+        ax3.set_xlabel("Raw scaling factor (Irr_ref / Irr_dwd)")
+        ax3.set_ylabel("Count")
+        ax3.set_title("Scaling Factor Distribution")
+        ax3.legend()
+
+        # 4. Scaling factor vs Irr (colored by hour)
+        ax4 = plt.subplot(3, 4, 4)
+        sc = ax4.scatter(
+            merged["Irr_dwd"],
+            merged["raw_scaling_factor"],
+            c=merged["hour"],
+            s=4,
+            alpha=0.4,
+            cmap="viridis"
+        )
+        ax4.set_xlabel("DWD Irradiance [W/m²]")
+        ax4.set_ylabel("Scaling factor")
+        ax4.set_title("Scaling Factor vs Irradiance")
+        ax4.grid(True, alpha=0.3)
+        plt.colorbar(sc, ax=ax4, label="Hour of day")
+
+        # 5. Hourly scaling factor boxplot (raw)
+        ax5 = plt.subplot(3, 4, 5)
+        hour_data = [
+            merged.loc[merged["hour"] == h, "raw_scaling_factor"].values
+            for h in range(24)
+            if not merged.loc[merged["hour"] == h].empty
+        ]
+        hour_labels = [
+            h for h in range(24)
+            if not merged.loc[merged["hour"] == h].empty
+        ]
+        ax5.boxplot(hour_data, labels=hour_labels, showfliers=True)
+        ax5.set_xlabel("Hour")
+        ax5.set_ylabel("Scaling factor")
+        ax5.set_title("Hourly Scaling Factor (raw)")
+        ax5.grid(True, alpha=0.3)
+
+        # 6. Monthly scaling factor boxplot (raw)
+        ax6 = plt.subplot(3, 4, 6)
+        month_data = [
+            merged.loc[merged["month"] == m, "raw_scaling_factor"].values
+            for m in range(1, 13)
+            if not merged.loc[merged["month"] == m].empty
+        ]
+        month_labels = [
+            m for m in range(1, 13)
+            if not merged.loc[merged["month"] == m].empty
+        ]
+        ax6.boxplot(month_data, labels=month_labels, showfliers=True)
+        ax6.set_xlabel("Month")
+        ax6.set_ylabel("Scaling factor")
+        ax6.set_title("Monthly Scaling Factor (raw)")
+        ax6.grid(True, alpha=0.3)
+
+        # 7. Seasonal scaling factor trend
+        ax7 = plt.subplot(3, 4, 7)
+        season_order = ["Winter", "Spring", "Summer", "Autumn"]
+        season_data = [
+            merged.loc[merged["season"] == s, "raw_scaling_factor"].values
+            for s in season_order
+        ]
+        ax7.boxplot(season_data, labels=season_order, showfliers=True)
+        ax7.set_ylabel("Scaling factor")
+        ax7.set_title("Seasonal Scaling Factor Trend")
+        ax7.grid(True, alpha=0.3)
+
+        # 8. Scaling factor time evolution (sampled)
+        ax8 = plt.subplot(3, 4, 8)
+        sample = merged.iloc[::10]
+        sc2 = ax8.scatter(
+            sample.index,
+            sample["raw_scaling_factor"],
+            c=sample["hour"],
+            s=4,
+            alpha=0.5,
+            cmap="viridis"
+        )
+        ax8.set_xlabel("Time")
+        ax8.set_ylabel("Scaling factor")
+        ax8.set_title("Scaling Factor Over Time (sampled)")
+        ax8.tick_params(axis="x", rotation=45)
+        plt.colorbar(sc2, ax=ax8, label="Hour of day")
+
+        # 9. Residuals using median scaling
+        ax9 = plt.subplot(3, 4, 9)
+        median_factor = merged["raw_scaling_factor"].median()
+        predicted = merged["Irr_dwd"] * median_factor
+        residuals = merged["Irr_ref"] - predicted
+        ax9.scatter(predicted, residuals, s=4, alpha=0.4)
+        ax9.axhline(0, color="red", linestyle="--")
+        ax9.set_xlabel("Predicted Irr [W/m²]")
+        ax9.set_ylabel("Residual [W/m²]")
+        ax9.set_title("Residuals (Median Scaling)")
+        ax9.grid(True, alpha=0.3)
+
+        # 10. Summary statistics
+        ax10 = plt.subplot(3, 4, 10)
+        ax10.axis("off")
+
+        stats_text = [
+            f"Scaling reference: {self.scaling_ref_module}",
+            f"Cross reference: {self.cross_module_ref if sanyo_ref_clean is not None else 'None'}",
+            f"Years covered: {merged['year'].min()}–{merged['year'].max()}",
+            f"Total points: {len(merged):,}",
+            "",
+            f"Median scaling factor: {merged['raw_scaling_factor'].median():.3f}",
+            f"Mean scaling factor: {merged['raw_scaling_factor'].mean():.3f}",
+            f"Std scaling factor: {merged['raw_scaling_factor'].std():.3f}",
+            "",
+            f"Min: {merged['raw_scaling_factor'].min():.3f}",
+            f"Max: {merged['raw_scaling_factor'].max():.3f}",
+        ]
+
+        ax10.text(
+            0.02, 0.98, "\n".join(stats_text),
+            transform=ax10.transAxes,
+            va="top",
+            family="monospace",
+            fontsize=9
+        )
+
+        plt.suptitle(
+            f"Irradiance Gap Filling & Scaling Analysis – {self.scaling_ref_module}",
+            fontsize=16,
+            y=1.02
+        )
         plt.tight_layout()
-        self._save_plot(fig,"Irradiance_comparison_side_by_side")
+        self._save_plot(fig, "irradiance_gap_filling_overview")
         plt.close(fig)
 
     def night_detector(
@@ -589,8 +900,8 @@ class PVValidationPipeline:
                                         - Set P, I, U, Irr, Temp = 0.0
         """
 
-        print("\nSTEP 5 : Night data handling")
-
+        print("\nSTEP 5: Night data handling")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
         cols = ["P", "I", "U", "Irr", "Temp"]
         before_rows = len(self.df)
 
@@ -668,24 +979,146 @@ class PVValidationPipeline:
 
         return self.df
 
+    #NEW: Add columns based on name_mapping_dict
+    def map_module_metadata(self):
+        """
+        Adds columns:
+        - module_id (eg. 1,2,3, ...) 
+        - module_type (eg. atersa, sanyo, solon, ...)
+        - category (eg. si/psc)
+        """
+        print("\nSTEP 6: Mapping module metadata from name_mapping_dict")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
+
+        # initialize columns
+        self.df["module_id"] = np.nan
+        self.df["module_type"] = np.nan
+        self.df["category"] = np.nan
+
+        missing_modules = []
+
+        for module, idx in self.df.groupby("Name").groups.items():
+            if module not in self.name_mapping_dict:
+                missing_modules.append(module)
+                continue
+
+            module_id, module_type, category = self.name_mapping_dict[module]
+
+            self.df.loc[idx, "module_id"] = int(module_id)
+            self.df.loc[idx, "module_type"] = str(module_type)
+            self.df.loc[idx, "category"] = str(category)
+
+            print(
+                f"{module:30s} -> "
+                f"id={module_id}, type={module_type}, category={category} "
+                f"({len(idx):,} rows)"
+            )
+
+        # Report missing mappings
+        if missing_modules:
+            print("\nWARNING: Modules missing in name_mapping_dict")
+            print("-" * 40)
+            for m in missing_modules:
+                print(m)
+
+        self.df["module_id"] = self.df["module_id"].astype("Int64")
+
+        print("\nSUMMARY")
+        print("-" * 40)
+        print(self.df[["module_type", "category"]].value_counts(dropna=False))
+
+    #NEW
+    def plot_module_metadata_summary(self, out_png):
+        """
+        Plot summary of module metadata distribution
+        """
+        print("\nPlotting module metadata summary")
+
+        df = self.df.copy()
+        df["date"] = df["_time"].dt.date
+
+        fig, axes = plt.subplots(3, 2, figsize=(16, 14))
+        fig.suptitle("Module Metadata Distribution Summary", fontsize=16)
+
+        summaries = [
+            ("category", "Category"),
+            ("module_type", "Module Type"),
+            ("module_id", "Module ID"),
+        ]
+
+        for row, (col, title) in enumerate(summaries):
+            # rows
+            row_counts = df[col].value_counts().sort_index()
+            axes[row, 0].bar(row_counts.index.astype(str), row_counts.values)
+            axes[row, 0].set_title(f"{title} – Number of Rows")
+            axes[row, 0].set_ylabel("Rows")
+            axes[row, 0].tick_params(axis="x", rotation=45)
+
+            # days
+            day_counts = (
+                df.groupby(col)["date"]
+                .nunique()
+                .sort_index()
+            )
+            axes[row, 1].bar(day_counts.index.astype(str), day_counts.values)
+            axes[row, 1].set_title(f"{title} – Number of Days")
+            axes[row, 1].set_ylabel("Days")
+            axes[row, 1].tick_params(axis="x", rotation=45)
+
+        for ax in axes.flat:
+            ax.grid(axis="y", alpha=0.3)
+
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        plt.savefig(out_png, dpi=150)
+        plt.close(fig)
+
+        print(f"Saved metadata summary plot: {out_png}")
+
+    #NEW : range_validation based on module_type column (eg. atersa, sanyo, solon, ...)
     def range_validation(self):
-        print("\nSTEP 6 : Physical range validation (daytime only)")
+        """
+        Validation is performed per module_type
+        """
+
+        print("\nSTEP 7: Physical range validation (daytime only)")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
 
         night_mask = (
             ((self.df["_time"].dt.hour >= 22) | (self.df["_time"].dt.hour <= 4)) & (self.df["Irr"] < 1)
         )
 
-        bounds_by_type = {
-            "Si": {
-                "P": (0, 220),
-                "I": (0.1, 7),
-                "U": (0, 60),
+        bounds_by_module_type = {
+            "atersa": {
+                "P": (0, 170),
+                "I": (0, 6),
+                "U": (10, 50),
                 "Irr": (0, 1300),
                 "Temp": (-20, 100),
             },
-            "PSC": {
+            "sanyo": {
+                "P": (0, 200),
+                "I": (0, 6),
+                "U": (10, 50),
+                "Irr": (0, 1300),
+                "Temp": (-20, 100),
+            },
+            "solon": {
+                "P": (0, 250),
+                "I": (0, 9),
+                "U": (10, 40),
+                "Irr": (0, 1300),
+                "Temp": (-20, 100),
+            },
+            "sun_power": {
+                "P": (0, 250),
+                "I": (0, 6),
+                "U": (10, 50),
+                "Irr": (0, 1300),
+                "Temp": (-20, 100),
+            },
+            "perovskite": {
                 "P": (0, 110),
-                "I": (0.1, 1.4),
+                "I": (0, 1.4),
                 "U": (40, 100),
                 "Irr": (0, 1300),
                 "Temp": (-20, 100),
@@ -705,20 +1138,20 @@ class PVValidationPipeline:
         print(f"Daytime rows : {len(df_day):,}")
         print(f"Night rows   : {night_mask.sum():,}")
 
-        for module, sub in df_day.groupby("Name"):
-            if "Sanyo" in module or "Solon" in module:
-                mtype = "Si"
-            elif "Perovskite" in module:
-                mtype = "PSC"
-            else:
-                mtype = "Si"
+        # validation per module_type
+        for module_type, sub in df_day.groupby("module_type"):
+            if module_type not in bounds_by_module_type:
+                print(f"\nWARNING: No bounds defined for module_type = {module_type}")
+                continue
 
-            print(f"\n{module} ({mtype}) - daytime rows: {len(sub):,}")
+            bounds = bounds_by_module_type[module_type]
+
+            print(f"\n{module_type} - daytime rows: {len(sub):,}")
             print("Param | Invalid | Min(day) | Max(day)")
             print("-" * 40)
 
             for p in params:
-                lo, hi = bounds_by_type[mtype][p]
+                lo, hi = bounds[p]
                 bad = (sub[p] < lo) | (sub[p] > hi)
 
                 self.df.loc[sub.index[bad], f"invalid_physical_{p}"] = 1
@@ -737,8 +1170,8 @@ class PVValidationPipeline:
             print(f"{p:5}: {count:7} invalid ({pct:5.2f}%)")
 
     def detect_statistical_outliers(self, param_cols=["P", "I", "U", "Irr", "Temp"], z_thresh=3.0):
-        print("\nSTEP 7 : Z-Score based Outlier detection")
-        
+        print("\nSTEP 8: Z-Score based Outlier detection")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
         night_mask = (
             ((self.df["_time"].dt.hour >= 22) | (self.df["_time"].dt.hour <= 4)) & (self.df["Irr"] < 1)
         )
@@ -800,8 +1233,89 @@ class PVValidationPipeline:
             pct = (col_outliers / total_day_rows) * 100 if total_day_rows > 0 else 0
             print(f"{col:7} | {col_outliers:14,} | {pct:17.1f}%")
 
+    #NEW
+    def detect_correlation_anomalies(self, mark_as_nan: bool = True) -> list[dict]:
+        """
+        Detect correlation anomalies between Irr and P by comparing relative changes.
+        """
+        print("\nSTEP 9: Correlation Anomaliy Detection")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
+        min_proportion = 0.05       #minimum allowed proportion of P_change / Irr_change
+        min_irr_threshold = 10.0    #minimum Irr threshold to consider in comparison
+
+        anomalies = []
+
+        if not {'Irr', 'P', '_time'}.issubset(self.df.columns):
+            print(f"WARNING: Required columns 'Irr', 'P', or '_time' not found.")
+            return anomalies
+
+        print(f"Starting correlation anomaly detection...")
+
+        df = self.df.sort_values('_time').reset_index()
+
+        valid_mask = (df['Irr'] > 0) & (df['P'] > 0)
+        valid_indices = df.index[valid_mask].tolist()
+
+        if len(valid_indices) < 2:
+            print(f"[WARNING: Not enough valid data points for anomaly detection.")
+            return anomalies
+
+        for i in range(1, len(valid_indices)):
+            prev_i = valid_indices[i-1]
+            curr_i = valid_indices[i]
+
+            prev_irr = df.at[prev_i, 'Irr']
+            curr_irr = df.at[curr_i, 'Irr']
+            prev_p = df.at[prev_i, 'P']
+            curr_p = df.at[curr_i, 'P']
+
+            # Skip if both Irr values below threshold
+            if prev_irr < min_irr_threshold and curr_irr < min_irr_threshold:
+                continue
+
+            # Avoid division by zero
+            if prev_irr == 0 or prev_p == 0:
+                continue
+
+            irr_change = (curr_irr - prev_irr) / prev_irr
+            p_change = (curr_p - prev_p) / prev_p
+
+            if abs(irr_change) < 0.01:
+                continue
+
+            proportion = abs(p_change) / abs(irr_change) if irr_change != 0 else 1.0
+
+            if proportion < min_proportion:
+                anomaly = {
+                    "timestamp": df.at[curr_i, '_time'],
+                    "type": "irr_p_correlation_mismatch",
+                    "irr_change_pct": irr_change * 100,
+                    "p_change_pct": p_change * 100,
+                    "proportion_pct": proportion * 100,
+                    "min_proportion_pct": min_proportion * 100,
+                    "irr_value": curr_irr,
+                    "p_value": curr_p,
+                    "prev_irr": prev_irr,
+                    "prev_p": prev_p,
+                    "row_index": df.at[curr_i, 'index'],
+                    "description": f"P changed only {proportion*100:.1f}% relative to Irr change "
+                                f"(min required: {min_proportion*100:.1f}%)"
+                }
+                anomalies.append(anomaly)
+
+                idx = anomaly["row_index"]
+                if mark_as_nan:
+                    self.df.at[idx, 'P'] = np.nan
+                    self.df.at[idx, 'Irr'] = np.nan
+                else:
+                    self.df.at[idx, 'P'] = 0.0
+                    self.df.at[idx, 'Irr'] = 0.0
+
+        print(f"\nDetected {len(anomalies)} correlation anomalies.")
+
     def generate_feature_nan_masks(self):
-        print("\nSTEP 8 : Generate NaN column per column")
+        print("\nSTEP 10: Generate NaN column per column")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
         feature_columns = ["P", "Irr", "I", "U", "Temp"]
         created = 0
         nan_summary = {}  
@@ -827,6 +1341,7 @@ class PVValidationPipeline:
             print(f"{col:<25} {cnt:>10}")
         print("-" * 100)
 
+    #Not using
     def fill_P_U_I(self):
         print("\nSTEP 9 : Fill P, U, I using P = U * I when possible")
         df = self.df.copy()
@@ -909,6 +1424,7 @@ class PVValidationPipeline:
 
     def combine_masks(self):
         print("\nCombining all flags into a single flag: invalid_any")
+        print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
         mask_cols = [
             'invalid_physical_P', 'invalid_physical_I', 'invalid_physical_U', 'invalid_physical_Irr', 'invalid_physical_Temp', 
             'invalid_outlier_P', 'invalid_outlier_I', 'invalid_outlier_U', 'invalid_outlier_Irr', 'invalid_outlier_Temp',
@@ -1061,65 +1577,212 @@ class PVValidationPipeline:
         self._save_plot(fig, "scatter_per_panel_P_Irr")
         plt.close(fig)
 
-    def compute_p_normalized(self):
-        print("\nCompute P_normalized")
+    #NEW
+    def normalise_power_per_module(
+        self,
+        df: pd.DataFrame | None = None,
+        power_col: str = "P",
+        module_col: str = "Name",
+        out_col: str = "P_normalised",
+        quantile: float = 0.95,
+        json_name: str = "power_normalisation_factors.json",
+    ):
+        """
+        For each unique module:
+        - Compute P_q95
+        - Create P_normalised = P / P_q95
+        - Save scaling factors + min/max to JSON
+        """
+
+        print("\nSTEP 11: Power normalisation per module")
+
+        if df is None:
+            if not hasattr(self, "df") or self.df is None:
+                raise ValueError("WARNING: No DataFrame provided.")
+            df = self.df
+        else:
+            df = df.copy()
+
+        if power_col not in df.columns:
+            raise ValueError(f"WARNING: Column '{power_col}' not found in DataFrame")
+        if module_col not in df.columns:
+            raise ValueError(f"WARNING: Column '{module_col}' not found in DataFrame")
+
+        neg_mask = df[power_col] < 0
+        n_neg = neg_mask.sum()
+
+        if n_neg > 0:
+            print(f"Clamping {n_neg} negative '{power_col}' values to 0")
+            df.loc[neg_mask, power_col] = 0.0
+        else:
+            print("No negative power values found")
+
+        scaling_stats = {}
+
+        for module, g in df.groupby(module_col):
+            power = g[power_col].dropna()
+
+            if power.empty:
+                print(f"{module}: no valid power values, skipping")
+                continue
+
+            p_q = power.quantile(quantile)
+
+            if p_q <= 0 or np.isnan(p_q):
+                print(f"{module}: invalid quantile value ({p_q}), skipping")
+                continue
+
+            min_p = power.min()
+            max_p = power.max()
+
+            # Apply normalisation
+            module_mask = df[module_col] == module
+            df.loc[module_mask, out_col] = (df.loc[module_mask, power_col] / p_q).clip(lower=0.0, upper=1.75) #1.2 for si
+
+            # Normalised stats
+            p_norm = df.loc[module_mask, out_col].dropna()
+            min_p_norm = p_norm.min() if not p_norm.empty else np.nan
+            max_p_norm = p_norm.max() if not p_norm.empty else np.nan
+
+            scaling_stats[module] = {
+                "quantile": quantile,
+                "p_q": float(p_q),
+                "min_P": float(min_p),
+                "max_P": float(max_p),
+                "min_P_normalised": float(min_p_norm),
+                "max_P_normalised": float(max_p_norm),
+                "rows_total": int(len(g)),
+                "rows_non_nan": int(power.notna().sum()),
+            }
+
+            print(
+                f"{module}: "
+                f"P_q{int(quantile*100)}={p_q:.3f}, "
+                f"P[min,max]=({min_p:.3f},{max_p:.3f}), "
+                f"P_norm[min,max]=({min_p_norm:.3f},{max_p_norm:.3f}), "
+                f"rows={len(g)}"
+            )
+
+        # Save JSON
+        scaling_file = self.results_dir / json_name
+        with open(scaling_file, "w") as f:
+            json.dump(scaling_stats, f, indent=2)
+
+        print(f"\nSaved power normalisation factors to: {scaling_file}")
+
+        self.df = df
+        return df
+    
+    #Name change: compute_p_normalized to compute_module_average    
+    def compute_module_average(self):
+        print("\nCompute per column average from all modules")
         timestamp_groups = self.df.groupby('_time')
         normalized_data = []
         for timestamp, group in timestamp_groups:
-            row_data = {'_time': timestamp}            
-            for col in ['P', 'I', 'U', 'Temp', 'Irr']:
-                available_vals = group[col].dropna()
-                if len(available_vals) > 0:
-                    row_data[col] = available_vals.median() #should be mean or median?
-                else:
+            row_data = {'_time': timestamp}
+            
+            for col in ['P','P_normalised', 'I', 'U', 'Temp', 'Irr']: #add P_normalised here if that is target
+                values = group[col].dropna()
+                if len(values) == 0:
                     row_data[col] = np.nan
+                    continue
+                
+                # Exclude zeros if non-zero values exist
+                non_zero_values = values[values != 0.0]
+                zero_values = values[values == 0.0]
+                
+                if len(non_zero_values) > 0 and len(zero_values) > 0:
+                    values = non_zero_values  # Ignore zeros
+                
+                # Outlier detection if 3 or more values remain
+                if len(values) >= 3:
+                    mean_val = values.mean()
+                    std_val = values.std()
+                    if std_val > 0:
+                        z_scores = abs((values - mean_val) / std_val)
+                        # Keep values with z-score <= 2.5
+                        filtered_values = values[z_scores <= 2.5]
+                        if len(filtered_values) > 0:
+                            values = filtered_values
+                
+                # Final aggregation with median
+                row_data[col] = values.median() if len(values) > 0 else np.nan
             
             row_data['modules_available'] = len(group)
             row_data['modules_total'] = len(self.validation_modules)
             
             normalized_data.append(row_data)
         
-        #create normalized dataset
-        normalized_df = pd.DataFrame(normalized_data)
+        # Create average dataset
+        averaged_df = pd.DataFrame(normalized_data)
         
-        #sort by timestamp
-        normalized_df = normalized_df.sort_values('_time').reset_index(drop=True)
-        print(f"Created normalized dataset: {len(normalized_df)} timestamps")
+        # Sort by timestamp
+        averaged_df = averaged_df.sort_values('_time').reset_index(drop=True)
+        print(f"Created normalized dataset: {len(averaged_df)} timestamps")
         
-        #Save normalized dataset
-        normalized_file = self.results_dir / "pv_normalized.csv"
-        normalized_df.to_csv(normalized_file, index=False)
-        print(f"Saved normalized data to: {normalized_file}")
+        # Save normalized dataset
+        averaged_file = self.results_dir / "pv_normalized.csv"
+        averaged_df.to_csv(averaged_file, index=False)
+        print(f"Saved normalized data to: {averaged_file}")
         
-        return normalized_df
+        return averaged_df
     
-    def plot_normalized_parameters_monthly(self, normalized_df):
-        exclude_ranges = [
+    def plot_normalized_parameters_monthly(self, averaged_df):
+        exclude_ranges_psc = [
             ("2024-12-06", "2024-12-14"),
             ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2024-01-03"),
+            ("2025-01-02", "2025-01-03"),
+            ("2025-05-02", "2025-05-13"),
+            ("2025-06-25", "2025-06-30"),
+            ("2025-09-17", "2025-09-26"),
+            ("2025-11-18", "2025-11-26"),
+        ]
+
+        exclude_ranges_si = [
+            ("2024-12-06", "2024-12-14"),
             ("2025-05-02", "2025-05-13"),
             ("2025-06-26", "2025-06-30"),
             ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-23"),
+            ("2025-11-16", "2025-11-26"),
+            ("2025-12-21", "2025-12-24"),
         ]
+
         print("\nPlotting normalized P, I, U, Temp per month")
 
-        if normalized_df.empty:
+        if averaged_df.empty:
             print("No data in normalized dataframe")
             return
 
-        normalized_df = normalized_df.copy()
-        normalized_df['_time'] = pd.to_datetime(normalized_df['_time'], utc=True)
+        averaged_df = averaged_df.copy()
+        averaged_df['_time'] = pd.to_datetime(averaged_df['_time'], utc=True)
+
+        if 'category' in averaged_df.columns:
+            cats = averaged_df['category'].dropna().str.lower().unique()
+            if len(cats) == 1 and cats[0] == 'si':
+                active_ranges = exclude_ranges_si
+                print("Using SI exclude ranges")
+            else:
+                active_ranges = exclude_ranges_psc
+                print("Using PSC exclude ranges")
+        else:
+            # no category column → use both
+            active_ranges = exclude_ranges_psc + exclude_ranges_si
+            print("No category column → using BOTH PSC + SI exclude ranges")
+
+        exclude_intervals = [
+            (pd.Timestamp(start).tz_localize('UTC'),
+            pd.Timestamp(end).tz_localize('UTC'))
+            for start, end in active_ranges
+        ]
+
         parameters = ['P', 'I', 'U', 'Temp', 'Irr']
-        exclude_intervals = [(pd.Timestamp(start).tz_localize('UTC'), pd.Timestamp(end).tz_localize('UTC')) for start, end in exclude_ranges]
-        months = sorted(normalized_df['_time'].dt.tz_convert(None).dt.to_period('M').unique())
+        months = sorted(averaged_df['_time'].dt.tz_convert(None).dt.to_period('M').unique())
         n_months = len(months)
         ncols = min(4, n_months)
         nrows = (n_months + ncols - 1) // ncols
 
         for param in parameters:
-            if param not in normalized_df.columns:
+            if param not in averaged_df.columns:
                 print(f"Parameter '{param}' not found in normalized data, skipping")
                 continue
 
@@ -1136,8 +1799,7 @@ class PVValidationPipeline:
                 month_start = month_period.start_time.tz_localize('UTC')
                 month_end = month_period.end_time.tz_localize('UTC')
 
-                month_data = normalized_df[(normalized_df['_time'] >= month_start) & (normalized_df['_time'] <= month_end)].copy()
-                month_data = month_data.sort_values('_time')
+                month_data = averaged_df[(averaged_df['_time'] >= month_start) & (averaged_df['_time'] <= month_end)].copy().sort_values('_time')
 
                 if month_data.empty:
                     ax.text(0.5, 0.5, f"No data\n{month_period}",
@@ -1161,35 +1823,39 @@ class PVValidationPipeline:
                 ax.grid(True, alpha=0.3)
 
                 ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%m-%d'))
-                ax.xaxis.set_major_locator(plt.matplotlib.dates.WeekdayLocator(byweekday=0)) 
-
+                ax.xaxis.set_major_locator(plt.matplotlib.dates.WeekdayLocator(byweekday=0))
                 plt.setp(ax.get_xticklabels(), rotation=45, ha='right', fontsize=8)
 
                 if not valid_data.empty:
-                    stats_text = f"Min: {valid_data[param].min():.1f}\nMax: {valid_data[param].max():.1f}\nPoints: {len(valid_data)}"
+                    stats_text = (
+                        f"Min: {valid_data[param].min():.1f}\n"
+                        f"Max: {valid_data[param].max():.1f}\n"
+                        f"Points: {len(valid_data)}"
+                    )
                     ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=8,
                             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
             for idx in range(len(months), len(axes)):
                 axes[idx].axis('off')
 
-            start_date = normalized_df['_time'].min()
-            end_date = normalized_df['_time'].max()
+            start_date = averaged_df['_time'].min()
+            end_date = averaged_df['_time'].max()
 
-            fig.suptitle(f"Monthly {param} - Normalized Dataset\n"
-                        f"Time Range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}\n"
-                        f"Red areas indicate exclude date ranges",
-                        fontsize=12, fontweight='bold')
+            fig.suptitle(
+                f"Monthly {param} - Normalized Dataset\n"
+                f"Time Range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}\n"
+                f"Red areas indicate exclude date ranges",
+                fontsize=12, fontweight='bold'
+            )
 
             plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
             self._save_plot(fig, f"monthly_{param}_normalized")
             plt.close(fig)
 
         print(f"\nAll monthly parameter plots saved to: {self.results_dir}/")
 
-    def plot_normalized_parameters_detailed(self, normalized_df):
-        exclude_ranges = [
+    def plot_normalized_parameters_detailed(self, averaged_df):
+        exclude_ranges_psc = [
             ("2024-12-06", "2024-12-14"),
             ("2024-12-30", "2024-12-31"),
             ("2025-01-02", "2024-01-03"),
@@ -1198,26 +1864,48 @@ class PVValidationPipeline:
             ("2025-09-17", "2025-09-26"),
             ("2025-11-18", "2025-11-23"),
         ]
-        if normalized_df.empty:
+
+        exclude_ranges_si = [
+            ("2024-12-06", "2024-12-14"),
+            ("2025-05-02", "2025-05-13"),
+            ("2025-06-26", "2025-06-30"),
+            ("2025-09-17", "2025-09-26"),
+            ("2025-11-16", "2025-11-26"),
+            ("2025-12-21", "2025-12-24"),
+        ]
+
+        if averaged_df.empty:
             print("No data in normalized dataframe")
             return
 
-        normalized_df = normalized_df.copy()
-        normalized_df['_time'] = pd.to_datetime(normalized_df['_time'], utc=True)
+        averaged_df = averaged_df.copy()
+        averaged_df['_time'] = pd.to_datetime(averaged_df['_time'], utc=True)
+
+        if 'category' in averaged_df.columns:
+            cats = averaged_df['category'].dropna().str.lower().unique()
+            if len(cats) == 1 and cats[0] == 'si':
+                active_ranges = exclude_ranges_si
+                print("Using SI exclude ranges")
+            else:
+                active_ranges = exclude_ranges_psc
+                print("Using PSC exclude ranges")
+        else:
+            active_ranges = exclude_ranges_psc + exclude_ranges_si
+            print("No category column → using BOTH PSC + SI exclude ranges")
+
+        exclude_intervals = [(pd.Timestamp(start).tz_localize('UTC'), pd.Timestamp(end).tz_localize('UTC')) for start, end in active_ranges]
 
         parameters = ['P', 'I', 'U', 'Temp', 'Irr']
 
-        exclude_intervals = [(pd.Timestamp(start).tz_localize('UTC'), pd.Timestamp(end).tz_localize('UTC')) for start, end in exclude_ranges]
-
         for param in parameters:
-            if param not in normalized_df.columns:
+            if param not in averaged_df.columns:
                 continue
 
             print(f"\nCreating detailed timeline for: {param}")
 
             fig, ax = plt.subplots(figsize=(26, 6))
 
-            plot_data = normalized_df[['_time', param]].sort_values('_time')
+            plot_data = averaged_df[['_time', param]].sort_values('_time')
             valid_data = plot_data[plot_data[param].notna()]
 
             if not valid_data.empty:
@@ -1228,28 +1916,29 @@ class PVValidationPipeline:
                 ax.axvspan(start, end, alpha=0.2, color='red')
 
             ax.set_title(f"{param} - Complete Timeline with Exclude Date Highlighting\n"
-                        f"Red areas indicate exclude date ranges",
-                        fontsize=14, fontweight='bold')
+                f"Red areas indicate exclude date ranges",
+                fontsize=14, fontweight='bold')
             ax.set_ylabel(param, fontsize=12)
             ax.set_xlabel("Date", fontsize=12)
             ax.grid(True, alpha=0.3)
 
             ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m'))
             ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator())
-
             plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
 
             ax.legend(loc='upper right', fontsize=10)
 
-            stats_text = (f"Data Points: {len(valid_data):,}\n"
-                        f"Time Range: {plot_data['_time'].min().strftime('%Y-%m-%d')} to {plot_data['_time'].max().strftime('%Y-%m-%d')}\n"
-                        f"Coverage: {len(valid_data) / len(plot_data) * 100:.1f}%")
+            stats_text = (
+                f"Data Points: {len(valid_data):,}\n"
+                f"Time Range: {plot_data['_time'].min().strftime('%Y-%m-%d')} to "
+                f"{plot_data['_time'].max().strftime('%Y-%m-%d')}\n"
+                f"Coverage: {len(valid_data) / len(plot_data) * 100:.1f}%"
+            )
 
             ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=10,
                     verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
             plt.tight_layout()
-
             self._save_plot(fig, f"detailed_timeline_{param}_normalized")
             plt.close(fig)
 
@@ -1262,8 +1951,8 @@ class PVValidationPipeline:
         Args:
             dwd_file (str): Path to DWD irradiance csv file.
             flag_invalid (bool): 
-                True  → Keep invalid rows but flag them (for model masking).
-                False → Drop all invalid rows.
+                True  : Keep invalid rows but flag them (for model masking).
+                False : Drop all invalid rows.
         """
         print(f"\nValidation modules: {self.validation_modules}")
         print(f"\nReference modules: {self.cross_module_ref} (cross-ref), {self.scaling_ref_module} (scaling)")
@@ -1280,13 +1969,18 @@ class PVValidationPipeline:
         #File path: result_data_validation/dwd_irradiance_scaling_factors.json
         #Plot Irr comparison between park sensors and DWD irr data 
         #File path: result_data_validation/Irradiance_comparison_side_by_side.png
-        self.fill_irradiance_gaps(dwd_file, cross_module_ref="Perovskite_1_1", scaling_ref_module="Sanyo_5_1")
+        self.fill_irradiance_gaps(dwd_file, cross_module_ref="Sanyo_5_1", scaling_ref_module="Perovskite_1_1")
         #clean night time data 
         self.night_detector()
+        #Add columns based on name_mapping_dict
+        self.map_module_metadata()
+        self.plot_module_metadata_summary(out_png=self.results_dir / "module_metadata_summary.png")
         #apply range validation as per module type and flag them as invalid_physical_*
         self.range_validation()
         #filter based on z-score and flag them as invalid_statistical_*
-        self.detect_statistical_outliers(z_thresh=2.0)
+        self.detect_statistical_outliers(z_thresh=3.0)
+        #NEW
+        self.detect_correlation_anomalies(mark_as_nan=False)
         #filter nan values and flag them as *_nan
         self.generate_feature_nan_masks()
         #fill P, I, U based on P=U*I relation
@@ -1334,11 +2028,12 @@ class PVValidationPipeline:
         #Plots 
         self.plot_histogram_per_panel()
         self.plot_scatter_per_panel_P_Irr()
-        
-        #compute P_normalized and create new df 
-        normalized_df =self.compute_p_normalized()
-        self.plot_normalized_parameters_monthly(normalized_df)
-        self.plot_normalized_parameters_detailed(normalized_df)
+        #Normalise power per module using p95 
+        self.normalise_power_per_module()
+        #compute average per column and create new df 
+        averaged_df =self.compute_module_average()
+        self.plot_normalized_parameters_monthly(averaged_df)
+        self.plot_normalized_parameters_detailed(averaged_df)
 
         #save final outputs
         cleaned_file = self.results_dir / "pv_cleaned_masked.csv"
@@ -1349,9 +2044,9 @@ class PVValidationPipeline:
         print(f"Modules: {sorted(self.df['Name'].unique())}")
         
         # Save normalized dataset
-        normalized_file = self.results_dir / "pv_normalized.csv"
-        normalized_df.to_csv(normalized_file, index=False)
-        print(f"\nNormalized dataset saved: {normalized_file}")
-        print(f"Rows: {len(normalized_df):,}, Columns: {len(normalized_df.columns)}")
+        averaged_file = self.results_dir / "pv_normalized.csv"
+        averaged_df.to_csv(averaged_file, index=False)
+        print(f"\nNormalized dataset saved: {averaged_file}")
+        print(f"Rows: {len(averaged_df):,}, Columns: {len(averaged_df.columns)}")
                 
-        return self.df, normalized_df
+        return self.df, averaged_df

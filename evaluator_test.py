@@ -1,10 +1,10 @@
-#Train for either perovskite or silicon at a time
-#Target can be P or P_normalised
-#Changes done to: all files
+#Version: 1.0 
+#Handles only 1 output
 import os
 from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
+import pickle
 from datetime import datetime
 
 from get_influxdb_pv_data import InfluxDBDataExporter
@@ -14,7 +14,7 @@ from merge_pv_and_dwd_data import PVDWDDataMerger
 from create_features_and_scale import FeatureEnggPipeline
 from train_lstm_model import run_lstm_training
 
-def create_run_folder(base_name="lstm_run"):
+def create_run_folder(base_name="evaluate"):
     """
     Create a folder with name base_name_yyyy_mm_dd_HHMMSS
     """
@@ -91,22 +91,22 @@ def run_pv_validation_pipeline(df_pv, weather_csv, run_folder):
         run_folder (str): Folder to save output CSVs
     
     Returns:
-        cleaned_df, averaged_df
+        tuple: (cleaned_df, normalized_df)
     """
     validation_modules = [
-        #"Atersa_1_1", "Atersa_2_1", "Atersa_3_1", "Atersa_4_1", "Atersa_5_1", "Atersa_6_1",
-        #"Atersa_1-1", "Atersa_2-1", "Atersa_3-1", "Atersa_4-1", "Atersa_5-1", "Atersa_6-1", 
-        #"Sanyo_1_1", "Sanyo_2_1", "Sanyo_3_1", "Sanyo_4_1", "Sanyo_5_1", 
-        #"Sanyo_1-1", "Sanyo_2-1", "Sanyo_3-1", "Sanyo_4-1", "Sanyo_5-1", 
-        #"Solon_1_1","Solon_1_2", "Solon_2_1", "Solon_2_2", "Solon_3_1", "Solon_3_2", "Solon_4_2", 
-        #"Solon_1-1","Solon_1-2", "Solon_2-1", "Solon_2-2", "Solon_3-1", "Solon_3-2", "Solon_4-2", 
-        #"Sun_Power_1_1", "Sun_Power_2_1", "Sun_Power_3_1", "Sun_Power_4_1", "Sun_Power_5_1",
-        #"Sun_Power_1-1", "Sun_Power_2-1", "Sun_Power_3-1", "Sun_Power_4-1", "Sun_Power_5-1",
+        "Atersa_1_1", "Atersa_2_1", "Atersa_3_1", "Atersa_4_1", "Atersa_5_1", "Atersa_6_1",
+        "Atersa_1-1", "Atersa_2-1", "Atersa_3-1", "Atersa_4-1", "Atersa_5-1", "Atersa_6-1", 
+        "Sanyo_1_1", "Sanyo_2_1", "Sanyo_3_1", "Sanyo_4_1", "Sanyo_5_1", 
+        "Sanyo_1-1", "Sanyo_2-1", "Sanyo_3-1", "Sanyo_4-1", "Sanyo_5-1", 
+        "Solon_1_1","Solon_1_2", "Solon_2_1", "Solon_2_2", "Solon_3_1", "Solon_3_2", "Solon_4_2", 
+        "Solon_1-1","Solon_1-2", "Solon_2-1", "Solon_2-2", "Solon_3-1", "Solon_3-2", "Solon_4-2", 
+        "Sun_Power_1_1", "Sun_Power_2_1", "Sun_Power_3_1", "Sun_Power_4_1", "Sun_Power_5_1",
+        "Sun_Power_1-1", "Sun_Power_2-1", "Sun_Power_3-1", "Sun_Power_4-1", "Sun_Power_5-1",
 
-        "Perovskite_1", "Perovskite_1_1", "Perovskite_1_2", "Perovskite_1_3", 
-        "Perovskite_2", "Perovskite_2_1", "Perovskite_2_2", "Perovskite_2_3", 
-        "Perovskite_3_1", "Perovskite_3_2", "Perovskite_3_3",
-        "Perovskite_4_1", "Perovskite_4_2", "Perovskite_4_3"
+        #"Perovskite_1", "Perovskite_1_1", "Perovskite_1_2", "Perovskite_1_3", 
+        #"Perovskite_2", "Perovskite_2_1", "Perovskite_2_2", "Perovskite_2_3", 
+        #"Perovskite_3_1", "Perovskite_3_2", "Perovskite_3_3",
+        #"Perovskite_4_1", "Perovskite_4_2", "Perovskite_4_3"
     ]
     flag_invalid = False
     
@@ -163,8 +163,8 @@ if __name__ == "__main__":
     run_folder = create_run_folder()
 
     #download pv data from influxdb
-    start_date = "2024-11-28"
-    end_date = "2025-12-31"
+    start_date = "2025-07-16"
+    end_date = "2025-09-14"
     
     output_csv = os.path.join(run_folder, f"data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
     
@@ -228,35 +228,96 @@ if __name__ == "__main__":
         horizon = 36
     )
     print("\nFeature engineering and splitting")
-    #create_val=True, creates a separate continuous validation df; orelse val is % of train sequences.
-    pipeline.process_pipeline(input_csv=merged_csv_path, create_val=False)
+    test_df = pipeline.load_input_csv(merged_csv_path)
+    test_df = pipeline.add_time_features(test_df)
+    test_df = pipeline.retain_only_features_and_target(test_df)
 
-    print("\nStarting LSTM Training")
+    SCALER_FILE = "lstm_run_2026_01_31_182240_si/training_data/scalers.pkl" #change this
+    P_SCALER_FILE = "lstm_run_2026_01_31_182240_si/training_data/p_scaling.pkl" #change this
+
+    with open(SCALER_FILE, "rb") as f:
+        scaler_payload = pickle.load(f)
+    feature_scalers = scaler_payload["feature_scalers"]
+    print(f"Loaded feature sclaers for: {list(feature_scalers.keys())}")
+
+    with open(P_SCALER_FILE, "rb") as f:
+        p_info = pickle.load(f)
+    p_scaler = p_info["scaler"]
+    print(f"Loaded target scaler with range: [{p_info['data_min']:.6f}, {p_info['data_max']:.6f}]")
+
+    # Transform test data using the loaded scalers
+    def transform_df(df, feature_scalers, p_scaler, target_col):
+        """Transform dataframe using pre-fitted scalers"""
+        df_t = df.copy()
+        for col, scaler in feature_scalers.items():
+            if col in df_t.columns:
+                col_vals = df_t[[col]].astype(float)
+                mask = col_vals.notna().values.ravel()
+                if mask.any():
+                    transformed = scaler.transform(col_vals[mask])
+                    df_t.loc[col_vals.index[mask], col] = transformed.flatten()
+        
+        # Transform target column
+        if target_col in df_t.columns:
+            p_vals = df_t[[target_col]].astype(float)
+            mask = p_vals.notna().values.ravel()
+            if mask.any():
+                df_t.loc[p_vals.index[mask], target_col] = (
+                    p_scaler.transform(p_vals[mask])[:, 0]
+                )
+        return df_t
+    
+    test_scaled = transform_df(test_df, feature_scalers, p_scaler, pipeline.target_col)
+
+    # Save the scaled test data
+    test_output_path = os.path.join(training_data_dir, "test_scaled.parquet")
+    test_scaled.to_parquet(test_output_path)
+    
+    print(f"\nTest data preparation complete!")
+    print(f"Test data shape: {test_scaled.shape}")
+    print(f"Test data date range: {test_scaled.index.min()} to {test_scaled.index.max()}")
+    print(f"Saved scaled test data to: {test_output_path}")
+    
+    # Print summary statistics
+    print("\nTest data summary (after scaling):")
+    all_feature_cols = list(dict.fromkeys(pipeline.sensor_cols + pipeline.env_cols))
+    pipeline.print_stats(test_scaled, all_feature_cols + [pipeline.target_col], "TEST (scaled)")
+    pipeline.print_stats(test_scaled, pipeline.engineered_cyclical, "TEST engineered_cyclical (unscaled)")
+
+   #evaluation section
+    MODEL_PATH = "lstm_run_2026_01_31_182240_si/lstm_results/31.01.2026.182441_model.pt" #change this
+    MODEL_INFO_PATH = "lstm_run_2026_01_31_182240_si/lstm_results/model_info.pkl" #change this
+    TEST_DATA_PATH = test_output_path
+    OUTPUT_DIR = "lstm_run_2026_01_31_182240_si/lstm_results/test_evaluation_si_full" #change this
+    BATCH_SIZE = 32
+    RANDOM_SEED = 42
+
+    print("Running evaluator code")
+    print(f"Model: {MODEL_PATH}")
+    print(f"Model info: {MODEL_INFO_PATH}")
+    print(f"Test data: {TEST_DATA_PATH}")
+    print(f"Scaler: {P_SCALER_FILE}") 
+    print(f"Output: {OUTPUT_DIR}")
+
     try:
-        training_results = run_lstm_training(
-            training_data_dir=training_data_dir,
-            output_dir=os.path.join(run_folder, "lstm_results"),  
-            window=48,
-            horizon=36,
-            batch_size=32,
-            epochs=150,
-            lr=0.0005, #PSC:0.0005 | si: 0.001
-            patience=15,
-            hidden_size=64,
-            num_layers=4,
-            dropout=0.2,
-            target_col="P_normalised", #P/ Pnormalised, MAKE sure same is set in create_features_and_scale.py
-            use_bad_day=True,   #Include bad_day as input feature
-            mask_bad_days=True, #Use bad_day column to mask loss 
-            validation_split= 0.15, #if create_val=False, then validation_split=0.15 will select every 7th sequence from traing sequences
-            random_seed = 42,
+        from evaluator import evaluate_test_only     
+        test_results = evaluate_test_only(
+            model_path=MODEL_PATH,
+            model_info_path=MODEL_INFO_PATH,
+            test_data_path=TEST_DATA_PATH,
+            scaler_path=P_SCALER_FILE,
+            output_dir=OUTPUT_DIR,
+            batch_size=BATCH_SIZE,
+            random_seed=RANDOM_SEED,
         )
- 
-        print(f"All results saved in: {run_folder}")
-        print(f"Training data: {training_data_dir}")
-        print(f"LSTM results: {os.path.join(run_folder, 'lstm_results')}")
+        print("\nEvaluation completed successfully!")
         
     except Exception as e:
-        print(f"\nERROR in LSTM training: {e}")
-        raise
+        print(f"\nEvaluation failed with error: {e}")
+        import traceback
+        traceback.print_exc()
+
+    
+    
+
     

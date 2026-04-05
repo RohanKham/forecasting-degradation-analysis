@@ -1,28 +1,27 @@
-#Version: 1.0 
-#Handles only 1 output
+#Version: 2.0
+# Handles more than one output 
 from pathlib import Path
 import pickle
-import textwrap
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.dates as mdates
 import warnings
 import random
-from typing import Optional, Tuple, Dict
+from typing import List, Dict, Tuple
 from datetime import datetime
+import seaborn as sns
 
-class LSTMModel(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size=1, forecast_steps=1, dropout=0.2):
+class MultiOutputLSTMModel(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, num_outputs, forecast_steps=1, dropout=0.2):
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        self.output_size = output_size
+        self.num_outputs = num_outputs
         self.forecast_steps = forecast_steps
         self.dropout = dropout
         
@@ -34,7 +33,7 @@ class LSTMModel(nn.Module):
             dropout=dropout if num_layers > 1 else 0
         )
         
-        self.fc = nn.Linear(hidden_size, forecast_steps * output_size)
+        self.fc = nn.Linear(hidden_size, forecast_steps * num_outputs)
         
         # ReLU activation to prevent negative predictions 
         self.relu = nn.ReLU()
@@ -54,85 +53,191 @@ class LSTMModel(nn.Module):
         # This captures information from the entire input sequence
         out = self.fc(out[:, -1, :])
         
+        #apply ReLU to prevent negative predictions
         out = self.relu(out)
         
-        # Reshape to (batch_size, forecast_steps, output_size)
-        out = out.view(batch_size, self.forecast_steps, self.output_size)
+        # Reshape to (batch_size, forecast_steps, num_outputs)
+        out = out.view(batch_size, self.forecast_steps, self.num_outputs)
         
-        return out.squeeze(-1)  # (batch_size, horizon)
+        return out  # (batch_size, horizon, num_outputs)
+
+def detect_bad_day_columns(df: pd.DataFrame, target_cols: List[str]) -> Dict[str, str]:
+    """
+    Detect which bad_day_* column corresponds to which target.
+    """
+    bad_day_mapping = {}
+    all_bad_day_cols = [col for col in df.columns if col.startswith('bad_day_')]
     
-class MultiStepDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, feature_cols, target_col, window: int, horizon: int, use_bad_day: bool = True, mask_bad_days: bool = True):
+    print(f"\nDetecting bad_day columns for targets: {target_cols}")
+    print(f"Available bad_day columns: {all_bad_day_cols}")
+    
+    for target in target_cols:
+        if '_' in target:
+            # Try different patterns
+            patterns = []
+            
+            # Check if target starts with known prefixes
+            known_prefixes = ['P_', 'I_', 'U_']
+            prefix_found = None
+            for prefix in known_prefixes:
+                if target.startswith(prefix):
+                    prefix_found = prefix
+                    break
+            
+            if prefix_found:
+                # Pattern 1: P_normalised_si : bad_day_si
+                parts = target.split('_')
+                if len(parts) > 1:
+                    patterns.append(f"bad_day_{parts[-1]}")
+                
+                # Pattern 2: Skip prefix and get rest
+                suffix = target[len(prefix_found):]
+                suffix_parts = suffix.split('_')
+                
+                # Try different combinations
+                patterns.append(f"bad_day_{suffix_parts[-1]}")  # Last part
+                if len(suffix_parts) > 1:
+                    patterns.append(f"bad_day_{'_'.join(suffix_parts)}")  # All parts after prefix
+                    patterns.append(f"bad_day_{'_'.join(suffix_parts[1:])}")  # Skip first part (e.g., 'normalised')
+            else:
+                # No known prefix, use generic approach
+                parts = target.split('_')
+                patterns.append(f"bad_day_{parts[-1]}")
+                patterns.append(f"bad_day_{'_'.join(parts)}")
+            
+            # Find first matching pattern
+            found = False
+            for pattern in patterns:
+                if pattern in all_bad_day_cols:
+                    bad_day_mapping[target] = pattern
+                    print(f"  {target} : {pattern}")
+                    found = True
+                    break
+            
+            if not found:
+                print(f"WARNING: No bad_day column found for target '{target}'")
+                # Fallback: use first bad_day column or None
+                if all_bad_day_cols:
+                    bad_day_mapping[target] = all_bad_day_cols[0]
+                    print(f"  Using fallback: {target} : {all_bad_day_cols[0]}")
+                else:
+                    bad_day_mapping[target] = None
+        else:
+            print(f"WARNING: Target '{target}' doesn't follow expected naming pattern")
+            if all_bad_day_cols:
+                bad_day_mapping[target] = all_bad_day_cols[0]
+            else:
+                bad_day_mapping[target] = None
+    
+    return bad_day_mapping
+    
+class MultiOutputDataset(Dataset):
+    def __init__(self, df: pd.DataFrame, feature_cols, target_cols: List[str], window: int, horizon: int, use_bad_day: bool = True, mask_bad_days: bool = True, bad_day_mapping: Dict[str, str] = None):
         """
         Creates sliding window samples for time series | stride = 1
         window: Lookback period (e.g., 48 timesteps)
-        horizon: Forecast horizon (e.g., 36 timesteps)
-        bad_day: Binary mask for low-quality data
-        
         Input X includes: [window + horizon] timesteps of features
-        Target y includes: only [horizon] timesteps of target
+        Targets y includes: only [horizon] timesteps of target
+        horizon: Forecast horizon (e.g., 36 timesteps)
+        bad_day: Binary masks for low-quality data
+        
         """
         self.window = window
         self.horizon = horizon
         self.use_bad_day = use_bad_day
         self.mask_bad_days = mask_bad_days
-        
+        self.target_cols = target_cols
+        self.num_outputs = len(target_cols)        
         self.original_feature_cols = feature_cols.copy()
-        # Create actual feature columns based on use_bad_day flag
-        if use_bad_day:
-            # Include 'bad_day' as a feature if it exists
-            if 'bad_day' in df.columns and 'bad_day' not in feature_cols:
-                self.feature_cols = feature_cols + ['bad_day']
-            elif 'bad_day' in df.columns and 'bad_day' in feature_cols:
-                self.feature_cols = feature_cols 
-            else:
-                self.feature_cols = feature_cols
-                print(f"WARNING: use_bad_day=True but 'bad_day' column not found in DataFrame.")
+        
+        if bad_day_mapping is None:
+            self.bad_day_mapping = detect_bad_day_columns(df, target_cols)
         else:
-            # Exclude 'bad_day' from features
-            self.feature_cols = [col for col in feature_cols if col != 'bad_day']
+            self.bad_day_mapping = bad_day_mapping
+        
+        # Create actual feature columns based on use_bad_day flag
+        if use_bad_day and self.bad_day_mapping:
+            # Add all unique bad_day columns to features
+            unique_bad_cols = set(self.bad_day_mapping.values())
+            unique_bad_cols = [col for col in unique_bad_cols if col is not None]
+            
+            for col in unique_bad_cols:
+                if col not in feature_cols and col in df.columns:
+                    feature_cols = feature_cols + [col]
+            
+            self.feature_cols = feature_cols
+            print(f"Added bad_day columns to features: {unique_bad_cols}")
+        elif use_bad_day and not self.bad_day_mapping:
+            print(f"WARNING: use_bad_day=True but no bad_day mapping found")
+            self.feature_cols = feature_cols
+        else:
+            # Remove any bad_day columns if not using bad days
+            self.feature_cols = [col for col in feature_cols if not col.startswith('bad_day_')]
         
         # Get feature data
         self.X = df[self.feature_cols].to_numpy(np.float32)
-        self.y = df[target_col].to_numpy(np.float32)
+        
+        # Get all target data
+        self.y = df[target_cols].to_numpy(np.float32)  # (N, num_outputs)
         self.ts = df.index
 
-        # Get bad_day data for masking (even if not used as feature)
-        if 'bad_day' in df.columns:
-            self.bad_day = df['bad_day'].to_numpy(np.float32)
+        # Prepare bad_day arrays for each target
+        self.bad_day_arrays = {}
+        if self.bad_day_mapping:
+            for target_idx, target_name in enumerate(target_cols):
+                bad_col = self.bad_day_mapping.get(target_name)
+                if bad_col and bad_col in df.columns:
+                    self.bad_day_arrays[target_idx] = df[bad_col].to_numpy(np.float32)
+                    print(f"Target {target_name} will use {bad_col} for masking")
+                else:
+                    print(f"WARNING: No bad_day column for target '{target_name}', using all good days")
+                    self.bad_day_arrays[target_idx] = np.zeros(len(df), dtype=np.float32)
         else:
-            print(f"'bad_day' column not found. Assuming all days are valid (bad_day=0).")
-            self.bad_day = np.zeros_like(self.y, dtype=np.float32)
+            # No bad day masking
+            for target_idx in range(self.num_outputs):
+                self.bad_day_arrays[target_idx] = np.zeros(len(df), dtype=np.float32)
 
-        max_idx = len(df) - (window + horizon) + 1  # Input_size: window+horizon, Target_size: horizon
+        max_idx = len(df) - (window + horizon) + 1 
         self.valid_indices = list(range(max_idx))
         self.n = len(self.valid_indices)
 
-        print(f"Dataset Configuration:")
-        print(f"  use_bad_day={use_bad_day}, mask_bad_days={mask_bad_days}")
-        print(f"  Features used: {self.feature_cols}")
-        print(f"  Input shape per sample: ({window + horizon}, {len(self.feature_cols)})")
-        print(f"  Target shape per sample: ({horizon},)")
-        print(f"  Total samples: {self.n}")
+        print(f"\nMultiOutputDataset Configuration:")
+        print(f"use_bad_day={use_bad_day}, mask_bad_days={mask_bad_days}")
+        print(f"Features used: {self.feature_cols}")
+        print(f"Targets: {target_cols}")
+        print(f"Input shape per sample: ({window + horizon}, {len(self.feature_cols)})")
+        print(f"Target shape per sample: ({horizon}, {self.num_outputs})")
+        print(f"Total samples: {self.n}")
         
-        bad_day_counts = []
-        for idx in self.valid_indices:
-            bad_days_in_horizon = self.bad_day[idx + window: idx + window + horizon]
-            bad_day_counts.append(np.sum(bad_days_in_horizon > 0.5))
-
-        total_bad_days = sum(bad_day_counts)
-        print(f"Bad day statistics: {total_bad_days} horizon periods with bad_day=1 "
-              f"({total_bad_days/(self.n * horizon)*100:.1f}% of horizon steps)")
+        # Calculate statistics for bad days in horizon
+        bad_day_stats = {}
+        for target_idx in range(self.num_outputs):
+            bad_counts = []
+            for idx in self.valid_indices:
+                bad_in_horizon = self.bad_day_arrays[target_idx][idx + window: idx + window + horizon]
+                bad_counts.append(np.sum(bad_in_horizon > 0.5))
+            
+            total_bad = sum(bad_counts)
+            target_name = target_cols[target_idx]
+            bad_day_stats[target_name] = total_bad
         
+        for target_name, total_bad in bad_day_stats.items():
+            print(f"  {target_name}: {total_bad} bad horizon periods "
+                  f"({total_bad/(self.n * horizon)*100:.1f}% of steps)")
+        
+        # Debug: first sample alignment
         i = self.valid_indices[0]
-        print("-" * 100)
-        print("[DEBUG DATASET]")
+        print("\n[DEBUG MULTI-OUTPUT DATASET]")
         print(f"X covers: {self.ts[i]} → {self.ts[i + self.window + self.horizon - 1]}")
         print(f"y covers: {self.ts[i + self.window]} → {self.ts[i + self.window + self.horizon - 1]}")
-
-        print("First 5 y values:", self.y[i + self.window : i + self.window + 5])
-        print("First 5 bad_day:", self.bad_day[i + self.window : i + self.window + 5])
-        print("-" * 100)
+        print("First 5 y values (all targets):")
+        for j, col in enumerate(target_cols):
+            print(f"  {col}: {self.y[i + self.window : i + self.window + 5, j]}")
+        print("First 5 bad_day flags per target:")
+        for j, col in enumerate(target_cols):
+            bad_vals = self.bad_day_arrays[j][i + self.window : i + self.window + 5]
+            print(f"  {col}: {bad_vals}")
+        print("\n" + "-"*100)
 
     def __len__(self):
         return self.n
@@ -143,137 +248,124 @@ class MultiStepDataset(Dataset):
         # Input includes window + horizon timesteps
         x = self.X[i : i + self.window + self.horizon].copy()  # (window+horizon, features)
         
-        # Target starts after the entire input sequence
-        y = self.y[i + self.window : i + self.window + self.horizon].copy()
-        bad_day_mask = self.bad_day[i + self.window : i + self.window + self.horizon].copy()
+        y = self.y[i + self.window : i + self.window + self.horizon].copy()  # (horizon, num_outputs)
+        
+        # Create bad_day mask for each target (horizon, num_outputs)
+        bad_day_masks = []
+        for target_idx in range(self.num_outputs):
+            bad_mask = self.bad_day_arrays[target_idx][i + self.window : i + self.window + self.horizon].copy()
+            bad_day_masks.append(bad_mask)
+        
+        # Stack to (horizon, num_outputs)
+        bad_day_mask = np.stack(bad_day_masks, axis=-1) if bad_day_masks else np.zeros((self.horizon, self.num_outputs))
 
-        # Replace NaN targets with 0.0, loss will be masked for bad days
+        # Also mask NaN positions in y
+        nan_mask = np.isnan(y)  # (horizon, num_outputs)
+        bad_day_mask = np.where(nan_mask, 1.0, bad_day_mask)
+
+        # Replace NaN targets with 0.0
         y = np.nan_to_num(y, nan=0.0).astype(np.float32)
         x = np.nan_to_num(x, nan=0.0).astype(np.float32)
         
-        if self.mask_bad_days:
-            bad_day_mask = bad_day_mask.astype(np.float32)
+        if not self.mask_bad_days:
+            # If not masking bad days, set all masks to 0
+            bad_day_mask = np.zeros_like(bad_day_mask, dtype=np.float32)
         else:
-            bad_day_mask = np.zeros_like(y, dtype=np.float32)
+            bad_day_mask = bad_day_mask.astype(np.float32)
 
         return (
             torch.from_numpy(x),            # (window+horizon, features)
-            torch.from_numpy(y),            # (horizon,) 
-            torch.from_numpy(bad_day_mask), # (horizon,) 
+            torch.from_numpy(y),            # (horizon, num_outputs)
+            torch.from_numpy(bad_day_mask), # (horizon, num_outputs)
         )
 
     def get_timestamps_for_sample(self, idx):
         i = self.valid_indices[idx]
-        # Return timestamps for the target horizon
         return self.ts[i + self.window : i + self.window + self.horizon]
     
     def get_feature_columns(self):
         """Return the actual feature columns used in the dataset"""
         return self.feature_cols
+    
+    def get_target_columns(self):
+        """Return the target columns"""
+        return self.target_cols
+    
+    def get_bad_day_mapping(self):
+        """Return the bad_day mapping dictionary"""
+        return self.bad_day_mapping
 
-#NEW 
-class NonOverlappingMultiStepDataset(Dataset):
-    def __init__(self, df: pd.DataFrame,feature_cols, target_col, 
-                 window: int, horizon: int, use_bad_day: bool = True, mask_bad_days: bool = True, debug: bool = True):
+class NonOverlappingMultiOutputDataset(Dataset):
+    def __init__(self, df: pd.DataFrame, feature_cols, target_cols: List[str], 
+                 window: int, horizon: int, use_bad_day: bool = True, 
+                 mask_bad_days: bool = True, bad_day_mapping: Dict[str, str] = None):
         """
-        Creates NON-OVERLAPPING sliding window samples for time series (stride=horizon)        
-        Input X includes: [window + horizon] timesteps of features
-        Target y includes: [horizon] timesteps of target
-        
-        Non-overlapping sequences: stride=horizon, used for evaluation
+        Creates NON-OVERLAPPING sliding horizon samples for multi-output time series with target-specific bad day masking.
         """
         self.window = window
         self.horizon = horizon
         self.use_bad_day = use_bad_day
         self.mask_bad_days = mask_bad_days
-        self.debug = debug
+        self.target_cols = target_cols
+        self.num_outputs = len(target_cols)
         self.original_feature_cols = feature_cols.copy()
-        # Create actual feature columns based on use_bad_day flag
-        if use_bad_day:
-            if 'bad_day' in df.columns and 'bad_day' not in feature_cols:
-                self.feature_cols = feature_cols + ['bad_day']
-            else:
-                self.feature_cols = feature_cols
+        
+        if bad_day_mapping is None:
+            self.bad_day_mapping = detect_bad_day_columns(df, target_cols)
         else:
-            # Exclude 'bad_day' from features
-            self.feature_cols = [c for c in feature_cols if c != 'bad_day']
+            self.bad_day_mapping = bad_day_mapping
+        
+        # Create feature columns
+        if use_bad_day and self.bad_day_mapping:
+            unique_bad_cols = set(self.bad_day_mapping.values())
+            unique_bad_cols = [col for col in unique_bad_cols if col is not None]
+            
+            for col in unique_bad_cols:
+                if col not in feature_cols and col in df.columns:
+                    feature_cols = feature_cols + [col]
+            
+            self.feature_cols = feature_cols
+        elif use_bad_day and not self.bad_day_mapping:
+            self.feature_cols = feature_cols
+        else:
+            self.feature_cols = [col for col in feature_cols if not col.startswith('bad_day_')]
+        
         self.X = df[self.feature_cols].to_numpy(np.float32)
-        self.y = df[target_col].to_numpy(np.float32)
+        self.y = df[target_cols].to_numpy(np.float32)
         self.ts = df.index
 
-        # Get bad_day data for masking (even if not used as feature)
-        if 'bad_day' in df.columns:
-            self.bad_day = df['bad_day'].to_numpy(np.float32)
+        # Prepare bad_day arrays for each target
+        self.bad_day_arrays = {}
+        if self.bad_day_mapping:
+            for target_idx, target_name in enumerate(target_cols):
+                bad_col = self.bad_day_mapping.get(target_name)
+                if bad_col and bad_col in df.columns:
+                    self.bad_day_arrays[target_idx] = df[bad_col].to_numpy(np.float32)
+                else:
+                    self.bad_day_arrays[target_idx] = np.zeros(len(df), dtype=np.float32)
         else:
-            print("WARNING: 'bad_day' column missing → assuming all good days")
-            self.bad_day = np.zeros_like(self.y, dtype=np.float32)
+            for target_idx in range(self.num_outputs):
+                self.bad_day_arrays[target_idx] = np.zeros(len(df), dtype=np.float32)
 
-        # Calculate non-overlapping indices with stride = horizon
         total_length = len(df)
-
-        # stride = horizon : ensures no missing forecast steps
         stride = horizon
         max_idx = total_length - (window + horizon) + 1
-
-        self.valid_indices = list(range(0, max_idx, stride))
+        
+        self.valid_indices = []
+        i = 0
+        while i < max_idx:
+            self.valid_indices.append(i)
+            i += stride
+        
         self.n = len(self.valid_indices)
 
-        print(f"stride={stride}")
-        print(f"window={window}, horizon={horizon}")
-        print(f"Features: {self.feature_cols}")
-        print(f"Input shape: ({window + horizon}, {len(self.feature_cols)})")
-        print(f"Target shape: ({horizon},)")
-        print(f"Total samples: {self.n}")
-        
-        # Calculate statistics for bad days in horizon
-        bad_day_counts = []
-        for i in self.valid_indices:
-            bad_day_counts.append(np.sum(self.bad_day[i + window : i + window + horizon] > 0.5))
-
-        total_bad = int(np.sum(bad_day_counts))
-        print(
-            f"Bad-day steps in horizon: {total_bad} / {self.n*horizon} "
-            f"({100 * total_bad/(self.n*horizon):.2f}%)"
-        )
-
-        if debug:
-            self._debug_sequence_alignment()
-            self._debug_target_continuity()
-
-    def _debug_sequence_alignment(self, n_show=3):
-        print("\n[DEBUG] Sequence alignment check:")
-        for k in range(min(n_show, self.n)):
-            i = self.valid_indices[k]
-            xs = i
-            xe = i + self.window + self.horizon - 1
-            ys = i + self.window
-            ye = i + self.window + self.horizon - 1
-
-            print(f"Sample {k}")
-            print(f"  X: [{xs:6d} → {xe:6d}] | {self.ts[xs]} → {self.ts[xe]}")
-            print(f"  y: [{ys:6d} → {ye:6d}] | {self.ts[ys]} → {self.ts[ye]}")
-            print("")
-
-    def _debug_target_continuity(self, n_check=8):
-        print("\n[DEBUG] Target continuity check:")
-        prev_end = None
-        for k in range(min(n_check, self.n)):
-            i = self.valid_indices[k]
-            ys = i + self.window
-            ye = i + self.window + self.horizon - 1
-
-            if prev_end is not None:
-                gap = ys - prev_end - 1
-                status = "OK" if gap == 0 else f"GAP={gap}"
-            else:
-                status = "START"
-
-            print(
-                f"Sample {k}: y [{ys:6d} → {ye:6d}] | "
-                f"{self.ts[ys]} → {self.ts[ye]} | {status}"
-            )
-
-            prev_end = ye
+        print(f"NonOverlappingMultiOutputDataset Configuration (stride={horizon}):")
+        print(f"use_bad_day={use_bad_day}, mask_bad_days={mask_bad_days}")
+        print(f"Features used: {self.feature_cols}")
+        print(f"Targets: {target_cols}")
+        print(f"Input shape per sample: ({window + horizon}, {len(self.feature_cols)})")
+        print(f"Target shape per sample: ({horizon}, {self.num_outputs})")
+        print(f"Total non-overlapping samples: {self.n}")
 
     def __len__(self):
         return self.n
@@ -282,36 +374,48 @@ class NonOverlappingMultiStepDataset(Dataset):
         i = self.valid_indices[idx]
         x = self.X[i : i + self.window + self.horizon].copy()
         y = self.y[i + self.window : i + self.window + self.horizon].copy()
-        bad_day_mask = self.bad_day[i + self.window : i + self.window + self.horizon].copy()
-
-        x = np.nan_to_num(x, nan=0.0).astype(np.float32)
-        y = np.nan_to_num(y, nan=0.0).astype(np.float32)
         
-        if self.mask_bad_days:
-            bad_day_mask = bad_day_mask.astype(np.float32)
+        # Create bad_day mask for each target
+        bad_day_masks = []
+        for target_idx in range(self.num_outputs):
+            bad_mask = self.bad_day_arrays[target_idx][
+                i + self.window : i + self.window + self.horizon
+            ].copy()
+            bad_day_masks.append(bad_mask)
+        
+        bad_day_mask = np.stack(bad_day_masks, axis=-1) if bad_day_masks else np.zeros((self.horizon, self.num_outputs))
+
+        #Also mask NaN positions in y 
+        nan_mask = np.isnan(y)  # (horizon, num_outputs)
+        bad_day_mask = np.where(nan_mask, 1.0, bad_day_mask)
+
+        y = np.nan_to_num(y, nan=0.0).astype(np.float32)
+        x = np.nan_to_num(x, nan=0.0).astype(np.float32)
+        
+        if not self.mask_bad_days:
+            bad_day_mask = np.zeros_like(bad_day_mask, dtype=np.float32)
         else:
-            bad_day_mask = np.zeros_like(y, dtype=np.float32)
+            bad_day_mask = bad_day_mask.astype(np.float32)
 
         return (
             torch.from_numpy(x),            # (window+horizon, features)
-            torch.from_numpy(y),            # (horizon,) 
-            torch.from_numpy(bad_day_mask), # (horizon,) 
+            torch.from_numpy(y),            # (horizon, num_outputs)
+            torch.from_numpy(bad_day_mask), # (horizon, num_outputs)
         )
 
     def get_timestamps_for_sample(self, idx):
         i = self.valid_indices[idx]
-        # Return timestamps for the target horizon
         return self.ts[i + self.window : i + self.window + self.horizon]
     
     def get_feature_columns(self):
-        """Return the actual feature columns used in the dataset"""
         return self.feature_cols
     
+    def get_target_columns(self):
+        return self.target_cols
+    
     def get_valid_indices(self):
-        """Return the actual indices used in the dataset"""
         return self.valid_indices
 
-#NEW
 def split_train_val_from_sequences(
     X_seq,
     y_seq,
@@ -355,7 +459,7 @@ def split_train_val_from_sequences(
 
     return X_train, X_val, y_train, y_val, bad_train, bad_val, ts_train, ts_val
 
-def masked_mae_with_bad_day(pred, true, bad_day_mask):
+def masked_mae_with_multiple_bad_days(pred, true, bad_day_mask):
     """
     Compute MAE only on good days (bad_day == 0).
     Bad days contribute zero loss and zero gradient.
@@ -366,44 +470,37 @@ def masked_mae_with_bad_day(pred, true, bad_day_mask):
     Returns:
         Scalar MAE loss computed only on good days
     """
-    # mask for good days
-    good_day_mask = (1.0 - bad_day_mask)
+     # mask for good days
+    good_day_mask = 1.0 - bad_day_mask
     
-    diff = torch.abs(pred - true)    
+    diff = torch.abs(pred - true)
     masked_diff = diff * good_day_mask
     # Sum over all elements, divide by number of good days
-    total_good_days = torch.sum(good_day_mask) + 1e-8  
+    total_good_days = torch.sum(good_day_mask) + 1e-8
     
     return torch.sum(masked_diff) / total_good_days
 
-def compute_masked_metrics_with_bad_day(
-    true_series: pd.Series,
-    pred_series: pd.Series,
-    bad_series: pd.Series,
-):
+def compute_masked_metrics_with_bad_day_per_target(y_true, y_pred, bad_day_mask, target_idx: int, target_name: str,):
     """
-    Calculate metrics for model evaluation using continuous series.
-    Filters out NaN values and bad days.
-    Args:
-        true_series: Continuous time series of true values
-        pred_series: Continuous time series of predicted values
-        bad_series: Continuous time series of bad day mask (1=bad_day, 0=good_day)
-    Returns:
-        Dictionary of metrics computed only on good days
+    Calculate metrics for a single target output from CONTINUOUS series.
     """
-    common_index = true_series.index.intersection(pred_series.index).intersection(bad_series.index)
-    y_true = true_series.loc[common_index].values
-    y_pred = pred_series.loc[common_index].values
-    bad_flat = bad_series.loc[common_index].values
+    y_true_flat = np.asarray(y_true).flatten()
+    y_pred_flat = np.asarray(y_pred).flatten()
+    bad_flat = np.asarray(bad_day_mask).flatten()
+
+    y_true_flat = y_true_flat.astype(float)
+    y_pred_flat = y_pred_flat.astype(float)
+    bad_flat = bad_flat.astype(float)
     
     # Filter NaN values and bad days
-    mask = (~(np.isnan(y_true) | np.isnan(y_pred)) & (bad_flat < 0.5))
+    mask = (~(np.isnan(y_true_flat) | np.isnan(y_pred_flat)) & (bad_flat < 0.5))
     
-    y_true_clean = y_true[mask]
-    y_pred_clean = y_pred[mask]
+    y_true_clean = y_true_flat[mask]
+    y_pred_clean = y_pred_flat[mask]
 
     if len(y_true_clean) == 0:
         return {
+            "target": target_name,
             "MAE": np.nan,
             "RMSE": np.nan,
             "MAPE": np.nan,
@@ -412,8 +509,8 @@ def compute_masked_metrics_with_bad_day(
             "Skill_Score": np.nan,
             "Peak_Error": np.nan,
             "Data_Points": 0,
-            "Bad_Day_Excluded": np.sum(bad_flat > 0.5),
-            "Total_Points": len(y_true),
+            "Bad_Day_Excluded": 0,
+            "Total_Points": 0,
         }
 
     mse = np.mean((y_true_clean - y_pred_clean) ** 2)
@@ -456,6 +553,7 @@ def compute_masked_metrics_with_bad_day(
     peak_error = np.max(np.abs(y_true_clean - y_pred_clean))
 
     return {
+        "target": target_name,
         "MAE": mae,
         "RMSE": rmse,
         "MAPE": mape,
@@ -465,8 +563,28 @@ def compute_masked_metrics_with_bad_day(
         "Peak_Error": peak_error,
         "Data_Points": len(y_true_clean),
         "Bad_Day_Excluded": int(np.sum(bad_flat > 0.5)),
-        "Total_Points": len(y_true),
+        "Total_Points": len(y_true_flat),
     }
+
+def compute_metrics_from_continuous_series(series_dict_norm: Dict[str, Tuple[pd.Series, pd.Series, pd.Series]], target_cols: List[str], horizon: int = 36) -> Dict[str, Dict]:
+    """
+    Compute metrics for all targets from continuous normalized series. Each target uses its own bad day series.
+    """
+    all_metrics = {}
+    
+    for idx, target_name in enumerate(target_cols):
+        true_series, pred_series, bad_series = series_dict_norm[target_name]
+        
+        common_index = true_series.index.intersection(pred_series.index).intersection(bad_series.index)
+        
+        y_true = true_series.loc[common_index].values
+        y_pred = pred_series.loc[common_index].values
+        bad_mask = bad_series.loc[common_index].values
+        
+        metrics = compute_masked_metrics_with_bad_day_per_target(y_true, y_pred, bad_mask, idx, target_name)
+        all_metrics[target_name] = metrics
+    
+    return all_metrics
 
 def predict_with_loader(model, loader, device):
     if loader is None:
@@ -480,7 +598,7 @@ def predict_with_loader(model, loader, device):
         for xb, yb, bmb in loader:
             xb = xb.to(device)
             
-            # Forward pass - input now includes window+horizon
+            # Forward pass returns (B, H, num_outputs)
             preds = model(xb).cpu().numpy()
             
             # Store results
@@ -499,128 +617,132 @@ def predict_with_loader(model, loader, device):
     
     return preds_concat, trues_concat, bad_days_concat
 
-def build_continuous_series(dataset, preds, trues, bad_days, scaler, target_col: str = "P", mask_bad_days: bool = True, expected_freq: str = "10min"):
+def build_continuous_series_multi_output(dataset, preds, trues, bad_days, scaler_dict, target_cols, mask_bad_days: bool = True, expected_freq: str = "10min"):
     """
-    Build continuous normalized and denormalized time series for single target output
+    Build continuous normalized and denormalized time series for each target output
     with time continuity. Missing timestamps are filled with NaNs.
-
-    Args:
-        dataset: Dataset object
-        preds: Predictions array (n_samples, horizon)
-        trues: True values array (n_samples, horizon)
-        bad_days: Bad day mask (n_samples, horizon)
-        scaler: Scaler object for the target
-        target_col: Target column name (default: "P")
-        mask_bad_days: Whether to mask bad days
-        expected_freq: Expected time resolution (default: 10min)
-
-    Returns:
-        (results_norm, results_denorm) where each is a dict with:
-        target_col: (true_series, pred_series, bad_day_series)
+    
     """
     if preds is None or trues is None or bad_days is None or len(preds) == 0:
         empty = pd.Series(dtype=float)
         return (
-            {target_col: (empty.copy(), empty.copy(), empty.copy())},
-            {target_col: (empty.copy(), empty.copy(), empty.copy())}
+            {col: (empty.copy(), empty.copy(), empty.copy()) for col in target_cols},
+            {col: (empty.copy(), empty.copy(), empty.copy()) for col in target_cols}
         )
+
+    num_outputs = len(target_cols)
+    results_norm = {}
+    results_denorm = {}
+
+    print("\n" + "="*80)
+    print("BUILDING CONTINUOUS SERIES WITH TARGET-SPECIFIC BAD DAY MASKING")
+    print("="*80)
 
     print(f"Preds shape     : {preds.shape}")
     print(f"Trues shape     : {trues.shape}")
     print(f"Bad_days shape  : {bad_days.shape}")
     print(f"Dataset length : {len(dataset)}")
     print(f"Horizon         : {preds.shape[1]}")
+    print(f"Targets         : {num_outputs}")
     print(f"Mask bad days   : {mask_bad_days}")
 
-    # Extract predictions and truths
-    P_pred_norm = preds  # (n_samples, horizon) - normalised
-    P_true_norm = trues  # (n_samples, horizon) - normalised
+    for idx, target_name in enumerate(target_cols):
+        print(f"\nProcessing target: {target_name} [{idx}]")
 
-    # Denormalize values
-    P_pred_denorm = scaler.inverse_transform(P_pred_norm.reshape(-1, 1)).reshape(P_pred_norm.shape)
-    P_true_denorm = scaler.inverse_transform(P_true_norm.reshape(-1, 1)).reshape(P_true_norm.shape)
-    
-    print(f"Denormalized predictions range: [{P_pred_denorm.min():.4f}, {P_pred_denorm.max():.4f}]")
-    print(f"Denormalized truths range: [{P_true_denorm.min():.4f}, {P_true_denorm.max():.4f}]")
-    
-    n_samples = min(len(dataset), P_pred_norm.shape[0], P_true_norm.shape[0], bad_days.shape[0])
-    pred_map_norm = {}
-    true_map_norm = {}
-    pred_map_denorm = {}
-    true_map_denorm = {}
-    bad_map = {}
-    ts_count = {}
+        scaler = scaler_dict[target_name]
 
-    for i in range(n_samples):
-        timestamps = dataset.get_timestamps_for_sample(i)
-        for j, ts in enumerate(timestamps):
-            ts_count[ts] = ts_count.get(ts, 0) + 1
-            bad_val = bad_days[i, j]
-            
-            # Track bad_day for every timestamp
-            if ts not in bad_map:
-                bad_map[ts] = bad_val
+        # Extract predictions and trues
+        target_pred_norm = preds[:, :, idx]  # (n_samples, horizon) - NORMALIZED
+        target_true_norm = trues[:, :, idx]  # (n_samples, horizon) - NORMALIZED
+        target_bad_days = bad_days[:, :, idx]  # (n_samples, horizon) - TARGET-SPECIFIC
 
-            # Skip bad day samples if masking enabled
-            if mask_bad_days and bad_val > 0.5:
-                continue
-                
+        target_pred_denorm = scaler.inverse_transform(target_pred_norm.reshape(-1, 1)).reshape(target_pred_norm.shape)
+        target_true_denorm = scaler.inverse_transform(target_true_norm.reshape(-1, 1)).reshape(target_true_norm.shape)
+        
+        print(f"Denormalized predictions range: [{target_pred_denorm.min():.4f}, {target_pred_denorm.max():.4f}]")
+        print(f"Denormalized truths range: [{target_true_denorm.min():.4f}, {target_true_denorm.max():.4f}]")
+        
+        n_samples = min(len(dataset), target_pred_norm.shape[0], target_true_norm.shape[0], target_bad_days.shape[0])
+        
+        pred_map_norm = {}
+        true_map_norm = {}
+        pred_map_denorm = {}
+        true_map_denorm = {}
+        bad_map = {}
+        ts_count = {}
+
+        # Build maps
+        for i in range(n_samples):
+            timestamps = dataset.get_timestamps_for_sample(i)
+
+            for j, ts in enumerate(timestamps):
+                ts_count[ts] = ts_count.get(ts, 0) + 1
+
+                bad_val = target_bad_days[i, j]
+
+                if ts not in bad_map:
+                    bad_map[ts] = bad_val
+
+                # Skip bad day samples if masking enabled
+                if mask_bad_days and bad_val > 0.5:
+                    continue
+                    
             # Store first occurrence for predictions/truths (good days only when masking)
-            if ts not in pred_map_norm:
-                # Normalized values
-                pred_map_norm[ts] = P_pred_norm[i, j]
-                true_map_norm[ts] = P_true_norm[i, j]
-                # Denormalized values
-                pred_map_denorm[ts] = P_pred_denorm[i, j]
-                true_map_denorm[ts] = P_true_denorm[i, j]
+                if ts not in pred_map_norm:
+                    # Normalized values
+                    pred_map_norm[ts] = target_pred_norm[i, j]
+                    true_map_norm[ts] = target_true_norm[i, j]
+                    # Denormalized values
+                    pred_map_denorm[ts] = target_pred_denorm[i, j]
+                    true_map_denorm[ts] = target_true_denorm[i, j]
 
-    overlaps = {k: v for k, v in ts_count.items() if v > 1}
-    print(f"Unique timestamps found: {len(ts_count)}")
-    print(f"Timestamps: {len(overlaps)}")
+        # Build full time grid
+        if ts_count:
+            ts_min = min(ts_count.keys())
+            ts_max = max(ts_count.keys())
+        else:
+            empty_series = pd.Series(dtype=float)
+            results_norm[target_name] = (empty_series.copy(), empty_series.copy(), empty_series.copy())
+            results_denorm[target_name] = (empty_series.copy(), empty_series.copy(), empty_series.copy())
+            continue
 
-    if overlaps:
-        print(f"Max overlap count: {max(overlaps.values())}")
+        full_index = pd.date_range(
+            start=ts_min,
+            end=ts_max,
+            freq=expected_freq
+        )
 
-    ts_min = min(ts_count.keys())
-    ts_max = max(ts_count.keys())
+        print(f"Expected full grid size: {len(full_index)}")
+        print(f"Actual predicted timestamps: {len(pred_map_norm)}")
+        print(f"Missing timestamps (NaNs): {len(full_index) - len(pred_map_norm)}")
 
-    full_index = pd.date_range(
-        start=ts_min,
-        end=ts_max,
-        freq=expected_freq
-    )
+        pred_series_norm = pd.Series(pred_map_norm, name=f"{target_name}_pred_norm")
+        true_series_norm = pd.Series(true_map_norm, name=f"{target_name}_true_norm")
+        pred_series_denorm = pd.Series(pred_map_denorm, name=f"{target_name}_pred")
+        true_series_denorm = pd.Series(true_map_denorm, name=f"{target_name}_true")
+        bad_series = pd.Series(bad_map, name=f"bad_day_{target_name}")
 
-    print(f"Expected full grid size: {len(full_index)}")
-    print(f"Actual predicted timestamps: {len(pred_map_norm)}")
-    print(f"Missing timestamps (NaNs): {len(full_index) - len(pred_map_norm)}")
+        pred_series_norm = pred_series_norm.reindex(full_index)
+        true_series_norm = true_series_norm.reindex(full_index)
+        pred_series_denorm = pred_series_denorm.reindex(full_index)
+        true_series_denorm = true_series_denorm.reindex(full_index)
+        bad_series = bad_series.reindex(full_index)
 
-    pred_series_norm = pd.Series(pred_map_norm, name=f"{target_col}_pred_norm")
-    true_series_norm = pd.Series(true_map_norm, name=f"{target_col}_true_norm")
-    pred_series_denorm = pd.Series(pred_map_denorm, name=f"{target_col}_pred")
-    true_series_denorm = pd.Series(true_map_denorm, name=f"{target_col}_true")
-    bad_series = pd.Series(bad_map, name="bad_day")
+        print(f"NaNs pred_norm   : {pred_series_norm.isna().sum()}")
+        print(f"NaNs true_norm   : {true_series_norm.isna().sum()}")
+        print(f"NaNs pred_denorm : {pred_series_denorm.isna().sum()}")
+        print(f"NaNs true_denorm : {true_series_denorm.isna().sum()}")
+        print(f"NaNs bad_day     : {bad_series.isna().sum()}")
 
-    pred_series_norm = pred_series_norm.reindex(full_index)
-    true_series_norm = true_series_norm.reindex(full_index)
-    pred_series_denorm = pred_series_denorm.reindex(full_index)
-    true_series_denorm = true_series_denorm.reindex(full_index)
-    bad_series = bad_series.reindex(full_index)
-
-    print(f"NaNs pred_norm   : {pred_series_norm.isna().sum()}")
-    print(f"NaNs true_norm   : {true_series_norm.isna().sum()}")
-    print(f"NaNs pred_denorm : {pred_series_denorm.isna().sum()}")
-    print(f"NaNs true_denorm : {true_series_denorm.isna().sum()}")
-    print(f"NaNs bad_day     : {bad_series.isna().sum()}")
-    print("="*80 + "\n")
-
-    results_norm = {target_col: (true_series_norm, pred_series_norm, bad_series)}
-    results_denorm = {target_col: (true_series_denorm, pred_series_denorm, bad_series)}
+        # Store
+        results_norm[target_name] = (true_series_norm, pred_series_norm, bad_series)
+        results_denorm[target_name] = (true_series_denorm, pred_series_denorm, bad_series)
 
     return results_norm, results_denorm
 
 def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, model_file):
     """
-    Train LSTM with continuous forward passes and masked loss on bad days.
+    Train multi-output LSTM with target-specific bad day masking.
     """
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -639,11 +761,11 @@ def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, mo
             xb = xb.to(device)
             yb = yb.to(device)
             bmb = bmb.to(device)
-            optimizer.zero_grad()            
+            optimizer.zero_grad()
             pred = model(xb)
             
-            # Compute loss only on good days
-            loss = masked_mae_with_bad_day(pred, yb, bmb)
+            # Compute loss with target specific masking
+            loss = masked_mae_with_multiple_bad_days(pred, yb, bmb)
             
             if loss.requires_grad:
                 loss.backward()
@@ -662,11 +784,11 @@ def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, mo
                 )
             
             if epoch == 1 and batch_idx == 0:
-                print("-" * 100)
                 print("\n[DEBUG]")
                 print("Input:", xb.shape)
                 print("Pred:", pred.shape)
                 print("Target:", yb.shape)
+                print("Bad mask:", bmb.shape)
                 print("-" * 100)
 
         avg_train_loss = np.mean(train_losses) if train_losses else float("inf")
@@ -681,7 +803,7 @@ def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, mo
                 yb = yb.to(device)
                 bmb = bmb.to(device)
                 pred = model(xb)
-                loss = masked_mae_with_bad_day(pred, yb, bmb)
+                loss = masked_mae_with_multiple_bad_days(pred, yb, bmb)
                 val_losses.append(loss.item())
 
         avg_val_loss = np.mean(val_losses) if val_losses else float("inf")
@@ -694,7 +816,7 @@ def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, mo
             best_val = avg_val_loss
             wait = 0
             torch.save(model.state_dict(), model_file)
-            print(f"  -> Saved model (val loss: {avg_val_loss:.6f})")
+            print(f"Saved model (val loss: {avg_val_loss:.6f})")
         else:
             wait += 1
             if wait >= patience:
@@ -713,16 +835,19 @@ def train_loop(model, train_loader, val_loader, epochs, lr, patience, device, mo
     model.load_state_dict(state_dict)
     return history
 
-def save_scatter_ax(ax, y_true, y_pred, title):
-    """
-    Create scatter plot, ignoring NaN values.
-    """
-    # Flatten and remove NaNs
+def save_scatter_ax(ax, y_true, y_pred, bad_series, title, mask_bad_days=True):
+    """Create scatter plot, ignoring NaNs and target-specific bad days."""
     yt = y_true.flatten()
     yp = y_pred.flatten()
-    
-    # Find valid pairs (both non-NaN)
-    valid_mask = ~(np.isnan(yt) | np.isnan(yp))
+    bad = bad_series.values.flatten() if bad_series is not None else None
+    nan_mask = np.isnan(yt) | np.isnan(yp)
+
+    if mask_bad_days and bad is not None:
+        bad_mask = bad >= 0.5
+    else:
+        bad_mask = np.zeros_like(nan_mask, dtype=bool)
+
+    valid_mask = (~nan_mask) & (~bad_mask)
     yt_valid = yt[valid_mask]
     yp_valid = yp[valid_mask]
     
@@ -731,10 +856,11 @@ def save_scatter_ax(ax, y_true, y_pred, title):
                 ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f"{title} (No data)")
         return
-    
+
     ax.scatter(yt_valid, yp_valid, s=2, alpha=0.5)
     lims = [min(yt_valid.min(), yp_valid.min()), 
             max(yt_valid.max(), yp_valid.max())]
+
     ax.plot(lims, lims, 'r--', alpha=0.7, linewidth=1)
     ax.set_xlabel("Actual (normalized)")
     ax.set_ylabel("Predicted (normalized)")
@@ -742,9 +868,7 @@ def save_scatter_ax(ax, y_true, y_pred, title):
     ax.grid(True, alpha=0.3)
 
 def save_training_history_ax(ax, history):
-    """
-    Plot training and validation loss curves.
-    """
+    """Plot training history."""
     epochs = range(1, len(history["train_loss"]) + 1)
     ax.plot(epochs, history["train_loss"], '-', label='Train Loss', linewidth=2)
     ax.plot(epochs, history["val_loss"], '-', label='Val Loss', linewidth=2)
@@ -760,548 +884,264 @@ def save_training_history_ax(ax, history):
                 transform=ax.transAxes, ha='right', va='top',
                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
 
-def plot_time_series_ax(ax, true_series, pred_series, bad_series, title):
-    """
-    Plot time series, handling NaNs and bad days.
-    """
+def plot_time_series_ax(ax, true_series, pred_series, bad_series, title, mask_bad_days=True):
+    """Plot time series excluding NaNs and target-specific bad days."""
     if true_series.empty or pred_series.empty:
-        ax.text(0.5, 0.5, "No data", 
-                ha='center', va='center', transform=ax.transAxes)
+        ax.text(0.5, 0.5, "No data", ha='center', va='center', transform=ax.transAxes)
         ax.set_title(f"{title} (No data)")
         return
-    
-    valid_mask = (~np.isnan(true_series.values)) & (bad_series.values < 0.5)
-    if np.any(valid_mask):
-        valid_times = true_series.index[valid_mask]
-        ax.plot(valid_times, true_series.values[valid_mask], 
-                label="Actual", linewidth=1.5, alpha=0.8)
-        ax.plot(valid_times, pred_series.reindex(true_series.index).values[valid_mask], 
-                "--", label="Predicted", linewidth=1.2, alpha=0.8)
-        
-        # Calculate and display metrics
-        y_true = true_series.values[valid_mask]
-        y_pred = pred_series.reindex(true_series.index).values[valid_mask]
-        mae = np.mean(np.abs(y_true - y_pred))
-        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
-        
-        ax.text(0.02, 0.98, f"MAE: {mae:.3f}\nRMSE: {rmse:.3f}",
-                transform=ax.transAxes, ha='left', va='top',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+    yt = true_series.values
+    yp = pred_series.reindex(true_series.index).values
+    bad = bad_series.values if bad_series is not None else None
+    nan_mask = np.isnan(yt) | np.isnan(yp)
+
+    if mask_bad_days and bad is not None:
+        bad_mask = bad >= 0.5
     else:
-        ax.text(0.5, 0.5, "No valid true values", 
+        bad_mask = np.zeros_like(nan_mask, dtype=bool)
+
+    valid_mask = (~nan_mask) & (~bad_mask)
+
+    if not np.any(valid_mask):
+        ax.text(0.5, 0.5, "No valid data",
                 ha='center', va='center', transform=ax.transAxes)
-    
+        ax.set_title(title)
+        return
+
+    times = true_series.index[valid_mask]
+    y_true = yt[valid_mask]
+    y_pred = yp[valid_mask]
+    ax.plot(times, y_true, label="Actual", linewidth=1.5, alpha=0.85)
+    ax.plot(times, y_pred, "--", label="Predicted", linewidth=1.2, alpha=0.85)
+
+    mae = np.mean(np.abs(y_true - y_pred))
+    rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
+
+    ax.text(0.02, 0.98,
+            f"MAE: {mae:.3f}\nRMSE: {rmse:.3f}",
+            transform=ax.transAxes, ha='left', va='top',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
     ax.set_title(title)
     ax.legend(loc='upper right', fontsize=8)
     ax.grid(True, alpha=0.3)
     ax.set_ylabel("Value")
-    
     plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
 
-def build_pdf_report(out_pdf_path, model_info, train_stats, val_stats, test_stats,
-                     train_shape, val_shape, test_shape,
-                     feature_cols, metrics_tr, metrics_va, metrics_te,
-                     history, series_dict_train, series_dict_val, series_dict_test=None):
+def save_error_histogram_ax(ax, y_true, y_pred, bad_series, title, bins=60, mask_bad_days=True):
+    """Plot error distribution histogram with target-specific bad day exclusion."""
+    yt = y_true.flatten()
+    yp = y_pred.flatten()
+    bad = bad_series.values.flatten() if bad_series is not None else None
 
-    wrapped_features = textwrap.wrap(", ".join(feature_cols), width=90)
-    
-    with PdfPages(out_pdf_path) as pdf:
-        # PAGE 1: Data Statistics Summary
-        fig = plt.figure(figsize=(11.69, 8.27))  # A4 landscape
-        plt.axis("off")
-        
-        text_lines = [
-            "DATA STATISTICS SUMMARY",
-            "=" * 50,
-            "",
-            "TRAIN DATA:",
-            f"  Period: {train_stats['start_date']} to {train_stats['end_date']}",
-            f"  Days: {train_stats['num_days']}",
-            f"  Rows: {train_stats['num_rows']}",
-            f"  Bad days: {train_stats['bad_days']} ({train_stats['bad_days_pct']:.1f}%)",
-            "",
-        ]
-        
-        if train_stats['feature_stats']:
-            text_lines.append("  Features Statistics (scaled values):")
-            for feat, stats in train_stats['feature_stats'].items():
-                text_lines.append(f"    {feat:15s}: min={stats['min']:6.3f}, max={stats['max']:6.3f}, "
-                                 f"mean={stats['mean']:6.3f}, std={stats['std']:6.3f}")
-        
-        text_lines.extend([
-            "",
-            "VALIDATION DATA:",
-        ])
-        if val_stats is not None:
-            text_lines.extend([
-                f"  Period: {val_stats['start_date']} to {val_stats['end_date']}",
-                f"  Days: {val_stats['num_days']}",
-                f"  Rows: {val_stats['num_rows']}",
-                f"  Bad days: {val_stats['bad_days']} ({val_stats['bad_days_pct']:.1f}%)",
-            ])
-        else:
-            text_lines.append("  Created from train split")
-        
-        text_lines.extend([
-            "",
-            "TEST DATA:",
-        ])
-        
-        if test_stats:
-            text_lines.extend([
-                f"  Period: {test_stats['start_date']} to {test_stats['end_date']}",
-                f"  Days: {test_stats['num_days']}",
-                f"  Rows: {test_stats['num_rows']}",
-                f"  Bad days: {test_stats['bad_days']} ({test_stats['bad_days_pct']:.1f}%)",
-            ])
-        else:
-            text_lines.append("  Not available")
-        
-        # Get flag configuration from model_info
-        use_bad_day = model_info['data_config']['features']['use_bad_day']
-        mask_bad_days = model_info['data_config']['features']['mask_bad_days']
-        
-        # Determine mode description
-        if not use_bad_day and not mask_bad_days:
-            mode_desc = "Mode 1: Don't feed bad_day as input & Don't mask bad days in loss"
-        elif use_bad_day and mask_bad_days:
-            mode_desc = "Mode 2: Feed bad_day as input & Mask bad days in loss"
-        elif not use_bad_day and mask_bad_days:
-            mode_desc = "Mode 3: Don't feed bad_day as input & Mask bad days in loss"
-        elif use_bad_day and not mask_bad_days:
-            mode_desc = "Mode 4: Feed bad_day as input & Don't mask bad days in loss"
-        
-        text_lines.extend([
-            "",
-            "=" * 50,
-            "",
-            "MODEL CONFIGURATION",
-            mode_desc,
-            "",
-            "Bad_day Configuration:",
-            f"  use_bad_day={use_bad_day} (bad_day {'included' if use_bad_day else 'excluded'} as input feature)",
-            f"  mask_bad_days={mask_bad_days} (bad days {'masked' if mask_bad_days else 'not masked'} in loss calculation)",
-            "",
-            "Features (in feed order):",
-        ])
-        
-        # Add features in feed order
-        for i, feat in enumerate(feature_cols):
-            text_lines.append(f"  {i+1}. {feat}")
-        
-        text_lines.extend([
-            "",
-            "Hyperparameters:",
-            f"  WINDOW={model_info['dataset_info']['window']}, HORIZON={model_info['dataset_info']['horizon']}, BATCH_SIZE={model_info['training_config']['hyperparameters']['batch_size']}",
-            f"  EPOCHS={model_info['training_config']['hyperparameters']['epochs']}, LR={model_info['training_config']['hyperparameters']['lr']:.6f}, PATIENCE={model_info['training_config']['hyperparameters']['patience']}",
-            "",
-            "Model parameters:",
-            f"  hidden_size={model_info['architecture']['hidden_size']}, num_layers={model_info['architecture']['num_layers']}, dropout={model_info['architecture']['dropout']}",
-            f"  total_parameters={model_info['architecture']['total_params']:,}",
-            "",
-            "Data splits (sequences):",
-            f"  Train sequences: {train_shape}",
-            f"  Val sequences:   {val_shape}",
-            f"  Test sequences:  {test_shape if test_stats else 'N/A'}",
-        ])
-        
-        plt.text(
-            0.02, 0.98,
-            "\n".join(text_lines),
-            va="top", ha="left",
-            fontsize=8, family="monospace",
-            transform=fig.transFigure
-        )
-        
-        pdf.savefig(fig, bbox_inches='tight')
-        plt.close()
-        
-        # PAGE 2: Metrics Table
-        fig = plt.figure(figsize=(8.27, 11.69))
-        plt.axis("off")
-        
-        # Get flag configuration again for metrics page
-        use_bad_day = model_info['data_config']['features']['use_bad_day']
-        mask_bad_days = model_info['data_config']['features']['mask_bad_days']
-        
-        # Build text content
-        text_lines = [
-            "MODEL PERFORMANCE METRICS",
-            f"Report generated on: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            "",
-            f"Bad_day Configuration: use_bad_day={use_bad_day}, mask_bad_days={mask_bad_days}",
-            "",
-            "Feature list (in feed order):"
-        ]
-        text_lines.extend(["  " + line for line in wrapped_features])
-        plt.text(
-            0.02, 0.98,
-            "\n".join(text_lines),
-            va="top", ha="left",
-            fontsize=9, family="monospace",
-            transform=fig.transFigure
-        )
-        
-        # Metrics table
-        metric_keys = [
-            "MAE", "RMSE", "MAPE", "R2", 
-            "Directional_Accuracy", "Skill_Score", "Peak_Error", 
-            "Data_Points", "Bad_Day_Excluded", "Total_Points"
-        ]
-        
-        def make_metrics_table(ax, title):
-            # Create columns based on whether test data exists
-            if test_stats and metrics_te is not None:
-                table_data = [["Metric", "Train", "Val", "Test"]]
-                
-                for key in metric_keys:
-                    if key == "Data_Points" or key == "Bad_Day_Excluded" or key == "Total_Points":
-                        row = [
-                            key,
-                            f"{metrics_tr.get(key, 0)}",
-                            f"{metrics_va.get(key, 0)}",
-                            f"{metrics_te.get(key, 0)}" if metrics_te else "N/A"
-                        ]
-                    else:
-                        row = [
-                            key,
-                            f"{metrics_tr.get(key, np.nan):.4f}",
-                            f"{metrics_va.get(key, np.nan):.4f}",
-                            f"{metrics_te.get(key, np.nan):.4f}" if metrics_te else "N/A"
-                        ]
-                    table_data.append(row)
-            else:
-                table_data = [["Metric", "Train", "Val"]]
-                
-                for key in metric_keys:
-                    if key == "Data_Points" or key == "Bad_Day_Excluded" or key == "Total_Points":
-                        row = [
-                            key,
-                            f"{metrics_tr.get(key, 0)}",
-                            f"{metrics_va.get(key, 0)}",
-                        ]
-                    else:
-                        row = [
-                            key,
-                            f"{metrics_tr.get(key, np.nan):.4f}",
-                            f"{metrics_va.get(key, np.nan):.4f}",
-                        ]
-                    table_data.append(row)
-            
-            # Create table
-            table = ax.table(
-                cellText=table_data,
-                cellLoc='center',
-                loc='center',
-                bbox=[0, 0, 1, 1]
-            )
-            
-            # Style table
-            table.auto_set_font_size(False)
-            table.set_fontsize(8)
-            
-            # Header styling
-            num_cols = len(table_data[0])
-            for j in range(num_cols):
-                table[(0, j)].set_facecolor('#DDDDDD')
-                table[(0, j)].set_text_props(weight='bold')
-            
-            ax.set_title(title, fontsize=10, weight='bold', pad=20)
-            ax.axis('off')
-        
-        # Add table
-        ax_table = fig.add_axes([0.1, 0.15, 0.8, 0.35])
-        table_title = "METRICS"
-        if mask_bad_days:
-            table_title += " (computed only on good days)"
-        else:
-            table_title += " (computed on all days)"
-        
-        if test_stats:
-            table_title += " - Train/Val/Test"
-        make_metrics_table(ax_table, table_title)
-        
-        pdf.savefig(fig, bbox_inches='tight')
-        plt.close()
-        
-        # PAGE 3: Scatter plots + history
-        fig, axes = plt.subplots(2, 2, figsize=(11.69, 8.27))
-        target_col = list(series_dict_train.keys())[0]
+    nan_mask = np.isnan(yt) | np.isnan(yp)
 
-        # Prepare data for scatter plots from normalized series
-        train_true_series_denorm, train_pred_series_denorm, train_bad_series_denorm = series_dict_train[target_col]
-        val_true_series_denorm, val_pred_series_denorm, val_bad_series_denorm = series_dict_val[target_col]
-        
-        # Filter out NaNs and bad days for scatter plots
-        train_valid_mask = ((~np.isnan(train_true_series_denorm.values)) & (~np.isnan(train_pred_series_denorm.values)) & (train_bad_series_denorm == 0))
-        val_valid_mask = ((~np.isnan(val_true_series_denorm.values)) & (~np.isnan(val_pred_series_denorm.values)) & (val_bad_series_denorm == 0))
-        
-        train_y_true_denorm = train_true_series_denorm.values[train_valid_mask]
-        train_y_pred_denorm = train_pred_series_denorm.values[train_valid_mask]
-        val_y_true_denorm = val_true_series_denorm.values[val_valid_mask]
-        val_y_pred_denorm = val_pred_series_denorm.values[val_valid_mask]
-        
-        save_scatter_ax(axes[0, 0], train_y_true_denorm, train_y_pred_denorm, "Train: Pred vs Actual (De-Normalized)")
-        save_scatter_ax(axes[0, 1], val_y_true_denorm, val_y_pred_denorm, "Val: Pred vs Actual (De-Normalized)")
-        
-        # Error distribution histograms
-        if len(train_y_true_denorm) > 0:
-            train_errors = train_y_pred_denorm - train_y_true_denorm
-            axes[1, 0].hist(train_errors, bins=50, alpha=0.7, edgecolor='black', density=False)
-            axes[1, 0].axvline(x=0, color='red', linestyle='--', linewidth=1, label='Zero')
-            axes[1, 0].axvline(x=np.mean(train_errors), color='green', linestyle='-', linewidth=1.5, 
-                              label=f'Mean: {np.mean(train_errors):.3f}')
-            axes[1, 0].set_title("Train Error Distribution (De-Normalized)")
-            axes[1, 0].set_xlabel("Error (Predicted - Actual)")
-            axes[1, 0].set_ylabel("Frequency")
-            axes[1, 0].legend()
-            axes[1, 0].grid(True, alpha=0.3)
-        else:
-            axes[1, 0].text(0.5, 0.5, "No train data", ha='center', va='center')
-        
-        save_training_history_ax(axes[1, 1], history)
-        
-        plt.tight_layout()
-        pdf.savefig(fig)
-        plt.close()
-        
-        # PAGE 4: Time series plots
-        if test_stats and series_dict_test is not None:
-            fig, axes = plt.subplots(3, 1, figsize=(11.69, 16))
-            train_true_series, train_pred_series, train_bad_series = series_dict_train[target_col]
-            val_true_series, val_pred_series, val_bad_series = series_dict_val[target_col]
-            if series_dict_test is not None:
-                test_true_series, test_pred_series, test_bad_series = series_dict_test[target_col]
-            
-            plot_time_series_ax(axes[0], train_true_series, train_pred_series, train_bad_series, "Train: Actual vs Predicted")
-            plot_time_series_ax(axes[1], val_true_series, val_pred_series, val_bad_series, "Validation: Actual vs Predicted")
-            plot_time_series_ax(axes[2], test_true_series, test_pred_series, test_bad_series, "Test: Actual vs Predicted")
-            axes[2].set_xlabel("Time")
-        else:
-            fig, axes = plt.subplots(2, 1, figsize=(11.69, 12))
-            train_true_series, train_pred_series, train_bad_series = series_dict_train[target_col]
-            val_true_series, val_pred_series, val_bad_series = series_dict_val[target_col]
-            
-            plot_time_series_ax(axes[0], train_true_series, train_pred_series, train_bad_series, "Train: Actual vs Predicted")
-            plot_time_series_ax(axes[1], val_true_series, val_pred_series, val_bad_series, "Validation: Actual vs Predicted")
-            axes[1].set_xlabel("Time")
-        
-        plt.tight_layout()
-        pdf.savefig(fig)
-        plt.close()
-        
-        # PAGE 5: Additional Analysis
-        if test_stats and series_dict_test is not None:
-            fig, axes = plt.subplots(2, 2, figsize=(11.69, 8.27))
-            
-            # Test scatter plot
-            test_true_series_denorm, test_pred_series_denorm, test_bad_series_denorm = series_dict_test[target_col]
-            test_valid_mask = ((~np.isnan(test_true_series_denorm.values)) & (~np.isnan(test_pred_series_denorm.values)) & (test_bad_series_denorm == 0))
-            test_y_true_denorm = test_true_series_denorm.values[test_valid_mask]
-            test_y_pred_denorm = test_pred_series_denorm.values[test_valid_mask]
-            
-            save_scatter_ax(axes[0, 0], test_y_true_denorm, test_y_pred_denorm, "Test: Pred vs Actual")
-            
-            # Test error distribution (de-normalized)
-            if len(test_y_true_denorm) > 0:
-                test_errors = test_y_pred_denorm - test_y_true_denorm
-                axes[0, 1].hist(test_errors, bins=50, alpha=0.7, edgecolor='black', density=False, color='orange')
-                axes[0, 1].axvline(x=0, color='red', linestyle='--', linewidth=1, label='Zero')
-                axes[0, 1].axvline(x=np.mean(test_errors), color='green', linestyle='-', linewidth=1.5, 
-                                  label=f'Mean: {np.mean(test_errors):.3f}')
-                axes[0, 1].set_title("Test Error Distribution (De-Normalized)")
-                axes[0, 1].set_xlabel("Error (Predicted - Actual)")
-                axes[0, 1].set_ylabel("Frequency")
-                axes[0, 1].legend()
-                axes[0, 1].grid(True, alpha=0.3)
-            else:
-                axes[0, 1].text(0.5, 0.5, "No test data", ha='center', va='center')
-            
-            # Data coverage comparison
-            split_names = ['Train', 'Val']
-            train_true_series_norm, _, _ = series_dict_train[target_col]
-            val_true_series_norm, _, _ = series_dict_val[target_col]
-            split_counts = [len(train_true_series_norm.dropna()), len(val_true_series_norm.dropna())]
-            colors = ['blue', 'green']
-            
-            if series_dict_test is not None:
-                test_true_series_norm, _, _ = series_dict_test[target_col]
-                split_names.append('Test')
-                split_counts.append(len(test_true_series_norm.dropna()))
-                colors.append('orange')
-            
-            axes[1, 0].bar(split_names, split_counts, color=colors)
-            axes[1, 0].set_title('Data Points Comparison (After Bad Day Filtering)')
-            axes[1, 0].set_ylabel('Number of Points')
-            axes[1, 0].grid(True, alpha=0.3, axis='y')
-            
-            for i, v in enumerate(split_counts):
-                axes[1, 0].text(i, v + max(split_counts) * 0.01, str(v), ha='center')
-            
-            # Test error over time (using denormalized data)
-            if test_y_true_denorm.size > 0:
-                valid_mask = ~np.isnan(test_y_true_denorm)
-                if np.any(valid_mask):
-                    test_times = test_true_series_denorm.index[test_valid_mask][valid_mask]
-                    test_errors_masked = (test_y_true_denorm - test_y_pred_denorm)[valid_mask]
+    if mask_bad_days and bad is not None:
+        bad_mask = bad >= 0.5
+    else:
+        bad_mask = np.zeros_like(nan_mask, dtype=bool)
 
-                    axes[1, 1].plot(test_times, test_errors_masked, '-', alpha=0.7, linewidth=1)
-                    axes[1, 1].axhline(y=0, linestyle='--', linewidth=1)
-                    axes[1, 1].set_title("Test Errors Over Time (De-Normalized)")
-                    axes[1, 1].set_xlabel("Time")
-                    axes[1, 1].set_ylabel("Error")
-                    axes[1, 1].grid(True, alpha=0.3)
-                    plt.setp(axes[1, 1].xaxis.get_majorticklabels(), rotation=45, ha='right')
-            
-            plt.tight_layout()
-            pdf.savefig(fig)
-            plt.close()
-        
-        print(f"PDF report saved to {out_pdf_path}")
+    valid_mask = (~nan_mask) & (~bad_mask)
 
-def save_daily_pred_vs_true_plots(
-    df: pd.DataFrame,
-    series_dict: Dict[str, Tuple[pd.Series, pd.Series, pd.Series]],
-    split_name: str,
-    plots_dir: Path,
-    n_days: int = 10,
-    irr_col: str = "Irr",
-    min_points_per_day: int = 45,  
-    random_seed: int | None = 42,
-):
-    if random_seed is not None:
-        random.seed(random_seed)
+    yt_valid = yt[valid_mask]
+    yp_valid = yp[valid_mask]
 
-    df = df.copy()
-    
-    # Get the target column name from the series_dict keys
-    target_col = list(series_dict.keys())[0]
-    true_series, pred_series, _ = series_dict[target_col]
-    
-    df = df.join(true_series.rename(f"{target_col}_true"), how="left")
-    df = df.join(pred_series.rename(f"{target_col}_pred"), how="left")
-
-    df["date"] = df.index.date
-
-    valid_days = []
-
-    for day, day_df in df.groupby("date"):
-        # skip bad days
-        if (day_df["bad_day"] == 1).any():
-            continue
-        day_df_valid = day_df.dropna(subset=[f"{target_col}_true", f"{target_col}_pred", irr_col])
-        if day_df_valid.empty:
-            continue
-
-        # ensure sufficient samples in the day
-        if len(day_df_valid) < min_points_per_day:
-            continue
-
-        valid_days.append(day)
-
-    if len(valid_days) == 0:
-        print("[ERROR] No valid complete days found")
+    if len(yt_valid) == 0:
+        ax.text(0.5, 0.5, "No valid data",
+                ha='center', va='center', transform=ax.transAxes)
+        ax.set_title(f"{title} (No data)")
         return
 
-    n_select = min(n_days, len(valid_days))
-    selected_days = random.sample(valid_days, n_select)
+    errors = yp_valid - yt_valid
+    mean_err = np.mean(errors)
 
-    print(f"[INFO] Selected {n_select} random complete days for plotting")
+    ax.hist(errors, bins=bins, density=False, alpha=0.7)
+    ax.axvline(0.0, linestyle='--', linewidth=1.5, color='red', label='Zero error')
+    ax.axvline(mean_err, linestyle='-', linewidth=1.5, color='green', label=f'Mean = {mean_err:.4f}')
 
-    for day in selected_days:
-        day_df = df[df["date"] == day]
-        day_df = day_df.dropna(subset=[f"{target_col}_true", f"{target_col}_pred", irr_col])
+    ax.set_title(title)
+    ax.set_xlabel("Prediction Error (Pred - True)")
+    ax.set_ylabel("Frequency")
+    ax.legend()
+    ax.grid(True, alpha=0.25)
 
-        times = day_df.index
-        month = times[0].to_period("M")
-
-        fig, ax1 = plt.subplots(figsize=(10, 4))
-
-        ax1.plot(
-            times,
-            day_df[f"{target_col}_true"],
-            label="True",
-            linewidth=2,
-            marker="o",
-            markersize=3,
-        )
-        ax1.plot(
-            times,
-            day_df[f"{target_col}_pred"],
-            label="Pred",
-            linestyle="--",
-            marker="x",
-            markersize=4,
-        )
-
-        ax1.set_xlabel("Time (hour)")
-        ax1.set_ylabel(f"{target_col} (unscaled)")
-        ax1.set_title(f"{split_name} | {month} | {day}")
-        ax1.grid(True, alpha=0.3)
-        ax1.xaxis.set_major_locator(mdates.HourLocator(interval=1))
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-        fig.autofmt_xdate()
-
-        ax2 = ax1.twinx()
-        ax2.plot(times, day_df[irr_col], label="Irr (scaled)", alpha=0.6)
-        ax2.set_ylabel("Irr (scaled)")
-
-        lines1, labels1 = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(
-            lines1 + lines2,
-            labels1 + labels2,
-            loc="upper center",
-            ncol=3,
-            fontsize=8,
-        )
-
-        plt.tight_layout()
-        fname = plots_dir / f"{split_name.lower()}_{day}_pred_vs_true.png"
-        plt.savefig(fname, dpi=150)
-        plt.close()
-
-def get_data_statistics(df: pd.DataFrame, split_name: str = "") -> dict:
-    if df is None or len(df) == 0:
-        return None
+def save_target_visualizations(
+    target_name: str,
+    series_dict_train: Dict[str, Tuple[pd.Series, pd.Series, pd.Series]],
+    series_dict_val: Dict[str, Tuple[pd.Series, pd.Series, pd.Series]],
+    series_dict_test: Dict[str, Tuple[pd.Series, pd.Series, pd.Series]],
+    plots_dir: Path,
+    mask_bad_days: bool = True
+):
+    """
+        Save per-target visualizations:
+        1. Scatter plot (1 row, 3 cols: train/val/test)
+        2. Error histogram (1 row, 3 cols: train/val/test)
+        3. Continuous series (3 rows, 1 col: train/val/test)
+    """
+    splits = [
+        ("Train", series_dict_train),
+        ("Val", series_dict_val),
+        ("Test", series_dict_test) if series_dict_test else None
+    ]
+    splits = [s for s in splits if s is not None]
     
-    stats = {
-        "split_name": split_name,
-        "num_rows": len(df),
-        "start_date": df.index.min().strftime('%Y-%m-%d'),
-        "end_date": df.index.max().strftime('%Y-%m-%d'),
-        "num_days": (df.index.max() - df.index.min()).days + 1,
-    }
+    #1. SCATTER PLOT
+    fig, axes = plt.subplots(1, len(splits), figsize=(6 * len(splits), 5))
+    if len(splits) == 1:
+        axes = [axes]
     
-    # Calculate bad days
-    if 'bad_day' in df.columns:
-        bad_days = df['bad_day'].sum()
-        stats['bad_days'] = int(bad_days)
-        stats['bad_days_pct'] = (bad_days / len(df)) * 100
-    else:
-        stats['bad_days'] = 0
-        stats['bad_days_pct'] = 0.0
+    for idx, (split_name, series_dict) in enumerate(splits):
+        if target_name in series_dict:
+            true_s, pred_s, bad_s = series_dict[target_name]
+            save_scatter_ax(
+                axes[idx],
+                true_s.values,
+                pred_s.reindex(true_s.index).values,
+                bad_s,
+                f"{split_name}",
+                mask_bad_days=mask_bad_days
+            )
+        else:
+            axes[idx].set_visible(False)
     
-    # Calculate feature statistics
-    feature_stats = {}
-    for col in df.columns:
-        if col != 'bad_day' and pd.api.types.is_numeric_dtype(df[col]):
-            feature_stats[col] = {
-                'min': float(df[col].min()),
-                'max': float(df[col].max()),
-                'mean': float(df[col].mean()),
-                'std': float(df[col].std()),
-                'nan_count': int(df[col].isna().sum()),
-                'nan_pct': float(df[col].isna().sum() / len(df) * 100)
-            }
+    plt.suptitle(f"{target_name} - Scatter Plots", fontsize=14)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    scatter_file = plots_dir / f"{target_name}_scatter.png"
+    plt.savefig(scatter_file, dpi=150)
+    plt.close()
+    print(f"Saved: {scatter_file}")
     
-    stats['feature_stats'] = feature_stats
+    #2. ERROR HISTOGRAM
+    fig, axes = plt.subplots(1, len(splits), figsize=(6 * len(splits), 5))
+    if len(splits) == 1:
+        axes = [axes]
     
-    return stats
+    for idx, (split_name, series_dict) in enumerate(splits):
+        if target_name in series_dict:
+            true_s, pred_s, bad_s = series_dict[target_name]
+            save_error_histogram_ax(
+                axes[idx],
+                true_s.values,
+                pred_s.reindex(true_s.index).values,
+                bad_s,
+                f"{split_name}",
+                bins=60,
+                mask_bad_days=mask_bad_days
+            )
+        else:
+            axes[idx].set_visible(False)
+    
+    plt.suptitle(f"{target_name} - Error Histograms", fontsize=14)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    hist_file = plots_dir / f"{target_name}_histogram.png"
+    plt.savefig(hist_file, dpi=150)
+    plt.close()
+    print(f"Saved: {hist_file}")
+    
+    #3. CONTINUOUS SERIES
+    fig, axes = plt.subplots(len(splits), 1, figsize=(12, 5 * len(splits)), sharex=False)
+    if len(splits) == 1:
+        axes = [axes]
+    
+    for idx, (split_name, series_dict) in enumerate(splits):
+        if target_name in series_dict:
+            true_s, pred_s, bad_s = series_dict[target_name]
+            plot_time_series_ax(
+                axes[idx],
+                true_s,
+                pred_s,
+                bad_s,
+                f"{split_name}",
+                mask_bad_days=mask_bad_days
+            )
+        else:
+            axes[idx].set_visible(False)
+    
+    plt.suptitle(f"{target_name} - Continuous Time Series", fontsize=14)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    series_file = plots_dir / f"{target_name}_continuous.png"
+    plt.savefig(series_file, dpi=150)
+    plt.close()
+    print(f"Saved: {series_file}")
 
-def run_lstm_training(
+def save_all_metrics_to_txt(
+    metrics_tr: Dict[str, Dict],
+    metrics_va: Dict[str, Dict],
+    metrics_te: Dict[str, Dict],
+    target_cols: List[str],
+    output_file: Path,
+    model_info: dict
+):
+    """
+        Save all metrics for all targets to a common text file.
+    """
+    with open(output_file, "w") as f:
+        f.write("="*80 + "\n")
+        f.write("MULTI-OUTPUT LSTM MODEL METRICS\n")
+        f.write("="*80 + "\n\n")
+        
+        f.write("MODEL CONFIGURATION:\n")
+        f.write(f"  Targets: {', '.join(target_cols)}\n")
+        f.write(f"  Bad day mapping: {model_info['data_config'].get('bad_day_mapping', {})}\n")
+        f.write(f"  Window: {model_info['data_config']['window_horizon']['window']}, Horizon: {model_info['data_config']['window_horizon']['horizon']}\n")
+        f.write(f"  Hidden size: {model_info['architecture']['hidden_size']}, Layers: {model_info['architecture']['num_layers']}\n")
+        f.write(f"  Dropout: {model_info['architecture']['dropout']}\n")
+        f.write(f"  use_bad_day: {model_info['data_config']['features']['use_bad_day']}, mask_bad_days: {model_info['data_config']['features']['mask_bad_days']}\n")
+        f.write(f"  Total parameters: {model_info['architecture']['total_params']:,}\n\n")
+        
+        f.write("="*80 + "\n")
+        f.write("METRICS (computed from continuous normalized series with bad day exclusion)\n")
+        f.write("="*80 + "\n\n")
+        
+        for target_name in target_cols:
+            f.write(f"\n{'='*80}\n")
+            f.write(f"TARGET: {target_name}\n")
+            f.write(f"{'='*80}\n")
+            
+            f.write("\nTRAIN METRICS:\n")
+            f.write("-" * 40 + "\n")
+            if target_name in metrics_tr:
+                for k, v in metrics_tr[target_name].items():
+                    if k == 'target':
+                        continue
+                    if isinstance(v, float):
+                        f.write(f"  {k:25s}: {v:.6f}\n")
+                    else:
+                        f.write(f"  {k:25s}: {v}\n")
+            
+            f.write("\nVALIDATION METRICS:\n")
+            f.write("-" * 40 + "\n")
+            if target_name in metrics_va:
+                for k, v in metrics_va[target_name].items():
+                    if k == 'target':
+                        continue
+                    if isinstance(v, float):
+                        f.write(f"  {k:25s}: {v:.6f}\n")
+                    else:
+                        f.write(f"  {k:25s}: {v}\n")
+            
+            if metrics_te and target_name in metrics_te:
+                f.write("\nTEST METRICS:\n")
+                f.write("-" * 40 + "\n")
+                for k, v in metrics_te[target_name].items():
+                    if k == 'target':
+                        continue
+                    if isinstance(v, float):
+                        f.write(f"  {k:25s}: {v:.6f}\n")
+                    else:
+                        f.write(f"  {k:25s}: {v}\n")
+        
+        f.write("END OF METRICS REPORT\n")
+        f.write("="*80 + "\n")
+    
+    print(f"Saved metrics to: {output_file}")
+
+def run_lstm_training_multi_output(
     training_data_dir: str,
     output_dir: str = None,
+    target_cols: List[str] = None,
     window: int = 48,
     horizon: int = 12,
     batch_size: int = 36,
@@ -1311,35 +1151,25 @@ def run_lstm_training(
     hidden_size: int = 32,
     num_layers: int = 4,
     dropout: float = 0.1,
-    target_col: str = "P",
     use_bad_day: bool = False,
     mask_bad_days: bool = False,
     validation_split: float = 0.15,
     random_seed: int = 42,
 ):
     """
-    Check if train data exists
-    Check if validation data exists and is not empty
-    If no validation data, split from train using sequences
-    Check if test data exists and is not empty
-    Only evaluate test if it exists
-    
-    Training uses overlapping sequences (MultiStepDataset with stride=1)
-    Evaluation uses non-overlapping sequences (NonOverlappingMultiStepDataset with stride=horizon)
-    
-    Flag modes:
-    1. use_bad_day=False, mask_bad_days=False: Don't feed bad_day as input & Don't mask bad days in loss
-    2. use_bad_day=True, mask_bad_days=True: Feed bad_day as input & Mask bad days in loss
-    3. use_bad_day=False, mask_bad_days=True: Don't feed bad_day as input & Mask bad days in loss
-    4. use_bad_day=True, mask_bad_days=False: Feed bad_day as input & Don't mask bad days in loss
+    Run multi-output LSTM training with target specific bad day masking.
     """
+    # Default target
+    if target_cols is None:
+        target_cols = ['P']
+
     def set_all_seeds(seed: int):
         import os
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)        
+        torch.cuda.manual_seed_all(seed)
         os.environ['PYTHONHASHSEED'] = str(seed)
         os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
         torch.backends.cudnn.deterministic = True
@@ -1347,24 +1177,19 @@ def run_lstm_training(
         try:
             torch.use_deterministic_algorithms(True)
         except AttributeError:
-            pass        
+            pass
         print(f"All random seeds set to: {seed}")
         print(f"Deterministic mode: ON")
-    # Set all seeds at the beginning
-    set_all_seeds(random_seed)
-    # Print flag configuration
-    print("\nFlag config:")
-    print(f"use_bad_day={use_bad_day}")
-    print(f"mask_bad_days={mask_bad_days}")
     
-    if not use_bad_day and not mask_bad_days:
-        print("\nMODE 1: Don't feed bad_day as input & Don't mask bad days in loss")
-    elif use_bad_day and mask_bad_days:
-        print("\nMODE 2: Feed bad_day as input & Mask bad days in loss")
-    elif not use_bad_day and mask_bad_days:
-        print("\nMODE 3: Don't feed bad_day as input & Mask bad days in loss")
-    elif use_bad_day and not mask_bad_days:
-        print("\nMODE 4: Feed bad_day as input & Don't mask bad days in loss")
+    set_all_seeds(random_seed)
+    
+    print("\n" + "="*60)
+    print("MULTI-OUTPUT LSTM TRAINING WITH TARGET-SPECIFIC BAD DAY MASKING")
+    print(f"Target outputs: {target_cols}")
+    print(f"FLAG CONFIGURATION:")
+    print(f"  use_bad_day={use_bad_day}")
+    print(f"  mask_bad_days={mask_bad_days}")
+    print("="*60 + "\n")
     
     # Set output directory
     OUT_DIR = Path(output_dir) if output_dir else Path(training_data_dir)
@@ -1375,104 +1200,89 @@ def run_lstm_training(
     VAL_FPATH = Path(training_data_dir) / "val_scaled.parquet"
     TEST_FPATH = Path(training_data_dir) / "test_scaled.parquet"
     timestamp = datetime.now().strftime("%d.%m.%Y.%H%M%S")
-    MODEL_FILE = OUT_DIR / f"{timestamp}_model.pt"
-    METRICS_LOG = OUT_DIR / "training_metrics.txt"
-    PLOTS_DIR = OUT_DIR / "plots"
+    MODEL_FILE = OUT_DIR / f"{timestamp}_model_multi.pt"
+    METRICS_LOG = OUT_DIR / "training_metrics_multi.txt"
+    PLOTS_DIR = OUT_DIR / "plots_multi"
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
-    # Load the P scaler
-    P_SCALER_FILE = Path(training_data_dir) / "p_scaling.pkl"
     
-    # Load scaler
-    with open(P_SCALER_FILE, "rb") as f:
+    # Load scalers, one per target
+    SCALER_FILE = Path(training_data_dir) / "p_scalers.pkl"
+    with open(SCALER_FILE, "rb") as f:
         scaler_data = pickle.load(f)
-        p_scaler = scaler_data["scaler"]
+    
+    # Build scaler dictionary
+    scaler_dict = {}
+    for target_name in target_cols:
+        if target_name in scaler_data:
+            scaler_dict[target_name] = scaler_data[target_name]
+        elif "scaler" in scaler_data:  # Fallback for single target
+            scaler_dict[target_name] = scaler_data["scaler"]
+        else:
+            raise ValueError(f"Scaler for target '{target_name}' not found in {SCALER_FILE}")
     
     DEVICE = torch.device("cpu")
     print(f"Using device: {DEVICE} (CPU forced)")
     
-    required_files = [TRAIN_FPATH, P_SCALER_FILE]
+    # Check for required files
+    required_files = [TRAIN_FPATH, SCALER_FILE]
     for fpath in required_files:
         if not fpath.exists():
             raise FileNotFoundError(f"Required file not found: {fpath}")
     
-    # Check if validation data exists AND IS NOT EMPTY
-    val_data_exists = False
-    val_df = None
-    if VAL_FPATH.exists():
-        try:
-            val_df = pd.read_parquet(VAL_FPATH)
-            if len(val_df) > 0:
-                val_data_exists = True
-                print(f"\nValidation data found: YES ({len(val_df)} rows)")
-            else:
-                print(f"\nValidation data found but empty: will split from train")
-                val_df = None
-        except Exception as e:
-            warnings.warn(f"\nError reading validation data: {e}. Will split from train.")
-            val_df = None
-    else:
-        print(f"\nValidation data not found: will split from train")
-    
-    # Check if test data exists and is not empty
-    test_data_exists = False
-    test_df = None
-    if TEST_FPATH.exists():
-        try:
-            test_df = pd.read_parquet(TEST_FPATH)
-            if len(test_df) > 0:
-                test_data_exists = True
-                print(f"Test data found: YES ({len(test_df)} rows)")
-            else:
-                print(f"Test data found but empty: SKIPPING test evaluation")
-                test_df = None
-        except Exception as e:
-            warnings.warn(f"Error reading test data: {e}. Skipping test evaluation.")
-            test_df = None
-    else:
-        print(f"Test data not found: SKIPPING test evaluation")
-    
-    print(f"Validation data available: {'YES (separate file)' if val_data_exists else 'NO (will split from train)'}")
-    print(f"Test data available: {'YES' if test_data_exists else 'NO'}")
+    # Check validation and test data
+    val_data_exists = VAL_FPATH.exists()
+    test_data_exists = TEST_FPATH.exists()
     
     print("\nLoading data...")
     train_df = pd.read_parquet(TRAIN_FPATH)
     
-    # Get data statistics
-    train_stats = get_data_statistics(train_df, "Train")
-    val_stats = None
-    test_stats = None
+    val_df = None
+    if val_data_exists:
+        try:
+            val_df = pd.read_parquet(VAL_FPATH)
+            if len(val_df) == 0:
+                val_df = None
+                val_data_exists = False
+        except Exception as e:
+            warnings.warn(f"Error reading validation data: {e}")
+            val_df = None
+            val_data_exists = False
     
-    initial_feature_cols = [c for c in train_df.columns if c != target_col]    
-    print(f"\nInitial features available: {initial_feature_cols}")    
+    test_df = None
+    if test_data_exists:
+        try:
+            test_df = pd.read_parquet(TEST_FPATH)
+            if len(test_df) == 0:
+                test_df = None
+                test_data_exists = False
+        except Exception as e:
+            warnings.warn(f"Error reading test data: {e}")
+            test_df = None
+            test_data_exists = False
     
-    print("\n Creating training datasets (Overlapping with stride = 1)")
-    print("-" * 100)
+    for target in target_cols:
+        if target not in train_df.columns:
+            raise ValueError(f"Target column '{target}' not found in training data")
+    
+    #feature columns list (exclude targets)
+    initial_feature_cols = [c for c in train_df.columns if c not in target_cols]
+    
+    print(f"\nInitial features available: {initial_feature_cols}")
+    print(f"Target columns: {target_cols}")
+    
+    # Detect bad day mapping from data
+    bad_day_mapping = detect_bad_day_columns(train_df, target_cols)
+    
+    print("\n" + "="*60)
+    print("CREATING TRAINING DATASETS (OVERLAPPING, stride=1)")
+    print("="*60)
     
     if val_data_exists:
-        val_stats = get_data_statistics(val_df, "Validation")
-        print(f"Using separate validation dataset")
-        print(f"Train range: {train_df.index.min()} to {train_df.index.max()}")
-        print(f"Val range: {val_df.index.min()} to {val_df.index.max()}")
-        
-        # TRAINING datasets (overlapping)
-        train_ds = MultiStepDataset(train_df, initial_feature_cols, target_col, window, horizon,
-                                   use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
-        val_ds = MultiStepDataset(val_df, initial_feature_cols, target_col, window, horizon,
-                                 use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
-        
-        print(f"\n[OVERLAPPING DATASETS FOR TRAINING]")
-        print(f"Train sequences : {len(train_ds)} (stride=1)")
-        print(f"Val sequences   : {len(val_ds)} (stride=1)")
-        
+        train_ds = MultiOutputDataset(train_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
+        val_ds = MultiOutputDataset(val_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
     else:
-        # Split validation from train using sequences
         print(f"\nCreating validation split from training data ({validation_split:.0%})")
-        print(f"Train range: {train_df.index.min()} to {train_df.index.max()}")
-        
-        # Create base dataset from training data
-        train_ds_base = MultiStepDataset(train_df, initial_feature_cols, target_col, window, horizon,
-                                        use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
-        
+        train_ds_base = MultiOutputDataset(train_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
         # Extract sequences + timestamps
         X_seq, y_seq, bad_seq, ts_seq = [], [], [], []
         for i in range(len(train_ds_base)):
@@ -1493,13 +1303,14 @@ def run_lstm_training(
             use_validation_set=True,
         )
         
-        # Create custom dataset classes for split data
         class SplitDataset(Dataset):
-            def __init__(self, X, y, bad, timestamps):
+            def __init__(self, X, y, bad, timestamps, target_cols, bad_day_mapping):
                 self.X = X
                 self.y = y
                 self.bad = bad
                 self.timestamps = timestamps
+                self.target_cols = target_cols
+                self.bad_day_mapping = bad_day_mapping
             
             def __len__(self):
                 return len(self.X)
@@ -1509,56 +1320,44 @@ def run_lstm_training(
             
             def get_timestamps_for_sample(self, idx):
                 return self.timestamps[idx]
+            
+            def get_target_columns(self):
+                return self.target_cols
+            
+            def get_bad_day_mapping(self):
+                return self.bad_day_mapping
         
-        # Create datasets
-        train_ds = SplitDataset(torch.from_numpy(X_tr), torch.from_numpy(y_tr), 
-                               torch.from_numpy(bad_tr), ts_tr)
-        val_ds = SplitDataset(torch.from_numpy(X_va), torch.from_numpy(y_va),
-                             torch.from_numpy(bad_va), ts_va)
+        train_ds = SplitDataset(torch.from_numpy(X_tr), torch.from_numpy(y_tr), torch.from_numpy(bad_tr), ts_tr, target_cols, bad_day_mapping)
+        val_ds = SplitDataset(torch.from_numpy(X_va), torch.from_numpy(y_va), torch.from_numpy(bad_va), ts_va, target_cols, bad_day_mapping)
     
-    # Create test dataset for TRAINING (overlapping) if available
+    # Test dataset (overlapping)
     test_ds_train = None
     if test_data_exists:
-        test_stats = get_data_statistics(test_df, "Test")
-        print(f"\nTest range: {test_df.index.min()} to {test_df.index.max()}")
-        
-        test_ds_train = MultiStepDataset(test_df, initial_feature_cols, target_col, window, horizon,
-                                        use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
-        print(f"\nTest sequences: {len(test_ds_train)} (stride=1, for training evaluation)")
+        test_ds_train = MultiOutputDataset(test_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
+    print("\n" + "="*60)
+    print("CREATING EVALUATION DATASETS (NON-OVERLAPPING, stride=horizon)")
+    print("="*60)
     
-    print("\nCreating eval datasets (non-overlapping, stride = horizon)")
-    print("-" * 100)
-    
-    # Create non-overlapping datasets for evaluation
-    train_ds_eval = NonOverlappingMultiStepDataset(train_df, initial_feature_cols, target_col, window, horizon,
-                                                  use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
+    train_ds_eval = NonOverlappingMultiOutputDataset(train_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
     
     if val_data_exists:
-        val_ds_eval = NonOverlappingMultiStepDataset(val_df, initial_feature_cols, target_col, window, horizon,
-                                                    use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
+        val_ds_eval = NonOverlappingMultiOutputDataset(val_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
     else:
         val_ds_eval = None
-        print("Creating non-overlapping validation from train split...")
     
     test_ds_eval = None
     if test_data_exists:
-        test_ds_eval = NonOverlappingMultiStepDataset(test_df, initial_feature_cols, target_col, window, horizon,
-                                                     use_bad_day=use_bad_day, mask_bad_days=mask_bad_days)
-        print(f"Test sequences (non-overlapping): {len(test_ds_eval)} (stride={horizon})")
+        test_ds_eval = NonOverlappingMultiOutputDataset(test_df, initial_feature_cols, target_cols, window, horizon, use_bad_day=use_bad_day, mask_bad_days=mask_bad_days, bad_day_mapping=bad_day_mapping)
     
-    if hasattr(train_ds, 'get_feature_columns'):
-        actual_feature_cols = train_ds.get_feature_columns()
-    elif 'train_ds_base' in locals():
-        actual_feature_cols = train_ds_base.get_feature_columns()
-    else:
-        actual_feature_cols = initial_feature_cols
-        if use_bad_day and 'bad_day' in train_df.columns and 'bad_day' not in actual_feature_cols:
-            actual_feature_cols = actual_feature_cols + ['bad_day']
+    # Get feature columns
+    actual_feature_cols = train_ds_base.feature_cols
     
     input_size = len(actual_feature_cols)
+    num_outputs = len(target_cols)
     
-    print(f"\nActual features used (in feed order): {actual_feature_cols}")
+    print(f"\nActual features used: {actual_feature_cols}")
     print(f"Input size: {input_size} features")
+    print(f"Number of outputs: {num_outputs}")
     
     def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2**32
@@ -1584,20 +1383,19 @@ def run_lstm_training(
         generator=g
     )
     
+    # Debug loader shapes
     xb, yb, bmb = next(iter(train_loader))
-    print("-" * 100)
     print("\n[DEBUG TRAINING LOADER]")
     print("xb:", xb.shape)   # (B, W+H, F)
-    print("yb:", yb.shape)   # (B, H)
-    print("bmb:", bmb.shape) # (B, H)
-    print("-" * 100)
+    print("yb:", yb.shape)   # (B, H, num_outputs)
+    print("bmb:", bmb.shape) # (B, H, num_outputs)
 
-    print("\nCreating model...")
-    model = LSTMModel(
+    print("\nCreating multi-output model...")
+    model = MultiOutputLSTMModel(
         input_size=input_size,
         hidden_size=hidden_size,
         num_layers=num_layers,
-        output_size=1,
+        num_outputs=num_outputs,
         dropout=dropout,
         forecast_steps=horizon
     )
@@ -1619,7 +1417,6 @@ def run_lstm_training(
     print("MAKING PREDICTIONS FOR EVALUATION (NON-OVERLAPPING)")
     print("="*60)
     
-    # Create dataloaders for evaluation (non-overlapping)
     train_loader_eval = DataLoader(
         train_ds_eval, 
         batch_size=batch_size, 
@@ -1628,7 +1425,7 @@ def run_lstm_training(
         generator=g
     )
     
-    if val_data_exists:
+    if val_data_exists and val_ds_eval is not None:
         val_loader_eval = DataLoader(
             val_ds_eval, 
             batch_size=batch_size, 
@@ -1638,15 +1435,13 @@ def run_lstm_training(
         )
     else:
         val_loader_eval = DataLoader(
-            val_ds,  # Use original val_ds (already split properly)
+            val_ds,
             batch_size=batch_size, 
             shuffle=False,
             worker_init_fn=seed_worker,
             generator=g
         )
-        print("Using original validation split for evaluation (already properly split)")
     
-    # Test dataloader for evaluation
     test_loader_eval = DataLoader(
         test_ds_eval, 
         batch_size=batch_size, 
@@ -1659,151 +1454,64 @@ def run_lstm_training(
     preds_train_eval, trues_train_eval, bad_train_eval = predict_with_loader(model, train_loader_eval, DEVICE)
     preds_val_eval, trues_val_eval, bad_val_eval = predict_with_loader(model, val_loader_eval, DEVICE)
     
-    # Test predictions (only if test exists)
     preds_test_eval, trues_test_eval, bad_test_eval = None, None, None
     if test_loader_eval:
         preds_test_eval, trues_test_eval, bad_test_eval = predict_with_loader(model, test_loader_eval, DEVICE)
-        print(f"Test predictions (non-overlapping): {preds_test_eval.shape if preds_test_eval is not None else 'None'}")
     
-    print(f"\nPrediction shapes (non-overlapping):")
-    print(f"Train: {preds_train_eval.shape if preds_train_eval is not None else 'None'}")
-    print(f"Val:   {preds_val_eval.shape if preds_val_eval is not None else 'None'}")
-    if preds_test_eval is not None:
-        print(f"Test:  {preds_test_eval.shape}")
+    print("\n" + "="*60)
+    print("BUILDING CONTINUOUS SERIES FOR ALL TARGETS")
+    print("="*60)
     
-    print("\nBuilding continuous series from NON-OVERLAPPING predictions...")
-    # Build continuous series (normalized and denormalized)
-    series_dict_train_norm, series_dict_train_denorm = build_continuous_series(
+    series_dict_train_norm, series_dict_train_denorm = build_continuous_series_multi_output(
         train_ds_eval, preds_train_eval, trues_train_eval, bad_train_eval, 
-        p_scaler, target_col=target_col, mask_bad_days=mask_bad_days  # Add target_col
+        scaler_dict, target_cols, mask_bad_days=mask_bad_days
     )
-
+    
     if val_data_exists and val_ds_eval is not None:
-        series_dict_val_norm, series_dict_val_denorm = build_continuous_series(
+        series_dict_val_norm, series_dict_val_denorm = build_continuous_series_multi_output(
             val_ds_eval, preds_val_eval, trues_val_eval, bad_val_eval, 
-            p_scaler, target_col=target_col, mask_bad_days=mask_bad_days  # Add target_col
+            scaler_dict, target_cols, mask_bad_days=mask_bad_days
         )
     else:
-        series_dict_val_norm, series_dict_val_denorm = build_continuous_series(
+        series_dict_val_norm, series_dict_val_denorm = build_continuous_series_multi_output(
             val_ds, preds_val_eval, trues_val_eval, bad_val_eval, 
-            p_scaler, target_col=target_col, mask_bad_days=mask_bad_days  # Add target_col
+            scaler_dict, target_cols, mask_bad_days=mask_bad_days
         )
-
+    
+    series_dict_test_norm, series_dict_test_denorm = None, None
     if test_ds_eval and preds_test_eval is not None:
-        series_dict_test_norm, series_dict_test_denorm = build_continuous_series(
+        series_dict_test_norm, series_dict_test_denorm = build_continuous_series_multi_output(
             test_ds_eval, preds_test_eval, trues_test_eval, bad_test_eval, 
-            p_scaler, target_col=target_col, mask_bad_days=mask_bad_days  # Add target_col
+            scaler_dict, target_cols, mask_bad_days=mask_bad_days
         )
-
-    print(f"\nSeries lengths from CONTINUOUS SERIES:")
-    train_true_series_norm, _, _ = series_dict_train_norm[target_col]
-    val_true_series_norm, _, _ = series_dict_val_norm[target_col]
-    print(f"Train: {len(train_true_series_norm.dropna())} valid points (from continuous series)")
-    print(f"Val:   {len(val_true_series_norm.dropna())} valid points (from continuous series)")
-    if series_dict_test_norm is not None:
-        test_true_series_norm, _, _ = series_dict_test_norm[target_col]
-        print(f"Test:  {len(test_true_series_norm.dropna())} valid points (from continuous series)")
     
-    print("\nComputing metrics from CONTINUOUS NORMALIZED SERIES...")
-    train_true_series_norm, train_pred_series_norm, train_bad_series = series_dict_train_norm[target_col]
-    val_true_series_norm, val_pred_series_norm, val_bad_series = series_dict_val_norm[target_col]
+    print("\n" + "="*60)
+    print("COMPUTING METRICS FROM CONTINUOUS NORMALIZED SERIES")
+    print("="*60)
     
-    metrics_tr = compute_masked_metrics_with_bad_day(train_true_series_norm, train_pred_series_norm, train_bad_series)
-    metrics_va = compute_masked_metrics_with_bad_day(val_true_series_norm, val_pred_series_norm, val_bad_series)
+    metrics_tr = compute_metrics_from_continuous_series(series_dict_train_norm, target_cols, horizon)
+    metrics_va = compute_metrics_from_continuous_series(series_dict_val_norm, target_cols, horizon)
     metrics_te = None
-    
     if series_dict_test_norm is not None:
-        test_true_series_norm, test_pred_series_norm, test_bad_series = series_dict_test_norm[target_col]
-        metrics_te = compute_masked_metrics_with_bad_day(test_true_series_norm, test_pred_series_norm, test_bad_series)
+        metrics_te = compute_metrics_from_continuous_series(series_dict_test_norm, target_cols, horizon)
     
-    # Save metrics
-    with open(METRICS_LOG, "w") as f:
-        f.write(f"LSTM Model\n")
-        f.write(f"Window={window}, Horizon={horizon}\n")
-        f.write(f"Model: hidden_size={hidden_size}, layers={num_layers}, dropout={dropout}\n")
-        f.write(f"\nFlag Configuration:\n")
-        f.write(f"  use_bad_day={use_bad_day}\n")
-        f.write(f"  mask_bad_days={mask_bad_days}\n")
-        
-        if not use_bad_day and not mask_bad_days:
-            f.write("  MODE 1: Don't feed bad_day as input & Don't mask bad days in loss\n")
-        elif use_bad_day and mask_bad_days:
-            f.write("  MODE 2: Feed bad_day as input & Mask bad days in loss\n")
-        elif not use_bad_day and mask_bad_days:
-            f.write("  MODE 3: Don't feed bad_day as input & Mask bad days in loss\n")
-        elif use_bad_day and not mask_bad_days:
-            f.write("  MODE 4: Feed bad_day as input & Don't mask bad days in loss\n")
-        
-        f.write(f"\nFeatures (in feed order):\n")
-        for i, feat in enumerate(actual_feature_cols):
-            f.write(f"  {i+1}. {feat}\n")
-        
-        f.write(f"\nTRAINING: Overlapping sequences (stride=1)\n")
-        f.write(f"EVALUATION: Non-overlapping sequences (stride={horizon})\n")
-        f.write(f"Metrics computed from: Continuous normalized series (10-min grid)\n")
-        f.write(f"Validation: {'Separate dataset' if val_data_exists else f'Split from train ({validation_split:.0%})'}\n")
-        f.write(f"Test data: {'Available' if test_data_exists else 'Not available'}\n")
-        f.write(f"\nSequence counts:\n")
-        f.write(f"  Train overlapping: {len(train_ds)}\n")
-        f.write(f"  Train non-overlapping: {len(train_ds_eval)}\n")
-        f.write(f"  Val overlapping: {len(val_ds)}\n")
-        f.write(f"  Val non-overlapping: {len(val_ds_eval) if val_ds_eval else len(val_ds)}\n")
-        if test_ds_train:
-            f.write(f"  Test overlapping: {len(test_ds_train)}\n")
-        if test_ds_eval:
-            f.write(f"  Test non-overlapping: {len(test_ds_eval)}\n")
-        f.write("\n")
-        
-        f.write("TRAIN METRICS (from continuous normalized series)\n")
-        for k, v in metrics_tr.items():  # Direct access, not metrics_tr[target_col]
-            f.write(f"  {k}: {v}\n")
-
-        f.write("\nVAL METRICS (from continuous normalized series)\n")
-        for k, v in metrics_va.items():  # Direct access, not metrics_va[target_col]
-            f.write(f"  {k}: {v}\n")
-
-        if metrics_te:
-            f.write("\nTEST METRICS (from continuous normalized series)\n")
-            for k, v in metrics_te.items():  # Direct access, not metrics_te[target_col]
-                f.write(f"  {k}: {v}\n")
-    
-    print("\n=== METRICS (FROM CONTINUOUS NORMALIZED SERIES) ===")
-    print("TRAIN:", {k: f"{v:.4f}" if isinstance(v, float) else v for k, v in metrics_tr.items()})
-    print("VAL:  ", {k: f"{v:.4f}" if isinstance(v, float) else v for k, v in metrics_va.items()})
-    if metrics_te:
-        print("TEST: ", {k: f"{v:.4f}" if isinstance(v, float) else v for k, v in metrics_te.items()})
-    
-    # Save sample plots - Use DENORMALIZED series and the same random seed consistently
-    save_daily_pred_vs_true_plots(train_df, series_dict_train_denorm, split_name="Train", plots_dir=PLOTS_DIR, random_seed=random_seed)
-    
-    if val_data_exists:
-        val_df_for_plots = val_df
-    else:
-        val_df_for_plots = train_df
-    save_daily_pred_vs_true_plots(val_df_for_plots, series_dict_val_denorm, split_name="Validation", plots_dir=PLOTS_DIR, random_seed=random_seed)
-    
-    if test_data_exists and series_dict_test_denorm is not None:
-        save_daily_pred_vs_true_plots(test_df, series_dict_test_denorm, split_name="Test", plots_dir=PLOTS_DIR, random_seed=random_seed)
-    
-    # Build model info
     model_info = {
-        "model_class": "LSTMModel",
+        "model_class": "MultiOutputLSTMModel",
         "architecture": {
             "input_size": input_size,
             "hidden_size": hidden_size,
             "num_layers": num_layers,
+            "num_outputs": num_outputs,
             "dropout": dropout,
-            "output_size": 1,
             "forecast_steps": horizon,
             "activation": "ReLU (prevents negative predictions)",
             "lstm_batch_first": True,
             "total_params": total_params,
         },
-        
         "data_config": {
             "features": {
                 "feature_cols": actual_feature_cols,
-                "target_col": target_col,
+                "target_cols": target_cols,
                 "use_bad_day": use_bad_day,
                 "mask_bad_days": mask_bad_days,
                 "total_features": input_size,
@@ -1812,18 +1520,10 @@ def run_lstm_training(
                 "window": window,
                 "horizon": horizon,
                 "input_shape": f"({window + horizon}, {input_size})",
-                "output_shape": f"({horizon},)",
+                "output_shape": f"({horizon}, {num_outputs})",
             },
-            "scaler_info": {
-                "p_scaler_file": "p_scaling.pkl",
-                "feature_scaler_file": "scalers.pkl",
-                "p_scaler_type": "MinMaxScaler",
-                "feature_scaler_types": "MinMaxScaler",
-                "nan_handling": "nan_to_num(nan=0.0, copy=True)",
-                "dtype": "float32",
-            },
+            "bad_day_mapping": bad_day_mapping,
         },
-        
         "training_config": {
             "hyperparameters": {
                 "optimizer": "Adam",
@@ -1833,150 +1533,75 @@ def run_lstm_training(
                 "patience": patience,
                 "grad_clip_max_norm": 1.0,
             },
-            "scheduler": {
-                "type": "ReduceLROnPlateau",
-                "mode": "min",
-                "factor": 0.5,
-                "patience": patience // 4
-            },
-            "loss_function": "masked_mae_with_bad_day",
-            "dataloader": {
-                "shuffle_train": False,
-                "drop_last": False,
-                "worker_init_fn": "seed_worker",
-                "generator_seed": random_seed,
-            },
             "random_seed": random_seed,
             "deterministic": True,
-            "reproducibility": {
-                "python_hash_seed": "set",
-                "cudnn_deterministic": True,
-                "cudnn_benchmark": False,
-                "use_deterministic_algorithms": True,
-            }
         },
-        
         "dataset_info": {
             "window": window,
             "horizon": horizon,
             "use_bad_day": use_bad_day,
             "mask_bad_days": mask_bad_days,
-            "training_strategy": "Overlapping sequences (stride=1) for training",
-            "evaluation_strategy": f"Non-overlapping sequences (stride={horizon}) for evaluation",
-            "sequence_calculation": f"max_idx = len(df) - (window={window} + horizon={horizon}) + 1",
-            "input_timestamps": f"[i : i + window + horizon]",
-            "target_timestamps": f"[i + window : i + window + horizon]",
         },
-        
-        "data_split_info": {
-            "splits": {
-                "train": {
-                    "start": str(train_df.index.min()),
-                    "end": str(train_df.index.max()),
-                    "num_rows": len(train_df),
-                    "num_sequences_overlapping": len(train_ds),
-                    "num_sequences_non_overlapping": len(train_ds_eval),
-                    "bad_day_stats": {
-                        "bad_days": int(train_df['bad_day'].sum() if 'bad_day' in train_df.columns else 0),
-                        "bad_days_pct": float((train_df['bad_day'].sum() / len(train_df) * 100) if 'bad_day' in train_df.columns else 0.0)
-                    } if 'bad_day' in train_df.columns else None
-                },
-                "validation": {
-                    "source": "separate_dataset" if val_data_exists else "split_from_train",
-                    "start": str(val_df.index.min()) if val_data_exists and len(val_df) > 0 else None,
-                    "end": str(val_df.index.max()) if val_data_exists and len(val_df) > 0 else None,
-                    "num_rows": len(val_df) if val_data_exists else 0,
-                    "num_sequences_overlapping": len(val_ds),
-                    "num_sequences_non_overlapping": len(val_ds_eval) if val_ds_eval else len(val_ds),
-                    "validation_split": validation_split if not val_data_exists else None,
-                },
-                "test": {
-                    "available": test_data_exists,
-                    "start": str(test_df.index.min()) if test_data_exists else None,
-                    "end": str(test_df.index.max()) if test_data_exists else None,
-                    "num_rows": len(test_df) if test_data_exists else 0,
-                    "num_sequences_overlapping": len(test_ds_train) if test_ds_train else 0,
-                    "num_sequences_non_overlapping": len(test_ds_eval) if test_ds_eval else 0,
-                }
-            },
-            "total_sequences": {
-                "train_overlapping": len(train_ds),
-                "train_non_overlapping": len(train_ds_eval),
-                "validation_overlapping": len(val_ds),
-                "validation_non_overlapping": len(val_ds_eval) if val_ds_eval else len(val_ds),
-                "test_overlapping": len(test_ds_train) if test_ds_train else 0,
-                "test_non_overlapping": len(test_ds_eval) if test_ds_eval else 0,
-            }
-        },
-        
-        "training_principle": "LSTM forward pass always runs, PV learning masked on bad days",
-        
-        "flag_mode": {
-            "use_bad_day": use_bad_day,
-            "mask_bad_days": mask_bad_days,
-            "description": "Mode 1" if not use_bad_day and not mask_bad_days else 
-                          "Mode 2" if use_bad_day and mask_bad_days else
-                          "Mode 3" if not use_bad_day and mask_bad_days else
-                          "Mode 4"
-        },
-        
         "environment": {
             "device": str(DEVICE),
-            "device_name": "CPU (forced)",
             "pytorch_version": torch.__version__,
             "numpy_version": np.__version__,
             "pandas_version": pd.__version__,
-            "cuda_available": torch.cuda.is_available(),
-            "mps_available": False,
         },
-        
-        "file_paths": {
-            "training_data_dir": str(Path(training_data_dir).absolute()),
-            "output_dir": str(Path(output_dir).absolute()) if output_dir else str(Path(training_data_dir).absolute()),
-            "model_file": f"{timestamp}_model.pt",
-            "scaler_dir": str(Path(training_data_dir).absolute()),
-            "metrics_log": "training_metrics.txt",
-            "plots_dir": "plots",
-        },
-        
         "metrics_info": {
             "computed_from": "continuous_normalized_series",
             "persistence_method": "lag_1_persistence",
-            "series_continuity": "10-minute grid with NaN filling",
-            "bad_day_filtering": f"{'Applied' if mask_bad_days else 'Not applied'}",
+            "bad_day_handling": "target_specific_exclusion"
         }
     }
     
     # Save model info
-    with open(OUT_DIR / "model_info.pkl", "wb") as f:
+    with open(OUT_DIR / "model_info_multi.pkl", "wb") as f:
         pickle.dump(model_info, f)
     
     import json
-    with open(OUT_DIR / "model_info.json", "w") as f:
+    with open(OUT_DIR / "model_info_multi.json", "w") as f:
         json.dump(model_info, f, indent=2, default=str)
     
-    print(f"\nModel info saved to {OUT_DIR / 'model_info.pkl'}")
-    print(f"Model info (readable) saved to {OUT_DIR / 'model_info.json'}")
+    save_all_metrics_to_txt(
+        metrics_tr, metrics_va, metrics_te,
+        target_cols,
+        METRICS_LOG,
+        model_info
+    )
     
-    # Create PDF report
-    out_pdf = OUT_DIR / "report.pdf"
-    print("\nGenerating PDF report...")
-    build_pdf_report(out_pdf, model_info, train_stats, val_stats, test_stats,
-                len(train_ds_eval), 
-                len(val_ds_eval) if val_ds_eval else len(val_ds),
-                len(test_ds_eval) if test_ds_eval else 0,
-                actual_feature_cols, 
-                metrics_tr, metrics_va, metrics_te,
-                history, 
-                series_dict_train_denorm, series_dict_val_denorm, series_dict_test_denorm)
+    print("\n" + "="*60)
+    print("SAVING VISUALIZATIONS PER TARGET")
+    print("="*60)
     
-    print(f"\nTraining completed!")
-    print(f"Best model saved to {MODEL_FILE.name}")
+    for target_name in target_cols:
+        print(f"\nGenerating visualizations for {target_name}...")
+        save_target_visualizations(
+            target_name,
+            series_dict_train_denorm,
+            series_dict_val_denorm,
+            series_dict_test_denorm,
+            PLOTS_DIR,
+            mask_bad_days=mask_bad_days
+        )
+    
+    # Save training history
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111)
+    save_training_history_ax(ax, history)
+    plt.tight_layout()
+    history_file = PLOTS_DIR / "training_history.png"
+    plt.savefig(history_file, dpi=150)
+    plt.close()
+    print(f"\nSaved: {history_file}")
+    
+    print(f"\nMulti-output training completed with target-specific bad day masking!")
+    print(f"Targets: {', '.join(target_cols)}")
+    print(f"Model saved to {MODEL_FILE.name}")
     print(f"Metrics logged to {METRICS_LOG}")
-    print(f"Model info saved to {OUT_DIR / 'model_info.pkl'}")
-    print(f"PDF report saved to {out_pdf}")
     print(f"Plots saved to {PLOTS_DIR}")
-    results = {
+
+    return {
         "model": model,
         "metrics": {
             "train": metrics_tr,
@@ -1994,20 +1619,21 @@ def run_lstm_training(
             "val": series_dict_val_denorm,
             "test": series_dict_test_denorm,
         },
+        "bad_day_mapping": bad_day_mapping,
         "history": history
     }
 
-    return results
-
 def main():
     training_data_dir = "/path/to/your/data"
-    results = run_lstm_training(
+    
+    results = run_lstm_training_multi_output(
         training_data_dir=training_data_dir,
+        target_cols=['P_normalised_si', 'P_normalised_psc', 'I_normalised_dc', 'U_grid'],
         window=48,
-        horizon=12,
+        horizon=36,
         batch_size=32,
         epochs=100,
-        lr=0.0001,
+        lr=0.001,
         patience=15,
         hidden_size=64,
         num_layers=2,

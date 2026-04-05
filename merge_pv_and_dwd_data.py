@@ -1,26 +1,250 @@
-#Version: 1.0 
+#Version: 2.0
 import pandas as pd
 import numpy as np
 import os
 import json
 from datetime import datetime
-from typing import Optional, Tuple, List
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import seaborn as sns
+from typing import Optional, List, Dict
 
 class PVDWDDataMerger:
     def __init__(self, dwd_data_path: str, scaling_factors_path: str, dwd_columns: Optional[List[str]] = None):
         """
-            Class to merge PV system data with DWD weather data using DWD time as backbone.
+        Class to merge PV system data with DWD weather data using DWD time as backbone.
+        Supports both category-averaged and per-module data structures.
         """
         self.dwd_data_path = dwd_data_path
         self.scaling_factors_path = scaling_factors_path
         self.dwd_columns = dwd_columns
         self.dwd_df = None
         self.scaling_factors = None
+        self.data_structure = None  # 'category' or 'pv_per_module' - determined from filename
+        self.column_mapping = None  # Dynamic column mapping based on structure
+        self.pv_categories = []  # Will be detected from data
+        self.modules = []  # List of module identifiers for pv_per_module structure
+        self.base_pv_columns = ["P", "P_normalised", "I", "U", "Temp"]
         
+    def detect_data_structure_from_filename(self, pv_data_path: str) -> str:
+        """Determine data structure based on filename."""
+        filename = os.path.basename(pv_data_path).lower()
+        
+        if "pv_averaged_by_category" in filename:
+            print(f"Filename '{filename}' indicates 'category' mode")
+            return 'category'
+        elif "pv_per_module" in filename:
+            print(f"Filename '{filename}' indicates 'per_module' mode")
+            return 'per_module'
+        else:
+            print(f"WARNING : Cannot detect data structure from filename, defaulting to 'category'")
+            return 'category'
+    
+    def build_column_mapping(self, df):
+        """Build column mapping based on detected data structure."""
+        
+        if self.data_structure == 'category':
+            self.pv_categories = ['si', 'psc']
+            
+            # mapping for each category
+            mapping = {}
+            known_params = ['P', 'P_normalised', 'I', 'U', 'Temp']
+            
+            for category in self.pv_categories:
+                mapping[category] = {}
+                for param in known_params:
+                    col_name = f"{param}_{category}"
+                    if col_name in df.columns:
+                        mapping[category][param] = col_name
+            
+            found_cols = []
+            for category in self.pv_categories:
+                for param in known_params:
+                    if param in mapping[category]:
+                        found_cols.append(f"{param}_{category}")
+            
+            print(f"Found PV columns: {found_cols}")
+            return mapping
+            
+        else:  # per_module
+            #extract module information
+            mapping = {}
+            module_types = set()
+            module_list = []
+            
+            for col in df.columns:
+                if '_' in col:
+                    parts = col.split('_')
+                    if len(parts) >= 3:
+                        param = parts[0]  #P, I, U, Temp
+                        module_type = parts[1]  #atersa, sanyo,...
+                        module_id = parts[2]  #1, 2, 3,..
+                        
+                        module_key = f"{module_type}_{module_id}"
+                        module_types.add(module_type)
+                        
+                        if module_key not in mapping:
+                            mapping[module_key] = {
+                                'type': module_type,
+                                'id': module_id,
+                                'category': self._get_category_for_module_type(module_type)
+                            }
+                            module_list.append(module_key)
+                        
+                        mapping[module_key][param] = col
+            
+            self.modules = sorted(module_list)
+            
+            #extract categories from module types
+            self.pv_categories = sorted(set(mapping[m]['category'] for m in mapping))
+            print(f"Detected modules: {self.modules}")
+            print(f"Module types: {sorted(module_types)}")
+            print(f"Derived categories: {self.pv_categories}")
+            
+            return mapping
+    
+    def _get_category_for_module_type(self, module_type):
+        """Map module types to categories."""
+        si_types = ['atersa', 'sanyo', 'solon', 'sun_power']
+        psc_types = ['perovskite']
+        
+        if module_type in si_types:
+            return 'si'
+        elif module_type in psc_types:
+            return 'psc'
+        else:
+            print(f"Warning: Unknown module type '{module_type}', defaulting to 'si'")
+            return 'si'  #default to si
+    
+    def _get_category_bounds(self):
+        """Get bounds for category-averaged data."""
+        return {
+            # si category bounds
+            "P_si": (0, 250),
+            "I_si": (0, 9),
+            "U_si": (10, 60),
+            "P_normalised_si": (0.0, 1.2),
+            "Temp_si": (-20, 100),
+            
+            # psc category bounds
+            "P_psc": (0, 110),
+            "I_psc": (0, 1.4),
+            "U_psc": (40, 100),
+            "P_normalised_psc": (0.0, 1.75),
+            "Temp_psc": (-20, 100),
+        }
+    
+    #Need to extend per module type
+    def _get_per_module_bounds(self):
+        """Get bounds for per-module data."""
+        bounds = {}
+        
+        if self.column_mapping is None:
+            return bounds
+            
+        for module_key, module_info in self.column_mapping.items():
+            category = module_info.get('category', 'si')
+            
+            #dpply category-specific bounds
+            if category == 'si':
+                if 'P' in module_info:
+                    bounds[module_info['P']] = (0, 250)
+                if 'I' in module_info:
+                    bounds[module_info['I']] = (0, 9)
+                if 'U' in module_info:
+                    bounds[module_info['U']] = (10, 60)
+                if 'P_normalised' in module_info:
+                    bounds[module_info['P_normalised']] = (0.0, 1.2)
+                if 'Temp' in module_info:
+                    bounds[module_info['Temp']] = (-20, 100)
+                    
+            elif category == 'psc':
+                if 'P' in module_info:
+                    bounds[module_info['P']] = (0, 110)
+                if 'I' in module_info:
+                    bounds[module_info['I']] = (0, 1.4)
+                if 'U' in module_info:
+                    bounds[module_info['U']] = (40, 100)
+                if 'P_normalised' in module_info:
+                    bounds[module_info['P_normalised']] = (0.0, 1.75)
+                if 'Temp' in module_info:
+                    bounds[module_info['Temp']] = (-20, 100)
+        
+        return bounds
+    
+    def get_pv_columns_for_category(self, category: str) -> Dict[str, str]:
+        """Get column names for a specific PV category."""
+        if self.data_structure == 'category':
+            if category in self.column_mapping:
+                return self.column_mapping[category]
+            else:
+                return {}
+        else:
+            #for per-module structure, collect all columns for modules of this category
+            result = {}
+            for module_key, module_info in self.column_mapping.items():
+                if module_info.get('category') == category:
+                    for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                        if param in module_info:
+                            if param not in result:
+                                result[param] = []
+                            result[param].append(module_info[param])
+            return result
+    
+    def get_pv_columns_for_module(self, module_key: str) -> Dict[str, str]:
+        """Get column names for a specific module."""
+        if self.data_structure != 'per_module':
+            return {}
+        
+        if module_key in self.column_mapping:
+            return {k: v for k, v in self.column_mapping[module_key].items() 
+                   if k in ['P', 'I', 'U', 'Temp', 'P_normalised']}
+        return {}
+    
+    def get_all_pv_columns(self):
+        """Get all PV columns regardless of structure."""
+        all_cols = []
+        
+        if self.data_structure == 'category':
+            for category in self.pv_categories:
+                category_cols = self.get_pv_columns_for_category(category)
+                all_cols.extend(category_cols.values())
+        else:
+            for module_key, module_info in self.column_mapping.items():
+                for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                    if param in module_info:
+                        all_cols.append(module_info[param])
+        
+        return list(set(all_cols))
+    
+    def create_specific_bad_day_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Create category-specific or module-specific bad_day columns based on data structure.
+        For category structure: creates bad_day_si, bad_day_psc
+        For module structure: creates bad_day_atersa_1, bad_day_sanyo_2,...
+        """
+        result_df = df.copy()
+        bad_day_cols = [col for col in result_df.columns if col.startswith('bad_day')]
+        for col in bad_day_cols:
+            result_df = result_df.drop(columns=[col])
+        
+        if self.data_structure == 'category':
+            print("\nCreating category-specific bad_day columns...")
+            
+            for category in self.pv_categories:
+                col_name = f"bad_day_{category}"
+                result_df[col_name] = 0
+                print(f"  Created {col_name}")
+            
+        else:
+            print("\nCreating module-specific bad_day columns...")
+            
+            for module_key in self.modules:
+                col_name = f"bad_day_{module_key}"
+                result_df[col_name] = 0
+                print(f"  Created {col_name}")
+        
+        return result_df
+    
     def check_timezone_utc(self, df: pd.DataFrame, df_name: str) -> bool:
+        """Verify DataFrame has UTC timezone."""
         if df.index.tz is None:
             print(f"{df_name}: No timezone info - assuming UTC")
             return True
@@ -33,7 +257,7 @@ class PVDWDDataMerger:
     def load_scaling_factors(self) -> bool:
         try:
             if not os.path.exists(self.scaling_factors_path):
-                print(f"Scaling factors file not found: {self.scaling_factors_path}")
+                print(f"WARNING : Scaling factors file not found: {self.scaling_factors_path}")
                 return False
             with open(self.scaling_factors_path, 'r') as f:
                 self.scaling_factors = json.load(f)
@@ -41,10 +265,11 @@ class PVDWDDataMerger:
             return True
             
         except Exception as e:
-            print(f"Failed to load scaling factors: {e}")
+            print(f"WARNING : Failed to load scaling factors: {e}")
             return False
     
     def apply_doy_period_scaling(self, timestamp: pd.Timestamp, dwd_irradiance: float) -> float:
+        """Apply day-of-year and period-based scaling to DWD irradiance."""
         if pd.isna(dwd_irradiance) or dwd_irradiance <= 0:
             return 0.0
 
@@ -64,9 +289,10 @@ class PVDWDDataMerger:
                 break
 
         if period_name is None:
-            #New: return zero if no scaling factor
+            #return zero if no scaling factor
             return 0.0
 
+        # Try specific day-period factor
         key = f"{doy:03d}-{period_name}"
         factor_entry = self.scaling_factors.get("dayofyear_period", {}).get(key)
 
@@ -75,22 +301,25 @@ class PVDWDDataMerger:
             if factor > 0:
                 return dwd_irradiance * factor
 
+        # Fallback to period average
         fallback_factor = self.scaling_factors.get("period_fallback", {}).get(period_name, 0.0)
         if fallback_factor > 0:
             return dwd_irradiance * fallback_factor
 
-        return dwd_irradiance
+        #return zero if no fallback scaling factor
+        return 0.0
     
     def load_and_parse_dwd(self) -> Optional[pd.DataFrame]:
+        """Load and parse DWD weather data."""
         try:
             if not os.path.exists(self.dwd_data_path):
-                print(f"DWD data file not found: {self.dwd_data_path}")
+                print(f"WARNING : DWD data file not found: {self.dwd_data_path}")
                 return None
             
             dwd_df = pd.read_csv(self.dwd_data_path)
             
             if 'timestamp' not in dwd_df.columns:
-                print("No timestamp column found in DWD data")
+                print("WARNING : No timestamp column in DWD data")
                 return None
             
             timestamp_col = 'timestamp'
@@ -175,14 +404,19 @@ class PVDWDDataMerger:
             return dwd_df
 
         except Exception as e:
-            print(f"Error in load_and_parse_dwd: {e}")
+            print(f"WARNING : Error loading DWD data: {e}")
             return None
 
     def load_and_parse_pv(self, pv_data_path: str) -> Optional[pd.DataFrame]:
-        try:          
+        """Load and parse PV data, determining structure from filename."""
+        try:
             if not os.path.exists(pv_data_path):
-                print(f"PV data file not found: {pv_data_path}")
+                print(f"WARNING : PV data file not found: {pv_data_path}")
                 return None
+            
+            #etermine data structure from filename
+            self.data_structure = self.detect_data_structure_from_filename(pv_data_path)
+            print(f"Data structure determined: {self.data_structure}")
             
             pv_df = pd.read_csv(pv_data_path)
             
@@ -199,11 +433,13 @@ class PVDWDDataMerger:
             pv_df = pv_df.drop_duplicates(subset=[timestamp_col])
             duplicates_removed = initial_count - len(pv_df)
             
-            
             print(f"PV: Loaded {len(pv_df)} records")
             print(f"Time range: {pv_df[timestamp_col].min()} to {pv_df[timestamp_col].max()}")
             print(f"Removed {duplicates_removed} duplicate timestamps")
 
+            # Build column mapping based on determined structure
+            self.column_mapping = self.build_column_mapping(pv_df)
+            
             pv_df_temp = pv_df.set_index(timestamp_col)
             is_pv_utc = self.check_timezone_utc(pv_df_temp, "PV")
             pv_df = pv_df_temp.reset_index()
@@ -244,18 +480,17 @@ class PVDWDDataMerger:
         
         # Check if DataFrames are empty after removing NaN
         if len(dwd_sorted) == 0:
-            print("DWD DataFrame is empty after removing NaN timestamps")
+            print("WARNING : DWD DataFrame is empty after removing NaN timestamps")
             return pd.DataFrame()
         
         if len(pv_sorted) == 0:
-            print("PV DataFrame is empty after removing NaN timestamps")
+            print("WARNING : PV DataFrame is empty after removing NaN timestamps")
             result = dwd_sorted.set_index('timestamp')
             pv_columns = [col for col in pv_df_clean.columns if col != timestamp_col]
             for col in pv_columns:
                 result[col] = np.nan
             return result
         
-        # Perform left join merge_asof
         try:
             merged = pd.merge_asof(
                 dwd_sorted,  # Left: DWD backbone (all rows kept)
@@ -277,7 +512,7 @@ class PVDWDDataMerger:
             return merged
             
         except Exception as e:
-            print(f"ERROR in merge_asof: {e}")
+            print(f"WARNING: ERROR in merge_asof: {e}")
             print(f"DWD shape: {dwd_sorted.shape}, PV shape: {pv_sorted.shape}")
             print(f"DWD timestamp range: {dwd_sorted['timestamp'].min()} to {dwd_sorted['timestamp'].max()}")
             print(f"PV timestamp range: {pv_sorted[timestamp_col].min()} to {pv_sorted[timestamp_col].max()}")
@@ -288,8 +523,9 @@ class PVDWDDataMerger:
             for col in pv_columns:
                 result[col] = np.nan
             return result
-        
+    
     def fill_missing_irradiance(self, result_df: pd.DataFrame) -> pd.DataFrame:
+        """Fill missing irradiance values using DWD scaling."""
         if result_df.empty:
             print("No data to process")
             return result_df
@@ -298,38 +534,29 @@ class PVDWDDataMerger:
             print("No scaling factors loaded")
             return result_df
         
-        # Check for irradiance column (might be 'Irr' or 'global_radiation') in PV
-        irradiance_col = None
-        for col in ['Irr']:
-            if col in result_df.columns:
-                irradiance_col = col
-                break
-        
-        if irradiance_col is None:
-            print("No irradiance column found")
+        irradiance_col = 'Irr'
+        if irradiance_col not in result_df.columns:
+            print(f"No '{irradiance_col}' column found")
             return result_df
         
-        # Check for DWD irradiance column
         dwd_irradiance_col = None
         for col in ['global_radiation']:
             if col in result_df.columns:
                 dwd_irradiance_col = col
                 break
-        
         if dwd_irradiance_col is None:
             print(f"No DWD irradiance column found for scaling")
             return result_df
         
         # Count missing irradiance before filling
         missing_before = result_df[irradiance_col].isna().sum()
-        
         if missing_before == 0:
             print(f"No missing irradiance values to fill")
             return result_df
         
         print(f"Filling {missing_before} missing {irradiance_col} values")
         
-        # Fill missing irradiance values
+        #fill missing irradiance values
         filled_count = 0
         for idx, row in result_df.iterrows():
             if pd.isna(row[irradiance_col]) and not pd.isna(row[dwd_irradiance_col]):
@@ -337,258 +564,368 @@ class PVDWDDataMerger:
                 result_df.at[idx, irradiance_col] = scaled_value
                 filled_count += 1
         
-        # Count after filling
+        #count after filling
         missing_after = result_df[irradiance_col].isna().sum()
-        
         print(f"Filled {filled_count} irradiance values using DWD scaling")
         print(f"{missing_after} irradiance values still missing")
         
         return result_df
     
-    def mark_maintenance_periods(self, df: pd.DataFrame, exclude_ranges):
-        """
-        Sets PV columns (P, I, U, Temp) to NaN for maintenance periods.
-        """
+    def mark_maintenance_periods(self, df: pd.DataFrame):
+        """Mark maintenance periods as bad days."""
         result_df = df.copy()
 
         if not isinstance(result_df.index, pd.DatetimeIndex):
-            print("DataFrame must have datetime index")
+            print("WARNING : DataFrame must have datetime index")
             return result_df
 
-        # Initialize bad_day column
-        if "bad_day" not in result_df.columns:
-            result_df["bad_day"] = 0
+        maintenance_periods = {
+            'si': [
+                ("2024-12-06", "2024-12-14"),
+                ("2025-05-02", "2025-05-13"),
+                ("2025-06-25", "2025-06-30"),
+                ("2025-09-17", "2025-09-26"),
+                ("2025-11-18", "2025-11-26"),
+            ],
+            'psc': [
+                ("2024-12-06", "2024-12-14"),
+                ("2024-12-30", "2024-12-31"),
+                ("2025-01-02", "2025-01-03"),
+                ("2025-05-02", "2025-05-13"),
+                ("2025-06-25", "2025-06-30"),
+                ("2025-09-17", "2025-09-26"),
+                ("2025-11-18", "2025-11-26"),
+            ]
+        }
 
-        pv_cols = ["P", "P_normalised", "I", "U", "Temp"] #add P_normalised here if that is target
-        available_pv_cols = [c for c in pv_cols if c in result_df.columns]
+        for category in self.pv_categories:
+            if category not in maintenance_periods:
+                continue
+                
+            #get PV columns for by category
+            if self.data_structure == 'category':
+                category_cols = self.get_pv_columns_for_category(category)
+                pv_cols_to_nan = [
+                    category_cols.get('P', f'P_{category}'),
+                    category_cols.get('I', f'I_{category}'),
+                    category_cols.get('U', f'U_{category}'),
+                    category_cols.get('Temp', f'Temp_{category}'),
+                ]
+                # Add P_normalised if it exists
+                if 'P_normalised' in category_cols:
+                    pv_cols_to_nan.append(category_cols['P_normalised'])
+            else:  # per_module
+                pv_cols_to_nan = []
+                for module_key, module_info in self.column_mapping.items():
+                    if module_info.get('category') == category:
+                        for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                            if param in module_info:
+                                pv_cols_to_nan.append(module_info[param])
+            
+            # Filter to columns that actually exist in the dataframe
+            available_pv_cols = [c for c in pv_cols_to_nan if c in result_df.columns]
+            
+            if not available_pv_cols:
+                continue
+                
+            print(f"\nCategory '{category}' - PV columns affected: {available_pv_cols[:5]}...")  # Show first 5
 
-        print(f"PV columns affected: {available_pv_cols}")
+            #process maintenance periods for the category
+            for start_str, end_str in maintenance_periods[category]:
+                try:
+                    start_dt = pd.to_datetime(start_str)
+                    if start_dt.tz is None:
+                        start_dt = start_dt.tz_localize("UTC")
+                    
+                    end_dt = pd.to_datetime(end_str)
+                    if end_dt.tz is None:
+                        end_dt = end_dt.tz_localize("UTC")
+                    
+                    mask = (result_df.index >= start_dt) & (result_df.index <= end_dt)
+                    
+                    if mask.any():
+                        if self.data_structure == 'category':
+                            category_bad_col = f"bad_day_{category}"
+                            if category_bad_col in result_df.columns:
+                                result_df.loc[mask, category_bad_col] = 1
+                        
+                        else:  # per_module
+                            for module_key, module_info in self.column_mapping.items():
+                                if module_info.get('category') == category:
+                                    module_bad_col = f"bad_day_{module_key}"
+                                    if module_bad_col in result_df.columns:
+                                        result_df.loc[mask, module_bad_col] = 1
+                        
+                        #Set PV values to NaN
+                        result_df.loc[mask, available_pv_cols] = np.nan
+                        
+                        print(f"Maintenance {start_str} to {end_str}")
+                        print(f"{mask.sum()} rows flagged, PV set to NaN")
+                        
+                except Exception as e:
+                    print(f"Error parsing date range {start_str} to {end_str}: {e}")
 
-        #Normalize ranges to UTC timestamps
-        ranges = [(pd.to_datetime(start).tz_localize("UTC"), 
-                   pd.to_datetime(end).tz_localize("UTC")) 
-                   for start, end in exclude_ranges]
+        return result_df
+    
+    def mark_before_installation_bad(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Mark data before installation as bad."""
+        result_df = df.copy()
 
-        for start, end in ranges:
-            mask = (result_df.index >= start) & (result_df.index <= end)
+        if not isinstance(result_df.index, pd.DatetimeIndex):
+            return result_df
 
+        installation_dates = {
+            'si': pd.Timestamp("2024-07-26").tz_localize("UTC"),
+            'psc': pd.Timestamp("2024-11-28").tz_localize("UTC"),
+        }
+
+        total_rows = len(result_df)
+
+        for category in self.pv_categories:
+            if category not in installation_dates:
+                continue
+                
+            install_date = installation_dates[category]
+            
+            # Get columns for this category
+            if self.data_structure == 'category':
+                category_cols = self.get_pv_columns_for_category(category)
+                pv_cols_to_nan = [
+                    category_cols.get('P', f'P_{category}'),
+                    category_cols.get('I', f'I_{category}'),
+                    category_cols.get('U', f'U_{category}'),
+                    category_cols.get('Temp', f'Temp_{category}'),
+                ]
+                #add P_normalised if it exists
+                if 'P_normalised' in category_cols:
+                    pv_cols_to_nan.append(category_cols['P_normalised'])
+            else:  #per_module
+                pv_cols_to_nan = []
+                for module_key, module_info in self.column_mapping.items():
+                    if module_info.get('category') == category:
+                        for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                            if param in module_info:
+                                pv_cols_to_nan.append(module_info[param])
+            
+            #filter to columns that actually exist in the dataframe
+            available_pv_cols = [c for c in pv_cols_to_nan if c in result_df.columns]
+            
+            if not available_pv_cols:
+                continue
+            
+            #mark data before installation as bad
+            mask = result_df.index < install_date
+            
             if mask.any():
-                result_df.loc[mask, "bad_day"] = 1
+                rows_affected = mask.sum()                
+                if self.data_structure == 'category':
+                    category_bad_col = f"bad_day_{category}"
+                    if category_bad_col in result_df.columns:
+                        result_df.loc[mask, category_bad_col] = 1                
+                else:  # per_module
+                    for module_key, module_info in self.column_mapping.items():
+                        if module_info.get('category') == category:
+                            module_bad_col = f"bad_day_{module_key}"
+                            if module_bad_col in result_df.columns:
+                                result_df.loc[mask, module_bad_col] = 1
+                
+                #set PV values to NaN
                 result_df.loc[mask, available_pv_cols] = np.nan
+                
+                print(f"\nCategory '{category}' (installed on {install_date.date()}):")
+                print(f"{rows_affected} rows before installation")
+                print(f"Marked specific bad_day columns = 1")
 
-                print(f"Maintenance {start} to {end}")
-                print(f"{mask.sum()} rows flagged, PV set to NaN")
+        print(f"\nPer-category summary:")
+        for category in self.pv_categories:
+            if category in installation_dates:
+                install_date = installation_dates[category]
+                rows_before_install = (result_df.index < install_date).sum()
+                print(f"{category}: installed {install_date.date()}, {rows_before_install} rows before installation")
 
         return result_df
     
     def mark_low_quality_days_by_p_count(self, df: pd.DataFrame, threshold: int = 70):
-        """
-        Sets PV columns (P, I, U, Temp) to NaN for days with P count less than threshold.
-        """
+        """Mark days with low P count as bad."""
         result_df = df.copy()
-        if "bad_day" not in result_df.columns:
-            print("bad_day column missing")
+
+        # Get P columns
+        if self.data_structure == 'category':
+            p_columns = [f'P_{cat}' for cat in self.pv_categories if f'P_{cat}' in result_df.columns]
+        else:  # per_module
+            p_columns = []
+            module_p_mapping = {}
+            for module_key, module_info in self.column_mapping.items():
+                if 'P' in module_info and module_info['P'] in result_df.columns:
+                    p_col = module_info['P']
+                    p_columns.append(p_col)
+                    module_p_mapping[p_col] = module_key
+
+        if not p_columns:
+            print("No P columns found for any category/module")
             return result_df
 
-        pv_cols = ["P", "P_normalised", "I", "U", "Temp"] #add P_normalised here if that is target
-        available_pv_cols = [c for c in pv_cols if c in result_df.columns]
-        good_df = result_df[result_df["bad_day"] == 0]
+        for p_col in p_columns:
+            if p_col not in result_df.columns:
+                continue
+            valid_p_per_day = (
+                result_df.groupby(result_df.index.date)[p_col]
+                .apply(lambda x: x.notna().sum())
+            )
+            if valid_p_per_day.empty:
+                print(f"No valid data found for {p_col}.")
+                continue
 
-        if good_df.empty:
-            print("No good days available for quality check.")
-            return result_df
+            # Get scalar values
+            min_valid = float(valid_p_per_day.min())
+            max_valid = float(valid_p_per_day.max())
+            avg_valid = float(valid_p_per_day.mean())
 
-        valid_p_per_day = (
-            good_df.groupby(good_df.index.date)["P"]
-            .apply(lambda x: x.notna().sum())
-        )
+            print(f"{p_col} (valid count per day): min={min_valid:.0f}, max={max_valid:.0f}, avg={avg_valid:.2f}")
 
-        if valid_p_per_day.empty:
-            print("No valid P data found.")
-            return result_df
+            low_valid_days = valid_p_per_day[valid_p_per_day < threshold].index
+            low_days_count = len(low_valid_days)
+            print(f"Days with fewer than {threshold} valid '{p_col}' rows: {low_days_count}")
 
-        min_valid = valid_p_per_day.min()
-        max_valid = valid_p_per_day.max()
-        avg_valid = valid_p_per_day.mean()
+            if low_days_count == 0:
+                continue
 
-        print(
-            f"Good days valid 'P' count per day:"
-            f"min={min_valid}, max={max_valid}, avg={avg_valid:.2f}"
-        )
+            if self.data_structure == 'category':
+                for category in self.pv_categories:
+                    if p_col == f'P_{category}':
+                        category_cols = self.get_pv_columns_for_category(category)
+                        pv_cols_to_nan = []
+                        for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                            if param in category_cols:
+                                pv_cols_to_nan.append(category_cols[param])
+                        
+                        available_cols = [c for c in pv_cols_to_nan if c in result_df.columns]
+                        
+                        for day in low_valid_days:
+                            mask = result_df.index.date == day
+                            
+                            #update category-specific bad_day
+                            category_bad_col = f"bad_day_{category}"
+                            if category_bad_col in result_df.columns:
+                                result_df.loc[mask, category_bad_col] = 1
+                            
+                            #set PV values to NaN
+                            if available_cols:
+                                result_df.loc[mask, available_cols] = np.nan
+                        
+                        print(f"Category '{category}': marked {low_days_count} days as bad")
+                        break
+            
+            else:  # per_module
+                module_key = module_p_mapping.get(p_col)
+                if not module_key:
+                    continue                    
+                module_cols = self.get_pv_columns_for_module(module_key)
+                available_cols = list(module_cols.values())                
+                module_info = self.column_mapping[module_key]
+                category = module_info.get('category', 'unknown')
+                
+                for day in low_valid_days:
+                    mask = result_df.index.date == day
+                    module_bad_col = f"bad_day_{module_key}"
+                    if module_bad_col in result_df.columns:
+                        result_df.loc[mask, module_bad_col] = 1
+                    if available_cols:
+                        result_df.loc[mask, available_cols] = np.nan
+                
+                print(f"Module '{module_key}' (category: {category}): marked {low_days_count} days as bad")
 
-        low_valid_days = valid_p_per_day[valid_p_per_day < threshold].index
-        print(f"Days with fewer than {threshold} valid 'P' rows: {len(low_valid_days)}")
-
-        for day in low_valid_days:
-            mask = result_df.index.date == day
-            result_df.loc[mask, "bad_day"] = 1
-            result_df.loc[mask, available_pv_cols] = np.nan
-
-        total_bad_rows = result_df["bad_day"].sum()
-        print(f"Total bad rows after quality filtering: {total_bad_rows}")
+        if self.data_structure == 'category':
+            print("\nCategory-specific bad rows after low P count filtering:")
+            for category in self.pv_categories:
+                category_bad_col = f"bad_day_{category}"
+                if category_bad_col in result_df.columns:
+                    category_bad_rows = result_df[category_bad_col].sum()
+                    print(f"  {category_bad_col}: {category_bad_rows} bad rows")
+        else:  # per_module
+            print("\nModule-specific bad rows after low P count filtering (first 5 modules):")
+            module_count = 0
+            for module_key in self.modules:
+                module_bad_col = f"bad_day_{module_key}"
+                if module_bad_col in result_df.columns:
+                    module_bad_rows = result_df[module_bad_col].sum()
+                    print(f"  {module_bad_col}: {module_bad_rows} bad rows")
+                    module_count += 1
+                    if module_count >= 5:
+                        break
 
         return result_df
     
-    #NEW
     def enforce_bounds_and_irradiance(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        - For good days (bad_day == 0):
-            - If a column exists and value is outside bounds : set to 0
-            - If Irr <= 0 : force P, I, U to 0
-        - For bad days (bad_day == 1): leave values unchanged
-        - Missing columns are ignored
-        - bad_day column is untouched
-        """
-
+        """Enforce bounds and irradiance rules on good days."""
         if df.empty:
             return df
 
         result = df.copy()
 
-        BOUNDS = {
-            "P": (0, 110),
-            "I": (0, 1.4),
-            "U": (40, 100),
-            "P_normalised": (0.0, 1.75), #fo si 1.2 and for psc 1.75
-        }
-        """
-        BOUNDS = {
-            "P": (0, 250),
-            "I": (0, 9),
-            "U": (10, 60),
+        if self.data_structure == 'category':
+            BOUNDS = self._get_category_bounds()
+            # Category based processing
+            for category in self.pv_categories:
+                category_bad_col = f"bad_day_{category}"  
+                if category_bad_col not in result.columns:
+                    print(f"Warning: No bad_day column for category '{category}', treating all days as good")
+                    good_day_mask = pd.Series(True, index=result.index)
+                else:
+                    good_day_mask = result[category_bad_col] == 0  
+                if not good_day_mask.any():
+                    print(f"No good days found for category '{category}', skipping bounds enforcement")
+                    continue                
+                category_cols = self.get_pv_columns_for_category(category)
+
+                # Apply bounds
+                for param in ['P', 'I', 'U', 'Temp', 'P_normalised']:
+                    if param in category_cols:
+                        col_name = category_cols[param]
+                        if col_name in result.columns and col_name in BOUNDS:
+                            lo, hi = BOUNDS[col_name]
+
+                            valid_val_mask = result[col_name].notna() & (result[col_name] != 0)
+                            out_of_bounds_mask = (valid_val_mask & ((result[col_name] < lo) | (result[col_name] > hi)) & good_day_mask)
+                            
+                            if out_of_bounds_mask.any():
+                                rows_to_zero = out_of_bounds_mask.sum()
+                                result.loc[out_of_bounds_mask, col_name] = 0
+                                print(f"Category '{category}': Set {rows_to_zero} out-of-bounds values to 0 for column '{col_name}'")
         
-            "P": (0, 110),
-            "I": (0, 1.4),
-            "U": (40, 100),
-        }
-        """
-
-        good_day_mask = result["bad_day"] == 0
-        if not good_day_mask.any():
-            print("No good days found, skipping bounds enforcement")
-            return result
-
-        for col, (lo, hi) in BOUNDS.items():
-            if col not in result.columns:
-                continue
-
-            out_of_bounds = ((result[col] < lo) | (result[col] > hi)) & good_day_mask & (result[col] != 0)
-            if out_of_bounds.any():
-                count = out_of_bounds.sum()
-                result.loc[out_of_bounds, col] = 0
-                print(f"Set {count} non-zero out-of-bounds values to 0 for column '{col}' on good days")
-
-        if "Irr" in result.columns:
-            zero_irr_mask = (result["Irr"] <= 0) & good_day_mask            
-            for col in ["P", "P_normalised", "I", "U"]:
-                if col not in result.columns:
+        else:  # per_module
+            BOUNDS = self._get_per_module_bounds()            
+            for module_key in self.modules:
+                module_bad_col = f"bad_day_{module_key}"
+                if module_bad_col not in result.columns:
+                    print(f"Warning: No bad_day column for module '{module_key}', treating all days as good")
+                    module_good_mask = pd.Series(True, index=result.index)
+                else:
+                    module_good_mask = result[module_bad_col] == 0
+                
+                if not module_good_mask.any():
+                    print(f"No good days found for module '{module_key}', skipping bounds enforcement")
                     continue
-
-                force_zero_mask = zero_irr_mask & (result[col] != 0)
-
-                if force_zero_mask.any():
-                    cnt = force_zero_mask.sum()
-                    result.loc[force_zero_mask, col] = 0
-                    print(f"Set {cnt} non-zero '{col}' values to 0 due to Irr ≤ 0")
-
-        return result
-
-    def interpolate_pv_daylight(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Interpolate PV values when:
-        - bad_day == 0
-        - daytime (04:00-22:00)
-        - within the same day
-        - gaps <= 1 hour
-        - after interpolation: out of range values => 0
-        - smooth ramp down to zero for P, I, Temp at end of day
-        - if Irr (irradiance) <= 0, set P, I, U to zero
-        """
-
-        if df.empty:
-            return df
-
-        BOUNDS = {
-            "P": (0, 250),
-            "I": (0, 9),
-            "U": (40, 100),
-            "P_normalised": (0, 1.2),  #for si 1.2 and for psc 1.75
-        }
-
-        """
-        BOUNDS = {
-            "P": (0, 110),
-            "I": (0, 1.4),
-            "U": (40, 100),
-            "Temp": (-20, 100),
-
-            "P": (0, 250),
-            "I": (0, 9),
-            "U": (0, 60),
-            "Temp": (-20, 100),
-        }
-        """
-        pv_cols = [c for c in BOUNDS if c in df.columns]
-        if not pv_cols:
-            return df
-
-        result = df.copy().sort_index()
-
-        is_day = (result.index.hour >= 4) & (result.index.hour < 22)
-        good_day = result["bad_day"] == 0
-
-        for col in pv_cols:
-            day_mask = is_day & good_day
-            daylight_series = result.loc[day_mask, col]
-
-            if daylight_series.isna().sum() == 0:
-                continue
-
-            interpolated_days = []
-
-            for _, day_group in daylight_series.groupby(daylight_series.index.date):
-                s = day_group.copy()
-
-                valid_ts = s.dropna().index
-                for i in range(1, len(valid_ts)):
-                    if (valid_ts[i] - valid_ts[i - 1]).total_seconds() > 3600:
-                        gap_idx = s.loc[valid_ts[i - 1]:valid_ts[i]].index
-                        if len(gap_idx) > 2:
-                            s.loc[gap_idx[1:-1]] = np.nan
-
-                s = s.interpolate(method="linear", limit_direction="both", limit_area="inside")
-                if col in ["P", "I", "U"]:
-                    last_valid_idx = s.last_valid_index()
-                    if last_valid_idx is not None:
-                        tail_idx = s.loc[last_valid_idx:].index
-                        if len(tail_idx) > 1:
-                            s.loc[tail_idx] = np.linspace(
-                                s.loc[last_valid_idx],
-                                0,
-                                len(tail_idx)
-                            )
-
-                lo, hi = BOUNDS[col]
-                s[(s < lo) | (s > hi)] = 0
-
-                interpolated_days.append(s)
-
-            if interpolated_days:
-                merged = pd.concat(interpolated_days)
-                result.loc[merged.index, col] = merged
-
-        if "Irr" in result.columns:
-            low_irr_mask = result["Irr"] <= 0
-            for col in ["P", "I", "U"]:
-                if col in result.columns:
-                    result.loc[low_irr_mask, col] = 0
+                
+                module_cols = self.get_pv_columns_for_module(module_key)
+                
+                # Apply bounds
+                for param, col_name in module_cols.items():
+                    if col_name in result.columns and col_name in BOUNDS:
+                        lo, hi = BOUNDS[col_name]
+                        
+                        valid_val_mask = result[col_name].notna() & (result[col_name] != 0)
+                        out_of_bounds_mask = (valid_val_mask & ((result[col_name] < lo) | (result[col_name] > hi)) & module_good_mask)
+                        
+                        if out_of_bounds_mask.any():
+                            rows_to_zero = out_of_bounds_mask.sum()
+                            result.loc[out_of_bounds_mask, col_name] = 0
+                            print(f"Module '{module_key}': Set {rows_to_zero} out-of-bounds values to 0 for column '{col_name}'")
 
         return result
     
     def finalize_nan_cleanup(self, df: pd.DataFrame, set_nan_to_zero: bool = False) -> pd.DataFrame:
-        """
-        Prints NaN and non-NaN counts per column and optionally fills remaining NaNs.
-        """
+        """Print statistics and optionally fill NaNs."""
         nan_counts = df.isna().sum()
         non_nan_counts = df.notna().sum()
         total_rows = len(df)
@@ -600,7 +937,6 @@ class PVDWDDataMerger:
         for col in df.columns:
             nan_count = nan_counts[col]
             non_nan_count = non_nan_counts[col]
-            
             nan_pct = (nan_count / total_rows * 100) if total_rows > 0 else 0
             
             if nan_count > 0:
@@ -621,443 +957,111 @@ class PVDWDDataMerger:
             return df
 
     def drop_unwanted_columns(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Drop all columns NOT listed in local keep_columns.
-        """
-        keep_columns = ["P", "P_normalised", "I", "U", "Temp", "Irr", "bad_day", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover"] ##add P_normalised here if that is target
+        """Keep only required columns."""
+        keep_columns = ["Irr"]
+        
+        #keep all bad_day_* columns for training
+        bad_day_cols = [col for col in df.columns if col.startswith('bad_day_')]
+        keep_columns.extend(bad_day_cols)
+        
+        # Add weather columns
+        weather_columns = ["humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover"]
+        keep_columns.extend([c for c in weather_columns if c in df.columns])
+        
+        # Add PV columns
+        if self.data_structure == 'category':
+            for category in self.pv_categories:
+                category_cols = self.get_pv_columns_for_category(category)
+                for param in ["P", "P_normalised", "I", "U", "Temp"]:
+                    if param in category_cols and category_cols[param] in df.columns:
+                        keep_columns.append(category_cols[param])
+        else:  # per_module
+            for module_key, module_info in self.column_mapping.items():
+                for param in ["P", "P_normalised", "I", "U", "Temp"]:
+                    if param in module_info and module_info[param] in df.columns:
+                        keep_columns.append(module_info[param])
 
         existing_keep = [c for c in keep_columns if c in df.columns]
         to_drop = [c for c in df.columns if c not in existing_keep]
 
-        print(f"\nKeeping: {existing_keep}")
-        print(f"Dropping: {to_drop}")
+        print(f"\nKeeping: {len(existing_keep)} columns")
+        print(f"Weather/PV columns: {[c for c in existing_keep if not c.startswith('bad_day_')]}")
+        print(f"Bad day columns: {[c for c in existing_keep if c.startswith('bad_day_')]}")
+        print(f"Dropping: {len(to_drop)} columns")
 
         return df[existing_keep].copy()
-    
-    def plot_monthly_timeseries(
-        self,
-        df: pd.DataFrame,
-        output_dir: str,
-        pv_cols=('P', 'P_normalised', 'I', 'U', 'Temp', 'Irr', 'bad_day', 'humidity', 'temp_C', 'precip_mm', 'precip_indicator', 'cloud_cover'),
-    ):
-        if df.empty:
-            print("Empty DataFrame.")
-            return
-
-        if "timestamp" not in df.columns:
-            raise ValueError("DataFrame must contain 'timestamp' column")
-
-        if "bad_day" not in df.columns:
-            raise ValueError("DataFrame must contain 'bad_day' column")
-
-        os.makedirs(output_dir, exist_ok=True)
-
-        df = df.copy()
-        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_localize(None)
-        df = df.sort_values("timestamp")
-        df["month"] = df["timestamp"].dt.strftime("%Y-%m")
-
-        cols = [c for c in pv_cols if c in df.columns]
-        if not cols:
-            print("No PV columns found for plotting")
-            return
-
-        print(f"Plotting columns: {cols}")
-
-        for month, month_df in df.groupby("month"):
-            fig, axes = plt.subplots(
-                len(cols), 1, figsize=(14, 3 * len(cols)), sharex=True
-            )
-
-            if len(cols) == 1:
-                axes = [axes]
-
-            for ax, col in zip(axes, cols):
-
-                # Line + small dots
-                ax.plot(
-                    month_df["timestamp"],
-                    month_df[col],
-                    linewidth=1,
-                    marker="o",
-                    markersize=2,
-                    alpha=0.8
-                )
-
-                # Highlight bad days
-                bad_days = month_df.loc[month_df["bad_day"] == 1, "timestamp"].dt.date.unique()
-                for d in bad_days:
-                    start = pd.Timestamp(d)
-                    end = start + pd.Timedelta(days=1)
-                    ax.axvspan(start, end, color="red", alpha=0.15)
-
-                ax.set_ylabel(col)
-                ax.grid(True, alpha=0.3)
-
-            # X-axis formatting: daily ticks, 90° rotation
-            axes[-1].xaxis.set_major_locator(mdates.DayLocator())
-            axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%d-%m"))
-            axes[-1].tick_params(axis="x", rotation=90, labelsize=8)
-
-            fig.suptitle(f"Monthly Time Series for {month}", fontsize=14, fontweight="bold")
-            plt.tight_layout(rect=[0, 0, 1, 0.96])
-
-            out_path = os.path.join(output_dir, f"timeseries_{month}.png")
-            plt.savefig(out_path, dpi=150)
-            plt.close()
-            print(f"Saved {out_path}")
-
-    def plot_correlation_scatter(self, df: pd.DataFrame, output_dir: str):
-        os.makedirs(output_dir, exist_ok=True)
-        df = df.copy()
-        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-        df = df[df["timestamp"].notna()]
-
-        if "bad_day" in df.columns:
-            before = len(df)
-            df = df[df["bad_day"] == 0]
-            print(f"Excluded bad days: {before - len(df)} rows")
-        else:
-            print("Warning: 'bad_day' column not found")
-
-        is_day = (df["timestamp"].dt.hour >= 4) & (df["timestamp"].dt.hour < 22)
-        day_df = df[is_day]
-
-        print(f"Excluded night-time rows: {(~is_day).sum()}")
-        print(f"Remaining daytime rows: {len(day_df)}")
-
-        if day_df.empty:
-            print("No daytime data left, skipping correlation plots")
-            return
-
-        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle(
-            "PV System Correlations (Bad Days & Night Excluded)",
-            fontsize=16,
-            fontweight="bold",
-        )
-        axes = axes.flatten()
-
-        def scatter_plot(ax, x, y, c, xlabel, ylabel, title):
-            valid = day_df[[x, y, c]].dropna()
-            if valid.empty:
-                ax.text(0.5, 0.5, "No data", ha="center", va="center", transform=ax.transAxes)
-                ax.set_title(title)
-                return
-
-            x_min, x_max = valid[x].min(), valid[x].max()
-            y_min, y_max = valid[y].min(), valid[y].max()
-
-            sc = ax.scatter(
-                valid[x],
-                valid[y],
-                c=valid[c],
-                cmap="viridis",
-                s=12,
-                alpha=0.6,
-            )
-
-            if "Irr" in valid.columns:
-                low_irr = valid[valid["Irr"] < 10]
-                if not low_irr.empty:
-                    ax.scatter(
-                        low_irr[x],
-                        low_irr[y],
-                        color="red",
-                        s=10,
-                        alpha=0.9,
-                        label="Irr < 10"
-                    )
-                    ax.legend(loc="best")
-
-            ax.set_xlim(x_min, x_max)
-            ax.set_ylim(y_min, y_max)
-            corr = valid[x].corr(valid[y])
-            ax.set_xlabel(xlabel)
-            ax.set_ylabel(ylabel)
-            ax.set_title(f"{title}\n(r = {corr:.3f})")
-            ax.grid(True, alpha=0.3)
-
-            plt.colorbar(sc, ax=ax, label=c)
-
-        plots = [
-            (["Irr", "P", "Temp"], "Irr", "P", "Temp",
-            "Irradiance", "Power",
-            "Power vs Irradiance (colored by Temperature)"),
-
-            (["U", "Temp", "Irr"], "U", "Temp", "Irr",
-            "Voltage", "Panel Temperature",
-            "Voltage vs Temperature (colored by Irradiance)"),
-
-            (["Irr", "I", "Temp"], "Irr", "I", "Temp",
-            "Irradiance", "Current",
-            "Current vs Irradiance (colored by Temperature)"),
-
-            (["Irr", "Temp", "P"], "Irr", "Temp", "P",
-            "Irradiance", "Panel Temperature",
-            "Irradiance vs Temperature (colored by Power)"),
-        ]
-
-        for ax, (cols, x, y, c, xl, yl, title) in zip(axes, plots):
-            if all(col in day_df.columns for col in cols):
-                scatter_plot(ax, x, y, c, xl, yl, title)
-            else:
-                ax.set_visible(False)
-
-        plt.tight_layout()
-        out_path = os.path.join(output_dir, "correlation_scatter.png")
-        plt.savefig(out_path, dpi=150, bbox_inches="tight")
-        plt.close()
-        print(f"Saved: {out_path}")
-
-        self._plot_correlation_heatmap(day_df, output_dir)
-
-    def _plot_correlation_heatmap(self, df: pd.DataFrame, output_dir: str):
-        cols = ["P", "P_normalised", "I", "U", "Temp", "Irr", "humidity", "temp_C", "precip_mm", "precip_indicator", "cloud_cover",]
-        numeric_cols = [c for c in cols if c in df.columns]
-        df = df[numeric_cols].dropna()
-
-        if len(df) < 10:
-            print("Not enough valid rows for correlation heatmap")
-            return
-
-        corr = df.corr()
-        mask = np.triu(np.ones_like(corr, dtype=bool))
-
-        plt.figure(figsize=(12, 10))
-        sns.heatmap(
-            corr,
-            mask=mask,
-            cmap="coolwarm",
-            center=0,
-            annot=True,
-            fmt=".2f",
-            square=True,
-            cbar_kws={"shrink": 0.8},
-        )
-
-        plt.title(
-            "Correlation Matrix (Bad Days & Night Excluded)",
-            fontsize=16,
-            fontweight="bold",
-        )
-        plt.tight_layout()
-
-        out_path = os.path.join(output_dir, "correlation_heatmap.png")
-        plt.savefig(out_path, dpi=150, bbox_inches="tight")
-        plt.close()
-        print(f"Saved: {out_path}")
-    
-    def plot_day_per_month(
-        self,
-        df: pd.DataFrame,
-        output_dir: str,
-        day_list: list[str] | None = None,
-        p_col: str = "P",
-        irr_col: str = "Irr",
-    ):
-        DEFAULT_DAY_LIST = [
-            "26-12-2025",
-            "15-11-2025",
-            "31-10-2025",
-            "11-09-2025",
-            "03-08-2025",
-            "07-07-2025",
-            "17-06-2025",
-            "14-05-2025",
-            "26-04-2025",
-            "16-03-2025",
-            "15-02-2025",
-            "18-01-2025",
-            "27-12-2024",
-            "29-11-2024",
-        ]
-        if day_list is None:
-            day_list = DEFAULT_DAY_LIST
-
-        if df.empty:
-            print("Empty DataFrame.")
-            return
-
-        if "timestamp" not in df.columns:
-            raise ValueError("DataFrame must contain 'timestamp' column")
-
-        if "bad_day" not in df.columns:
-            raise ValueError("DataFrame must contain 'bad_day' column")
-
-        if not {p_col, irr_col}.issubset(df.columns):
-            print(f"Required columns missing: {p_col}, {irr_col}")
-            return
-
-        os.makedirs(output_dir, exist_ok=True)
-
-        df = df.copy()
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
-        df = df.set_index("timestamp").sort_index()
-        df["date"] = df.index.date
-
-        days = [pd.to_datetime(d, dayfirst=True).date() for d in day_list]
-
-        for day in days:
-            day_df = df[df["date"] == day]
-
-            if day_df.empty:
-                print(f"[SKIP] {day} not found in data")
-                continue
-
-            if (day_df["bad_day"] == 1).any():
-                print(f"[SKIP] {day} marked as bad_day")
-                continue
-
-            day_df = day_df.dropna(subset=[p_col, irr_col])
-            if day_df.empty:
-                print(f"[SKIP] {day} has no valid data after NaN drop")
-                continue
-
-            times = day_df.index
-            month = times[0].strftime("%Y-%m")
-
-            fig, ax1 = plt.subplots(figsize=(10, 4))
-
-            ax1.plot(times, day_df[p_col], label=p_col, linewidth=2, marker="o", markersize=3)
-            ax1.set_xlabel("Time (hour)")
-            ax1.set_ylabel(p_col)
-            ax1.set_title(f"{month} | {day}")
-            ax1.grid(True, alpha=0.3)
-            ax1.xaxis.set_major_locator(mdates.HourLocator(interval=1))
-            ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H"))
-
-            ax2 = ax1.twinx()
-            ax2.plot(times, day_df[irr_col], label=irr_col, linestyle="--", alpha=0.6)
-            ax2.set_ylabel(irr_col)
-
-            lines1, labels1 = ax1.get_legend_handles_labels()
-            lines2, labels2 = ax2.get_legend_handles_labels()
-            ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper center", ncol=2, fontsize=8)
-
-            plt.tight_layout()
-            fname = os.path.join(output_dir, f"day_{day}.png")
-            plt.savefig(fname, dpi=150)
-            plt.close()
-
-            print(f"Saved {fname}")
 
     def process_data(self, pv_data_path: str, output_path: str, create_plots: bool = True) -> bool:       
-        # Load scaling factors
+        print("\nSTEP 1 : Loading scaling factors")
+        print("-"*100)
         if not self.load_scaling_factors():
             return False
         
-        # Load PV data
-        print(f"\nSTEP 1: Loading PV data")
-        print("-" * 100)
+        print("\nSTEP 2 : Loading PV data")
+        print("-"*100)
         pv_df = self.load_and_parse_pv(pv_data_path)
         if pv_df is None:
             return False
         
-        # Get PV time range
         pv_start = pv_df['_time'].min()
         pv_end = pv_df['_time'].max()
         
-        # Load DWD data
-        print(f"\nSTEP 2: Loading DWD data")
-        print("-" * 100)
+        print("\nSTEP 3 : Loading DWD data")
+        print("-"*100)
         dwd_df = self.load_and_parse_dwd()
         if dwd_df is None:
             return False
         
-        # Filter DWD to PV time range
-        print(f"\nSTEP 3: Filtering DWD to PV time range")
-        print("-" * 100)
-        dwd_filtered = dwd_df[
-            (dwd_df.index >= pv_start) & 
-            (dwd_df.index <= pv_end)
-        ].copy()
+        print("\nSTEP 4 : Filtering DWD to PV time range")
+        print("-"*100)
+        dwd_filtered = dwd_df[(dwd_df.index >= pv_start) & (dwd_df.index <= pv_end)].copy()
         
         print(f"Original DWD records: {len(dwd_df)}")
         print(f"Filtered DWD records: {len(dwd_filtered)}")
         print(f"PV time range: {pv_start} to {pv_end}")
         
         if len(dwd_filtered) == 0:
-            print("No DWD data within PV time range")
+            print("WARNING : No DWD data in PV time range")
             return False
         
-        # Merge PV into DWD backbone
-        print(f"\nSTEP 4: Merging PV into DWD backbone")
-        print("-" * 100)
+        print("\nSTEP 5 : Merging PV into DWD backbone")
+        print("-"*100)
         merged_df = self.align_pv_to_backbone(pv_df, dwd_filtered)
         if merged_df.empty:
             print("No PV data could be merged with DWD backbone")
             return False
         
-        # Fill missing irradiance
-        print(f"\nSTEP 6: Filling missing irradiance")
-        print("-" * 100)
+        print("\nSTEP 6 : Filling missing irradiance")
+        print("-"*100)
         irr_filled_df = self.fill_missing_irradiance(merged_df)
-
-        # Mask maintenance periods as bad days
-        print(f"\nSTEP 7: Masking maintenance periods as bad days")
-        print("-" * 100)
-        #change as per target: psc / si
-        exclude_ranges = [
-            ("2024-12-06", "2024-12-14"),
-            ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2025-01-03"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-25", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-26"),
-        ]
-
-        """exclude_ranges [
-        for psc:
-            ("2024-12-06", "2024-12-14"),
-            ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2025-01-03"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-25", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-26"),
-            
-        for si:
-            ("2024-12-06", "2024-12-14"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-26", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-16", "2025-11-26"),
-            ("2025-12-21", "2025-12-24"),
-        ]"""
-        meaintenance_period_df = self.mark_maintenance_periods(irr_filled_df, exclude_ranges)
         
-        # Mask days with P count less than threshold, already night time is set to zero so the threshold is already 36. 
-        print(f"\nSTEP 8: Masking days with low P count")
-        print("-" * 100)
-        high_quality_df = self.mark_low_quality_days_by_p_count(meaintenance_period_df, threshold=70)
+        print("\nSTEP 7 : Creating bad_day columns")
+        print("-"*100)
+        specific_bad_day_df = self.create_specific_bad_day_columns(irr_filled_df)
 
-        # Skipping: Interpolate PV data
-        #print(f"\nSTEP 9: Interpolating PV data")
-        #print("-" * 100)
-        #interpolated_df = self.interpolate_pv_daylight(high_quality_df)
+        print("\nSTEP 8 : Marking before installation")
+        print("-"*100)
+        before_install_df = self.mark_before_installation_bad(specific_bad_day_df)
+
+        print("\nSTEP 9 : Marking maintenance periods")
+        print("-"*100)
+        maintenance_period_df = self.mark_maintenance_periods(before_install_df)
         
-        #NEW : Final bound check and filter
+        print("\nSTEP 10 : Marking low quality days")
+        print("-"*100)
+        high_quality_df = self.mark_low_quality_days_by_p_count(maintenance_period_df, threshold=50)
+
+        print("\nSTEP 11 : Enforcing bounds and irradiance rules")
+        print("-"*100)
         enforced_df = self.enforce_bounds_and_irradiance(high_quality_df)
 
-        # Remove unwanted columns
+        print("\nSTEP 12 : Selecting final columns")
+        print("-"*100)
         result_df = self.drop_unwanted_columns(enforced_df)
 
-        # Set all nans to zero or as it is
-        print(f"\nSTEP 10: Nan handling")
+        print(f"\nSTEP 13: Nan handling")
         print("-" * 100)
         result_df = self.finalize_nan_cleanup(result_df, set_nan_to_zero=False) 
-        
-        if create_plots:
-                plot_df = result_df.reset_index()
-                plot_dir = os.path.join(os.path.dirname(output_path), 'plots')
-                print(f"\nSTEP 11: Creating visualizations")
-                print("-" * 100)
-                self.plot_monthly_timeseries(plot_df, plot_dir)
-                self.plot_correlation_scatter(plot_df, plot_dir)
-                self.plot_day_per_month(plot_df, plot_dir)
-                print(f"\nPlots saved to: {plot_dir}")
 
         try:
             final_df_reset = result_df.reset_index()
@@ -1066,13 +1070,19 @@ class PVDWDDataMerger:
             final_df_reset = final_df_reset.sort_values("_time")
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             
-            # Save to CSV
+            #Save to CSV
             final_df_reset.to_csv(output_path, index=False)
             
             print(f"\nData saved to: {output_path}")
             print(f"Total records: {len(final_df_reset)}")
             print(f"Time range: {final_df_reset['_time'].min()} to {final_df_reset['_time'].max()}")
-            print(f"Columns: {list(final_df_reset.columns)}")
+            print(f"Data structure: {self.data_structure}")
+            print(f"Columns ({len(final_df_reset.columns)} total):")
+            for i, col in enumerate(final_df_reset.columns):
+                if col.startswith('bad_day_'):
+                    print(f"  {i+1}. {col} (specific bad day column)")
+                else:
+                    print(f"  {i+1}. {col}")
             return True
             
         except Exception as e:

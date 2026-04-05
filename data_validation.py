@@ -1,5 +1,5 @@
-#Version: 1.0 
-from typing import List, Optional
+#Version 2.0
+from typing import List
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -176,6 +176,10 @@ class PVValidationPipeline:
     def align_resample(self) -> None:
         print("\nSTEP 2: Removing pre-install & duplicate data")
         print(f"Total rows before: {len(self.df):,}")
+        if not self.df.empty:
+            print(f"Start date: {self.df['_time'].min()}")
+            print(f"End date: {self.df['_time'].max()}")
+        print(f"  Unique modules: {self.df['Name'].nunique()}")
         filtered = []
 
         for module, sub in self.df.groupby("Name"):
@@ -224,7 +228,7 @@ class PVValidationPipeline:
         4. Fill gaps within the merged reference dataframe. 
         5. Copy the processed Irr column to all validation modules (exact timestamp match only orelse nan)
         6. Fill per-module missing Irr values using scaled DWD
-    """    
+    """
     def fill_irradiance_gaps(self, dwd_file, cross_module_ref=None, scaling_ref_module=None):        
         print("\nSTEP 4: Fill Irradiance gaps")
         print(f"df size before: {self.df.shape}")
@@ -681,7 +685,6 @@ class PVValidationPipeline:
         
         return self.df
 
-    #NEW: Plotting function
     def plot_irradiance_gap_filling_overview(
         self,
         scaling_ref_final: pd.DataFrame,
@@ -941,22 +944,44 @@ class PVValidationPipeline:
                 if (t.hour >= night_start or t.hour <= night_end)
             ]
 
+            print(f"\nTotal night timestamps to check per module: {len(night_times):,}")
+            print("-" * 80)
+            print("Module           | Existing Night Rows | Missing Night Rows | Added")
+            print("-" * 80)
+
             new_rows = []
+            module_stats = []
 
             for module in all_modules:
                 module_times = set(self.df.loc[self.df["Name"] == module, "_time"])
+                
+                # Count existing night rows for this module
+                module_night_rows = sum(1 for ts in module_times if ts in night_times)
+                
+                # Find missing night timestamps
+                missing_times = [ts for ts in night_times if ts not in module_times]
+                module_added = len(missing_times)
 
-                for ts in night_times:
-                    if ts not in module_times:
-                        new_rows.append({
-                            "_time": ts,
-                            "Name": module,
-                            "P": value,
-                            "I": value,
-                            "U": value,
-                            "Irr": value,
-                            "Temp": value,
-                        })
+                module_stats.append({
+                    'module': module,
+                    'existing': module_night_rows,
+                    'missing': module_added,
+                    'added': module_added
+                })
+
+                for ts in missing_times:
+                    new_rows.append({
+                        "_time": ts,
+                        "Name": module,
+                        "P": value,
+                        "I": value,
+                        "U": value,
+                        "Irr": value,
+                        "Temp": value,
+                    })
+                
+                # Print per-module statistics
+                print(f"{module:16} | {module_night_rows:18,} | {module_added:18,} | {module_added:5,}")
 
             if new_rows:
                 new_df = pd.DataFrame(new_rows)
@@ -964,9 +989,28 @@ class PVValidationPipeline:
                 self.df = self.df.sort_values(["_time", "Name"]).reset_index(drop=True)
 
             added = len(new_rows)
-
-            print(f"Rows added: {added:,}")
+            
+            print("-" * 80)
+            print(f"TOTAL            | {sum(s['existing'] for s in module_stats):18,} | "
+                f"{sum(s['missing'] for s in module_stats):18,} | {added:5,}")
+            print("-" * 80)
+            
+            print(f"\nRows added: {added:,}")
             print(f"Total rows after operation: {len(self.df):,}")
+            
+            # Additional breakdown by hour if helpful
+            if added > 0 and mode in (2, 3):
+                print("\nNight rows added by hour:")
+                hour_counts = {}
+                for ts in night_times:
+                    hour = ts.hour
+                    hour_counts[hour] = hour_counts.get(hour, 0) + len(all_modules)
+                
+                hour_summary = []
+                for hour in sorted(hour_counts.keys()):
+                    hour_summary.append(f"{hour:02d}:00 ({hour_counts[hour]:,})")
+                
+                print(" | ".join(hour_summary))
 
         else:
             raise ValueError("Invalid mode. Use mode = 1, 2, or 3.")
@@ -975,11 +1019,10 @@ class PVValidationPipeline:
 
         delta = len(self.df) - before_rows
         sign = "+" if delta >= 0 else ""
-        print(f"Net row change: {sign}{delta:,}")
+        print(f"\nNet row change: {sign}{delta:,}")
 
         return self.df
 
-    #NEW: Add columns based on name_mapping_dict
     def map_module_metadata(self):
         """
         Adds columns:
@@ -1027,54 +1070,7 @@ class PVValidationPipeline:
         print("-" * 40)
         print(self.df[["module_type", "category"]].value_counts(dropna=False))
 
-    #NEW
-    def plot_module_metadata_summary(self, out_png):
-        """
-        Plot summary of module metadata distribution
-        """
-        print("\nPlotting module metadata summary")
 
-        df = self.df.copy()
-        df["date"] = df["_time"].dt.date
-
-        fig, axes = plt.subplots(3, 2, figsize=(16, 14))
-        fig.suptitle("Module Metadata Distribution Summary", fontsize=16)
-
-        summaries = [
-            ("category", "Category"),
-            ("module_type", "Module Type"),
-            ("module_id", "Module ID"),
-        ]
-
-        for row, (col, title) in enumerate(summaries):
-            # rows
-            row_counts = df[col].value_counts().sort_index()
-            axes[row, 0].bar(row_counts.index.astype(str), row_counts.values)
-            axes[row, 0].set_title(f"{title} – Number of Rows")
-            axes[row, 0].set_ylabel("Rows")
-            axes[row, 0].tick_params(axis="x", rotation=45)
-
-            # days
-            day_counts = (
-                df.groupby(col)["date"]
-                .nunique()
-                .sort_index()
-            )
-            axes[row, 1].bar(day_counts.index.astype(str), day_counts.values)
-            axes[row, 1].set_title(f"{title} – Number of Days")
-            axes[row, 1].set_ylabel("Days")
-            axes[row, 1].tick_params(axis="x", rotation=45)
-
-        for ax in axes.flat:
-            ax.grid(axis="y", alpha=0.3)
-
-        plt.tight_layout(rect=[0, 0, 1, 0.96])
-        plt.savefig(out_png, dpi=150)
-        plt.close(fig)
-
-        print(f"Saved metadata summary plot: {out_png}")
-
-    #NEW : range_validation based on module_type column (eg. atersa, sanyo, solon, ...)
     def range_validation(self):
         """
         Validation is performed per module_type
@@ -1233,85 +1229,146 @@ class PVValidationPipeline:
             pct = (col_outliers / total_day_rows) * 100 if total_day_rows > 0 else 0
             print(f"{col:7} | {col_outliers:14,} | {pct:17.1f}%")
 
-    #NEW
     def detect_correlation_anomalies(self, mark_as_nan: bool = True) -> list[dict]:
         """
         Detect correlation anomalies between Irr and P by comparing relative changes.
         """
-        print("\nSTEP 9: Correlation Anomaliy Detection")
+        print("\nSTEP 9: Correlation Anomaly Detection")
         print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
         min_proportion = 0.05       #minimum allowed proportion of P_change / Irr_change
         min_irr_threshold = 10.0    #minimum Irr threshold to consider in comparison
 
-        anomalies = []
+        all_anomalies = []
 
         if not {'Irr', 'P', '_time'}.issubset(self.df.columns):
             print(f"WARNING: Required columns 'Irr', 'P', or '_time' not found.")
-            return anomalies
+            return all_anomalies
 
         print(f"Starting correlation anomaly detection...")
-
-        df = self.df.sort_values('_time').reset_index()
-
-        valid_mask = (df['Irr'] > 0) & (df['P'] > 0)
-        valid_indices = df.index[valid_mask].tolist()
-
-        if len(valid_indices) < 2:
-            print(f"[WARNING: Not enough valid data points for anomaly detection.")
-            return anomalies
-
-        for i in range(1, len(valid_indices)):
-            prev_i = valid_indices[i-1]
-            curr_i = valid_indices[i]
-
-            prev_irr = df.at[prev_i, 'Irr']
-            curr_irr = df.at[curr_i, 'Irr']
-            prev_p = df.at[prev_i, 'P']
-            curr_p = df.at[curr_i, 'P']
-
-            # Skip if both Irr values below threshold
-            if prev_irr < min_irr_threshold and curr_irr < min_irr_threshold:
+        
+        total_rows = len(self.df)
+        total_anomalies = 0
+        
+        # Process each module/panel separately
+        for module, sub in self.df.groupby("Name"):
+            if len(sub) < 10:
                 continue
-
-            # Avoid division by zero
-            if prev_irr == 0 or prev_p == 0:
+                
+            module_anomalies = []
+            df_sub = sub.sort_values('_time').reset_index()
+            
+            valid_mask = (df_sub['Irr'] > 0) & (df_sub['P'] > 0)
+            valid_indices = df_sub.index[valid_mask].tolist()
+            
+            if len(valid_indices) < 2:
+                print(f"\n{module} — Not enough valid data points for anomaly detection.")
                 continue
-
-            irr_change = (curr_irr - prev_irr) / prev_irr
-            p_change = (curr_p - prev_p) / prev_p
-
-            if abs(irr_change) < 0.01:
-                continue
-
-            proportion = abs(p_change) / abs(irr_change) if irr_change != 0 else 1.0
-
-            if proportion < min_proportion:
-                anomaly = {
-                    "timestamp": df.at[curr_i, '_time'],
-                    "type": "irr_p_correlation_mismatch",
-                    "irr_change_pct": irr_change * 100,
-                    "p_change_pct": p_change * 100,
-                    "proportion_pct": proportion * 100,
-                    "min_proportion_pct": min_proportion * 100,
-                    "irr_value": curr_irr,
-                    "p_value": curr_p,
-                    "prev_irr": prev_irr,
-                    "prev_p": prev_p,
-                    "row_index": df.at[curr_i, 'index'],
-                    "description": f"P changed only {proportion*100:.1f}% relative to Irr change "
-                                f"(min required: {min_proportion*100:.1f}%)"
-                }
-                anomalies.append(anomaly)
-
-                idx = anomaly["row_index"]
-                if mark_as_nan:
-                    self.df.at[idx, 'P'] = np.nan
-                    self.df.at[idx, 'Irr'] = np.nan
-                else:
-                    self.df.at[idx, 'P'] = 0.0
-                    self.df.at[idx, 'Irr'] = 0.0
-
-        print(f"\nDetected {len(anomalies)} correlation anomalies.")
+            
+            print(f"\n{module} — total rows: {len(sub):,} | valid pairs: {len(valid_indices)-1:,}")
+            print("-" * 80)
+            print("Correlation Anomalies (Irr-P relationship)")
+            print("-" * 80)
+            
+            for i in range(1, len(valid_indices)):
+                prev_i = valid_indices[i-1]
+                curr_i = valid_indices[i]
+                
+                prev_irr = df_sub.at[prev_i, 'Irr']
+                curr_irr = df_sub.at[curr_i, 'Irr']
+                prev_p = df_sub.at[prev_i, 'P']
+                curr_p = df_sub.at[curr_i, 'P']
+                timestamp = df_sub.at[curr_i, '_time']
+                
+                # Skip if both Irr values below threshold
+                if prev_irr < min_irr_threshold and curr_irr < min_irr_threshold:
+                    continue
+                
+                # Avoid division by zero
+                if prev_irr == 0 or prev_p == 0:
+                    continue
+                
+                irr_change = (curr_irr - prev_irr) / prev_irr
+                p_change = (curr_p - prev_p) / prev_p
+                
+                if abs(irr_change) < 0.01:
+                    continue
+                
+                proportion = abs(p_change) / abs(irr_change) if irr_change != 0 else 1.0
+                
+                if proportion < min_proportion:
+                    anomaly = {
+                        "timestamp": timestamp,
+                        "type": "irr_p_correlation_mismatch",
+                        "irr_change_pct": irr_change * 100,
+                        "p_change_pct": p_change * 100,
+                        "proportion_pct": proportion * 100,
+                        "min_proportion_pct": min_proportion * 100,
+                        "irr_value": curr_irr,
+                        "p_value": curr_p,
+                        "prev_irr": prev_irr,
+                        "prev_p": prev_p,
+                        "module": module,
+                        "row_index": df_sub.at[curr_i, 'index'],
+                        "description": f"P changed only {proportion*100:.1f}% relative to Irr change "
+                                    f"(min required: {min_proportion*100:.1f}%)"
+                    }
+                    module_anomalies.append(anomaly)
+                    all_anomalies.append(anomaly)
+                    
+                    idx = anomaly["row_index"]
+                    if mark_as_nan:
+                        self.df.at[idx, 'P'] = np.nan
+                        self.df.at[idx, 'Irr'] = np.nan
+                    else:
+                        self.df.at[idx, 'P'] = 0.0
+                        self.df.at[idx, 'Irr'] = 0.0
+            
+            # Print module summary
+            if module_anomalies:
+                print(f"\n{module} — Found {len(module_anomalies)} anomalies:")
+                print("Timestamp           | Irr Change | P Change | Proportion | Irr Val | P Val | Prev Irr | Prev P")
+                print("-" * 100)
+                
+                # Show first 5 anomalies as sample
+                for j, anom in enumerate(module_anomalies[:5]):
+                    print(f"{anom['timestamp']} | "
+                        f"{anom['irr_change_pct']:9.1f}% | "
+                        f"{anom['p_change_pct']:8.1f}% | "
+                        f"{anom['proportion_pct']:9.1f}% | "
+                        f"{anom['irr_value']:7.1f} | "
+                        f"{anom['p_value']:6.1f} | "
+                        f"{anom['prev_irr']:8.1f} | "
+                        f"{anom['prev_p']:6.1f}")
+                
+                if len(module_anomalies) > 5:
+                    print(f"... and {len(module_anomalies) - 5} more anomalies")
+            else:
+                print(f"{module} — No correlation anomalies found.")
+            
+            total_anomalies += len(module_anomalies)
+        
+        # Print overall summary
+        print("\n" + "=" * 80)
+        print("CORRELATION ANOMALY DETECTION SUMMARY")
+        print("=" * 80)
+        print(f"Total rows processed: {total_rows:,}")
+        print(f"Total anomalies found: {total_anomalies:,}")
+        print(f"Anomaly rate: {(total_anomalies/total_rows)*100:.2f}% of all rows")
+        print("=" * 80)
+        
+        if all_anomalies:
+            print("\nAnomalies by Module:")
+            print("-" * 40)
+            module_counts = {}
+            for anom in all_anomalies:
+                module_counts[anom['module']] = module_counts.get(anom['module'], 0) + 1
+            
+            for module, count in sorted(module_counts.items(), key=lambda x: x[1], reverse=True):
+                print(f"{module:20} : {count:5} anomalies")
+            print("-" * 40)
+        
+        print(f"\nDetected {len(all_anomalies)} correlation anomalies total.")
+        return all_anomalies
 
     def generate_feature_nan_masks(self):
         print("\nSTEP 10: Generate NaN column per column")
@@ -1341,87 +1398,6 @@ class PVValidationPipeline:
             print(f"{col:<25} {cnt:>10}")
         print("-" * 100)
 
-    #Not using
-    def fill_P_U_I(self):
-        print("\nSTEP 9 : Fill P, U, I using P = U * I when possible")
-        df = self.df.copy()
-        def build_masks(var):
-            invalid = (
-                (df.get(f"invalid_physical_{var}", 0) == 1) |
-                (df.get(f"invalid_statistical_{var}", 0) == 1) |
-                (df.get(f"{var}_nan", 0) == 1)
-            )
-            valid = ~invalid
-            return invalid, valid
-
-        mask_P_invalid, mask_P_valid = build_masks("P")
-        mask_U_invalid, mask_U_valid = build_masks("U")
-        mask_I_invalid, mask_I_valid = build_masks("I")
-        results = {"P_filled": 0, "U_filled": 0, "I_filled": 0}
-
-        # 1.fill P when P invalid & U,I valid
-        mask_fill_P = mask_P_invalid & mask_U_valid & mask_I_valid
-        print(f"Rows eligible to fill P: {mask_fill_P.sum()}")
-
-        if mask_fill_P.any():
-            new_P = df.loc[mask_fill_P, "U"] * df.loc[mask_fill_P, "I"]
-            valid_mask = ~new_P.isna()
-
-            idx = new_P.index[valid_mask]
-            df.loc[idx, "P"] = new_P[idx]
-
-            # Clear only P flags
-            for col in ["invalid_physical_P", "invalid_statistical_P", "P_nan"]:
-                if col in df.columns:
-                    df.loc[idx, col] = 0
-
-            results["P_filled"] = len(idx)
-            print(f"Filled P for {len(idx)} rows.")
-
-        # 2.fill U when U invalid & P,I valid
-        mask_fill_U = mask_U_invalid & mask_P_valid & mask_I_valid
-        print(f"Rows eligible to fill U: {mask_fill_U.sum()}")
-
-        if mask_fill_U.any():
-            denom = df.loc[mask_fill_U, "I"].replace(0, np.nan)
-            new_U = df.loc[mask_fill_U, "P"] / denom
-
-            valid_mask = ~new_U.isna()
-            idx = new_U.index[valid_mask]
-
-            df.loc[idx, "U"] = new_U[idx]
-
-            # Clear only U flags
-            for col in ["invalid_physical_U", "invalid_statistical_U", "U_nan"]:
-                if col in df.columns:
-                    df.loc[idx, col] = 0
-
-            results["U_filled"] = len(idx)
-            print(f"Filled U for {len(idx)} rows.")
-
-        # 3.fILL I when I invalid & P,U valid
-        mask_fill_I = mask_I_invalid & mask_P_valid & mask_U_valid
-        print(f"Rows eligible to fill I: {mask_fill_I.sum()}")
-
-        if mask_fill_I.any():
-            denom = df.loc[mask_fill_I, "U"].replace(0, np.nan)
-            new_I = df.loc[mask_fill_I, "P"] / denom
-
-            valid_mask = ~new_I.isna()
-            idx = new_I.index[valid_mask]
-
-            df.loc[idx, "I"] = new_I[idx]
-
-            # Clear only I flags
-            for col in ["invalid_physical_I", "invalid_statistical_I", "I_nan"]:
-                if col in df.columns:
-                    df.loc[idx, col] = 0
-
-            results["I_filled"] = len(idx)
-            print(f"Filled I for {len(idx)} rows.")
-
-        self.df = df
-
     def combine_masks(self):
         print("\nCombining all flags into a single flag: invalid_any")
         print(f"Start date: {self.df['_time'].min()}, End date: {self.df['_time'].max()}")
@@ -1433,151 +1409,6 @@ class PVValidationPipeline:
         self.df["invalid_any"] = self.df[mask_cols].max(axis=1)
         print(f"Total invalid rows: {self.df['invalid_any'].sum()}")
 
-    def plot_histogram_per_panel(self):
-        print("\nPlotting histogram of P per panel (day/night bins)")
-
-        modules = sorted(self.df["Name"].unique())
-        num_modules = len(modules)
-        ncols = 4
-        nrows = int(np.ceil(num_modules / ncols))
-        fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
-        axes = np.array(axes).reshape(-1)
-
-        for i, module in enumerate(modules):
-            ax = axes[i]
-
-            # Full P data for module (for NaN, zero, min, max)
-            mod_data = self.df[self.df["Name"] == module]["P"]
-            nan_count = mod_data.isna().sum()
-            zero_count = (mod_data == 0).sum()
-            p_min = mod_data.min(skipna=True)
-            p_max = mod_data.max(skipna=True)
-
-            if mod_data.dropna().empty:
-                ax.text(0.5, 0.5, f"{module}\nAll values zero/NaN",
-                        ha="center", va="center", fontsize=10, color="red")
-                ax.axis("off")
-                continue
-
-            max_bin = (int(np.ceil(p_max / 10)) + 1) * 10  
-            bins = np.arange(0, max_bin + 10, 10)
-
-            valid_mask = (
-                (self.df["Name"] == module) &
-                (self.df["invalid_physical_P"] == 0) &
-                (self.df["invalid_outlier_P"] == 0) &
-                (self.df["P_nan"] == 0)
-            )
-            valid_data = self.df.loc[valid_mask, ["P", "_time"]].copy()
-
-            if valid_data.empty:
-                ax.text(0.5, 0.5, f"{module}\nNo valid data",
-                        ha="center", va="center", fontsize=10, color="red")
-                ax.axis("off")
-                continue
-
-            # Split day and night data
-            valid_data["is_night"] = ((valid_data["_time"].dt.hour >= 22) | (valid_data["_time"].dt.hour <= 4))
-            day_vals = valid_data.loc[~valid_data["is_night"], "P"].dropna()
-            night_vals = valid_data.loc[valid_data["is_night"], "P"].dropna()
-
-            day_hist, _ = np.histogram(day_vals, bins=bins)
-            night_hist, _ = np.histogram(night_vals, bins=bins)
-
-            width = 4
-            bin_centers = (bins[:-1] + bins[1:]) / 2
-
-            ax.bar(bin_centers - width/2, day_hist, width=width, color="tab:blue", alpha=0.7, label="Day")
-            ax.bar(bin_centers + width/2, night_hist, width=width, color="tab:orange", alpha=0.7, label="Night")
-
-            ax.set_title(
-                f"{module}\n"
-                f"NaN: {nan_count} | Zero: {zero_count}\n"
-                f"Min: {p_min:.2f} | Max: {p_max:.2f}",
-                fontsize=9
-            )
-            ax.set_xlabel("P")
-            ax.set_ylabel("Frequency")
-            ax.legend(fontsize=8)
-            ax.set_xticks(bins)
-            ax.set_xlim(bins[0], bins[-1])
-
-        # Turn off extra axes
-        for j in range(len(modules), len(axes)):
-            axes[j].axis("off")
-
-        plt.suptitle("Histogram of P per Panel (Day vs Night)", fontsize=16)
-        plt.tight_layout(rect=[0, 0, 1, 0.97])
-
-        self._save_plot(fig, "histogram_p_per_panel_day_night")
-        plt.close(fig)
-
-    def plot_scatter_per_panel_P_Irr(self):
-        print("\nPlotting P vs Irr scatter plot per panel")
-        modules = sorted(self.df["Name"].unique())
-        ncols = 4
-        nrows = int(np.ceil(len(modules) / ncols))
-        fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
-        axes = axes.flatten()
-
-        for i, module in enumerate(modules):
-            ax = axes[i]
-
-            mod_df = self.df[self.df["Name"] == module]
-
-            valid_mask = (
-                (mod_df["invalid_physical_P"] == 0) &
-                (mod_df["invalid_outlier_P"] == 0) &
-                (mod_df["P_nan"] == 0) &
-                (mod_df["invalid_physical_Irr"] == 0) &
-                (mod_df["invalid_outlier_Irr"] == 0) &
-                (mod_df["Irr_nan"] == 0)
-            )
-            valid_data = mod_df.loc[valid_mask, ["P", "Irr", "_time"]].dropna()
-
-            if valid_data.empty:
-                ax.text(0.5, 0.5, f"{module}\nNo valid data",
-                        ha="center", va="center", fontsize=10, color="red")
-                ax.axis("off")
-                continue
-
-            valid_data["is_night"] = ((valid_data["_time"].dt.hour >= 22) | (valid_data["_time"].dt.hour <= 4))
-
-            day_data = valid_data.loc[~valid_data["is_night"]]
-            night_data = valid_data.loc[valid_data["is_night"]]
-
-            ax.scatter(day_data["Irr"], day_data["P"], s=8, alpha=0.7, label="Day", color="tab:blue")
-            ax.scatter(night_data["Irr"], night_data["P"], s=8, alpha=0.7, label="Night", color="red")
-
-            nan_count_irr = mod_df["Irr"].isna().sum()
-            zero_count_irr = (mod_df["Irr"] == 0).sum()
-            nan_count_P = mod_df["P"].isna().sum()
-            zero_count_P = (mod_df["P"] == 0).sum()
-            p_min, p_max = mod_df["P"].min(skipna=True), mod_df["P"].max(skipna=True)
-            irr_min, irr_max = mod_df["Irr"].min(skipna=True), mod_df["Irr"].max(skipna=True)
-
-            ax.set_title(
-                f"{module}\n"
-                f"Irr NaN: {nan_count_irr} | Irr Zero: {zero_count_irr}\n"
-                f"P NaN: {nan_count_P} | P Zero: {zero_count_P}\n"
-                f"P[min,max]: {p_min:.2f} / {p_max:.2f}\n"
-                f"Irr[min,max]: {irr_min:.2f} / {irr_max:.2f}",
-                fontsize=9
-            )
-            ax.set_xlabel("Irr", fontsize=8)
-            ax.set_ylabel("P", fontsize=8)
-            ax.legend(fontsize=7)
-
-        for j in range(len(modules), len(axes)):
-            axes[j].axis("off")
-
-        plt.suptitle("P-Irr Correlation Scatter per Panel (Night = red)", fontsize=16)
-        plt.tight_layout(rect=[0, 0, 1, 0.97])
-
-        self._save_plot(fig, "scatter_per_panel_P_Irr")
-        plt.close(fig)
-
-    #NEW
     def normalise_power_per_module(
         self,
         df: pd.DataFrame | None = None,
@@ -1617,7 +1448,16 @@ class PVValidationPipeline:
         else:
             print("No negative power values found")
 
+        if "category" not in df.columns:
+            raise ValueError("WARNING: Column 'category' not found in DataFrame")
+        
         scaling_stats = {}
+        
+        # Clipping upper limits per category
+        clip_limits = {
+            "si": 1.2,
+            "psc": 1.75
+        }
 
         for module, g in df.groupby(module_col):
             power = g[power_col].dropna()
@@ -1635,9 +1475,11 @@ class PVValidationPipeline:
             min_p = power.min()
             max_p = power.max()
 
-            # Apply normalisation
+            category = g["category"].iloc[0]
+            upper_limit = clip_limits.get(category, 1.75)  # default to psc limit
+
             module_mask = df[module_col] == module
-            df.loc[module_mask, out_col] = (df.loc[module_mask, power_col] / p_q).clip(lower=0.0, upper=1.75) #1.2 for si
+            df.loc[module_mask, out_col] = (df.loc[module_mask, power_col] / p_q).clip(lower=0.0, upper=upper_limit)
 
             # Normalised stats
             p_norm = df.loc[module_mask, out_col].dropna()
@@ -1645,6 +1487,8 @@ class PVValidationPipeline:
             max_p_norm = p_norm.max() if not p_norm.empty else np.nan
 
             scaling_stats[module] = {
+                "category": category,
+                "clip_limit": upper_limit,
                 "quantile": quantile,
                 "p_q": float(p_q),
                 "min_P": float(min_p),
@@ -1657,6 +1501,7 @@ class PVValidationPipeline:
 
             print(
                 f"{module}: "
+                f"cat={category}, clip={upper_limit}, "
                 f"P_q{int(quantile*100)}={p_q:.3f}, "
                 f"P[min,max]=({min_p:.3f},{max_p:.3f}), "
                 f"P_norm[min,max]=({min_p_norm:.3f},{max_p_norm:.3f}), "
@@ -1673,278 +1518,163 @@ class PVValidationPipeline:
         self.df = df
         return df
     
-    #Name change: compute_p_normalized to compute_module_average    
-    def compute_module_average(self):
-        print("\nCompute per column average from all modules")
+    def compute_module_average(self, average_modules: bool = True):
+        """
+        Compute averages based on average_modules flag:
+        
+        If average_modules = True:
+        - Per-category averages: P_si, I_si, U_si, Temp_si, P_normalised_si
+        - Per-category averages: P_psc, I_psc, U_psc, Temp_psc, P_normalised_psc
+        - Irr remains continuous 
+        
+        If average_modules = False:
+        - Per-module columns: P_atersa_1,... ,P_perovskite_1, ... etc.
+        """
+        print(f"\nSTEP 12: Compute module averages (average_modules={average_modules})")
+        
+        if "category" not in self.df.columns:
+            raise ValueError("WARNING: Column 'category' not found in DataFrame")
+        
+        # Ensure module_type and module_id exist
+        if not average_modules:
+            if "module_type" not in self.df.columns or "module_id" not in self.df.columns:
+                raise ValueError("WARNING: Columns 'module_type' and 'module_id' required for per-module output")
+        
         timestamp_groups = self.df.groupby('_time')
-        normalized_data = []
+        averaged_data = []
+        
         for timestamp, group in timestamp_groups:
             row_data = {'_time': timestamp}
             
-            for col in ['P','P_normalised', 'I', 'U', 'Temp', 'Irr']: #add P_normalised here if that is target
-                values = group[col].dropna()
-                if len(values) == 0:
-                    row_data[col] = np.nan
-                    continue
+            if average_modules:
+                si_group = group[group['category'] == 'si']
+                psc_group = group[group['category'] == 'psc']
                 
-                # Exclude zeros if non-zero values exist
-                non_zero_values = values[values != 0.0]
-                zero_values = values[values == 0.0]
+                # Only process categories that have data at this timestamp
+                categories_to_process = []
+                if len(si_group) > 0:
+                    categories_to_process.append(('si', si_group))
+                if len(psc_group) > 0:
+                    categories_to_process.append(('psc', psc_group))
                 
-                if len(non_zero_values) > 0 and len(zero_values) > 0:
-                    values = non_zero_values  # Ignore zeros
+                for cat, cat_group in categories_to_process:
+                    for col in ['P', 'P_normalised', 'I', 'U', 'Temp']:
+                        if col not in cat_group.columns:
+                            row_data[col + f'_{cat}'] = np.nan
+                            continue
+                        
+                        values = cat_group[col].dropna()
+                        if len(values) == 0:
+                            row_data[col + f'_{cat}'] = np.nan
+                            continue
+                        
+                        # Exclude zeros if non-zero values exist
+                        non_zero_values = values[values != 0.0]
+                        zero_values = values[values == 0.0]
+                        
+                        if len(non_zero_values) > 0 and len(zero_values) > 0:
+                            values = non_zero_values  # Ignore zeros
+                        
+                        # Outlier detection if 3 or more values remain
+                        if len(values) >= 3:
+                            mean_val = values.mean()
+                            std_val = values.std()
+                            if std_val > 0:
+                                z_scores = abs((values - mean_val) / std_val)
+                                # Keep values with z-score <= 2.5
+                                filtered_values = values[z_scores <= 2.5]
+                                if len(filtered_values) > 0:
+                                    values = filtered_values
+                        
+                        # Final aggregation with median
+                        row_data[col + f'_{cat}'] = values.median() if len(values) > 0 else np.nan
+                    
+                    row_data['_debug_si_count'] = len(si_group)
+                    row_data['_debug_psc_count'] = len(psc_group)
+                    
+            else:
+                # Per-module columns using existing module_type and module_id
+                for _, module_row in group.iterrows():
+                    module_type = module_row['module_type']
+                    module_id = int(module_row['module_id'])
+                    
+                    col_prefix = f"{module_type}_{module_id}"
+                    
+                    for col in ['P', 'P_normalised', 'I', 'U', 'Temp']:
+                        if col in module_row:
+                            row_data[f"{col}_{col_prefix}"] = module_row[col]
                 
-                # Outlier detection if 3 or more values remain
-                if len(values) >= 3:
-                    mean_val = values.mean()
-                    std_val = values.std()
-                    if std_val > 0:
-                        z_scores = abs((values - mean_val) / std_val)
-                        # Keep values with z-score <= 2.5
-                        filtered_values = values[z_scores <= 2.5]
-                        if len(filtered_values) > 0:
-                            values = filtered_values
-                
-                # Final aggregation with median
-                row_data[col] = values.median() if len(values) > 0 else np.nan
+                row_data['_debug_module_count'] = len(group)
             
-            row_data['modules_available'] = len(group)
-            row_data['modules_total'] = len(self.validation_modules)
+            # Handle Irr
+            if 'Irr' in group.columns:
+                irr_values = group['Irr'].dropna()
+                if len(irr_values) > 0:
+                    non_zero_irr = irr_values[irr_values != 0.0]
+                    zero_irr = irr_values[irr_values == 0.0]
+                    
+                    if len(non_zero_irr) > 0 and len(zero_irr) > 0:
+                        irr_values = non_zero_irr
+                    
+                    if len(irr_values) >= 3:
+                        mean_val = irr_values.mean()
+                        std_val = irr_values.std()
+                        if std_val > 0:
+                            z_scores = abs((irr_values - mean_val) / std_val)
+                            filtered_values = irr_values[z_scores <= 2.5]
+                            if len(filtered_values) > 0:
+                                irr_values = filtered_values
+                    
+                    row_data['Irr'] = irr_values.median() if len(irr_values) > 0 else np.nan
+                else:
+                    row_data['Irr'] = np.nan
+            else:
+                row_data['Irr'] = np.nan
             
-            normalized_data.append(row_data)
+            averaged_data.append(row_data)
         
-        # Create average dataset
-        averaged_df = pd.DataFrame(normalized_data)
+        # Create averaged dataset
+        averaged_df = pd.DataFrame(averaged_data)
         
         # Sort by timestamp
         averaged_df = averaged_df.sort_values('_time').reset_index(drop=True)
-        print(f"Created normalized dataset: {len(averaged_df)} timestamps")
         
-        # Save normalized dataset
-        averaged_file = self.results_dir / "pv_normalized.csv"
+        print(f"Created averaged dataset: {len(averaged_df)} timestamps")
+        print(f"Columns: {list(averaged_df.columns)}")
+        
+        if average_modules:
+            si_cols = [col for col in averaged_df.columns if col.endswith('_si') and not col.startswith('_debug')]
+            psc_cols = [col for col in averaged_df.columns if col.endswith('_psc') and not col.startswith('_debug')]
+            
+            si_rows = averaged_df[si_cols].notna().any(axis=1).sum() if si_cols else 0
+            psc_rows = averaged_df[psc_cols].notna().any(axis=1).sum() if psc_cols else 0
+            
+            print(f"DEBUG: Rows with si data: {si_rows:,} ({si_rows/len(averaged_df)*100:.1f}%)")
+            print(f"DEBUG: Rows with psc data: {psc_rows:,} ({psc_rows/len(averaged_df)*100:.1f}%)")
+        else:
+            module_summary = self.df.groupby(['module_type', 'module_id']).size()
+            print("DEBUG: Data points per module_type + module_id:")
+            for (module_type, module_id), count in sorted(module_summary.items()):
+                print(f"  {module_type}_{module_id}: {count:,} data points")
+        
+        # Remove debug columns
+        debug_cols = [col for col in averaged_df.columns if col.startswith('_debug')]
+        if debug_cols:
+            averaged_df = averaged_df.drop(columns=debug_cols)
+        
+        # Save averaged dataset
+        if average_modules:
+            averaged_file = self.results_dir / "pv_averaged_by_category.csv"
+        else:
+            averaged_file = self.results_dir / "pv_per_module.csv"
+            
         averaged_df.to_csv(averaged_file, index=False)
-        print(f"Saved normalized data to: {averaged_file}")
+        print(f"Saved averaged data to: {averaged_file}")
         
         return averaged_df
+
     
-    def plot_normalized_parameters_monthly(self, averaged_df):
-        exclude_ranges_psc = [
-            ("2024-12-06", "2024-12-14"),
-            ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2025-01-03"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-25", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-26"),
-        ]
-
-        exclude_ranges_si = [
-            ("2024-12-06", "2024-12-14"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-26", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-16", "2025-11-26"),
-            ("2025-12-21", "2025-12-24"),
-        ]
-
-        print("\nPlotting normalized P, I, U, Temp per month")
-
-        if averaged_df.empty:
-            print("No data in normalized dataframe")
-            return
-
-        averaged_df = averaged_df.copy()
-        averaged_df['_time'] = pd.to_datetime(averaged_df['_time'], utc=True)
-
-        if 'category' in averaged_df.columns:
-            cats = averaged_df['category'].dropna().str.lower().unique()
-            if len(cats) == 1 and cats[0] == 'si':
-                active_ranges = exclude_ranges_si
-                print("Using SI exclude ranges")
-            else:
-                active_ranges = exclude_ranges_psc
-                print("Using PSC exclude ranges")
-        else:
-            # no category column → use both
-            active_ranges = exclude_ranges_psc + exclude_ranges_si
-            print("No category column → using BOTH PSC + SI exclude ranges")
-
-        exclude_intervals = [
-            (pd.Timestamp(start).tz_localize('UTC'),
-            pd.Timestamp(end).tz_localize('UTC'))
-            for start, end in active_ranges
-        ]
-
-        parameters = ['P', 'I', 'U', 'Temp', 'Irr']
-        months = sorted(averaged_df['_time'].dt.tz_convert(None).dt.to_period('M').unique())
-        n_months = len(months)
-        ncols = min(4, n_months)
-        nrows = (n_months + ncols - 1) // ncols
-
-        for param in parameters:
-            if param not in averaged_df.columns:
-                print(f"Parameter '{param}' not found in normalized data, skipping")
-                continue
-
-            fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
-            if n_months == 1:
-                axes = np.array([axes])
-            axes = axes.flatten()
-
-            for idx, month_period in enumerate(months):
-                if idx >= len(axes):
-                    break
-
-                ax = axes[idx]
-                month_start = month_period.start_time.tz_localize('UTC')
-                month_end = month_period.end_time.tz_localize('UTC')
-
-                month_data = averaged_df[(averaged_df['_time'] >= month_start) & (averaged_df['_time'] <= month_end)].copy().sort_values('_time')
-
-                if month_data.empty:
-                    ax.text(0.5, 0.5, f"No data\n{month_period}",
-                            ha='center', va='center', transform=ax.transAxes, fontsize=12)
-                    ax.set_title(f"{month_period}", fontsize=10)
-                    ax.axis('off')
-                    continue
-
-                valid_data = month_data[month_data[param].notna()]
-                if not valid_data.empty:
-                    ax.plot(valid_data['_time'], valid_data[param], color='blue', linewidth=1, alpha=0.8, marker='.', markersize=2)
-
-                for start, end in exclude_intervals:
-                    if end >= month_start and start <= month_end:
-                        highlight_start = max(start, month_start)
-                        highlight_end = min(end, month_end)
-                        ax.axvspan(highlight_start, highlight_end, color='red', alpha=0.3)
-
-                ax.set_title(f"{month_period}", fontsize=10, fontweight='bold')
-                ax.set_ylabel(param, fontsize=9)
-                ax.grid(True, alpha=0.3)
-
-                ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%m-%d'))
-                ax.xaxis.set_major_locator(plt.matplotlib.dates.WeekdayLocator(byweekday=0))
-                plt.setp(ax.get_xticklabels(), rotation=45, ha='right', fontsize=8)
-
-                if not valid_data.empty:
-                    stats_text = (
-                        f"Min: {valid_data[param].min():.1f}\n"
-                        f"Max: {valid_data[param].max():.1f}\n"
-                        f"Points: {len(valid_data)}"
-                    )
-                    ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=8,
-                            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-
-            for idx in range(len(months), len(axes)):
-                axes[idx].axis('off')
-
-            start_date = averaged_df['_time'].min()
-            end_date = averaged_df['_time'].max()
-
-            fig.suptitle(
-                f"Monthly {param} - Normalized Dataset\n"
-                f"Time Range: {start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}\n"
-                f"Red areas indicate exclude date ranges",
-                fontsize=12, fontweight='bold'
-            )
-
-            plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-            self._save_plot(fig, f"monthly_{param}_normalized")
-            plt.close(fig)
-
-        print(f"\nAll monthly parameter plots saved to: {self.results_dir}/")
-
-    def plot_normalized_parameters_detailed(self, averaged_df):
-        exclude_ranges_psc = [
-            ("2024-12-06", "2024-12-14"),
-            ("2024-12-30", "2024-12-31"),
-            ("2025-01-02", "2024-01-03"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-26", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-18", "2025-11-23"),
-        ]
-
-        exclude_ranges_si = [
-            ("2024-12-06", "2024-12-14"),
-            ("2025-05-02", "2025-05-13"),
-            ("2025-06-26", "2025-06-30"),
-            ("2025-09-17", "2025-09-26"),
-            ("2025-11-16", "2025-11-26"),
-            ("2025-12-21", "2025-12-24"),
-        ]
-
-        if averaged_df.empty:
-            print("No data in normalized dataframe")
-            return
-
-        averaged_df = averaged_df.copy()
-        averaged_df['_time'] = pd.to_datetime(averaged_df['_time'], utc=True)
-
-        if 'category' in averaged_df.columns:
-            cats = averaged_df['category'].dropna().str.lower().unique()
-            if len(cats) == 1 and cats[0] == 'si':
-                active_ranges = exclude_ranges_si
-                print("Using SI exclude ranges")
-            else:
-                active_ranges = exclude_ranges_psc
-                print("Using PSC exclude ranges")
-        else:
-            active_ranges = exclude_ranges_psc + exclude_ranges_si
-            print("No category column → using BOTH PSC + SI exclude ranges")
-
-        exclude_intervals = [(pd.Timestamp(start).tz_localize('UTC'), pd.Timestamp(end).tz_localize('UTC')) for start, end in active_ranges]
-
-        parameters = ['P', 'I', 'U', 'Temp', 'Irr']
-
-        for param in parameters:
-            if param not in averaged_df.columns:
-                continue
-
-            print(f"\nCreating detailed timeline for: {param}")
-
-            fig, ax = plt.subplots(figsize=(26, 6))
-
-            plot_data = averaged_df[['_time', param]].sort_values('_time')
-            valid_data = plot_data[plot_data[param].notna()]
-
-            if not valid_data.empty:
-                ax.plot(valid_data['_time'], valid_data[param], linewidth=1, alpha=0.7, color='blue',
-                        marker='.', markersize=1, label=f'{param} (n={len(valid_data)})')
-
-            for start, end in exclude_intervals:
-                ax.axvspan(start, end, alpha=0.2, color='red')
-
-            ax.set_title(f"{param} - Complete Timeline with Exclude Date Highlighting\n"
-                f"Red areas indicate exclude date ranges",
-                fontsize=14, fontweight='bold')
-            ax.set_ylabel(param, fontsize=12)
-            ax.set_xlabel("Date", fontsize=12)
-            ax.grid(True, alpha=0.3)
-
-            ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m'))
-            ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator())
-            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-
-            ax.legend(loc='upper right', fontsize=10)
-
-            stats_text = (
-                f"Data Points: {len(valid_data):,}\n"
-                f"Time Range: {plot_data['_time'].min().strftime('%Y-%m-%d')} to "
-                f"{plot_data['_time'].max().strftime('%Y-%m-%d')}\n"
-                f"Coverage: {len(valid_data) / len(plot_data) * 100:.1f}%"
-            )
-
-            ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, fontsize=10,
-                    verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-
-            plt.tight_layout()
-            self._save_plot(fig, f"detailed_timeline_{param}_normalized")
-            plt.close(fig)
-
-            print(f"Detailed {param} timeline: {len(valid_data):,} points")
-    
-    def run(self, dwd_file, flag_invalid=False):
+    def run(self, dwd_file, flag_invalid=False, normalise: bool = True, average_modules: bool = True):
         """
         Main pipeline execution sequence.
 
@@ -1953,9 +1683,16 @@ class PVValidationPipeline:
             flag_invalid (bool): 
                 True  : Keep invalid rows but flag them (for model masking).
                 False : Drop all invalid rows.
+            normalise (bool):
+                True  : Normalize power using p95 scaling per module.
+                False : Keep raw power values.
+            average_modules (bool):
+                True  : Average by category (si/psc).
+                False : Keep per-module columns (module_type + module_id).
         """
         print(f"\nValidation modules: {self.validation_modules}")
         print(f"\nReference modules: {self.cross_module_ref} (cross-ref), {self.scaling_ref_module} (scaling)")
+        print(f"\nConfiguration: normalise={normalise}, average_modules={average_modules}")
 
         #cleans names
         self.clean_module_names()
@@ -1974,20 +1711,17 @@ class PVValidationPipeline:
         self.night_detector()
         #Add columns based on name_mapping_dict
         self.map_module_metadata()
-        self.plot_module_metadata_summary(out_png=self.results_dir / "module_metadata_summary.png")
         #apply range validation as per module type and flag them as invalid_physical_*
         self.range_validation()
         #filter based on z-score and flag them as invalid_statistical_*
         self.detect_statistical_outliers(z_thresh=3.0)
-        #NEW
+        #
         self.detect_correlation_anomalies(mark_as_nan=False)
         #filter nan values and flag them as *_nan
         self.generate_feature_nan_masks()
-        #fill P, I, U based on P=U*I relation
-        #self.fill_P_U_I()
         #combine all flags as invalid_any
-        self.combine_masks()    
-        #Drop or keep invalids based on flag_invalid
+        self.combine_masks()
+        #drop or keep invalids based on flag_invalid
         if not flag_invalid:
             print("\nDropping invalid rows")
             before_total = len(self.df)
@@ -2003,7 +1737,7 @@ class PVValidationPipeline:
                 valid_pct = (panel_valid / panel_total * 100) if panel_total > 0 else 0
                 print(f"{panel:15s}: {int(panel_valid):5d} / {int(panel_total):5d} valid ({valid_pct:5.1f}%)")
             
-            #drop
+            #drop values with invalid_any == 1
             self.df = self.df[self.df["invalid_any"] == 0]
 
             after_total = len(self.df)
@@ -2025,17 +1759,14 @@ class PVValidationPipeline:
             for panel, row in invalid_by_panel.iterrows():
                 print(f"  {panel:15s}: {int(row['sum']):3d} / {int(row['count']):5d} invalid ({row['pct_invalid']:5.1f}%)")
 
-        #Plots 
-        self.plot_histogram_per_panel()
-        self.plot_scatter_per_panel_P_Irr()
-        #Normalise power per module using p95 
-        self.normalise_power_per_module()
+        #normalize power per module using p95 if requested
+        if normalise:
+            self.normalise_power_per_module()
+        
         #compute average per column and create new df 
-        averaged_df =self.compute_module_average()
-        self.plot_normalized_parameters_monthly(averaged_df)
-        self.plot_normalized_parameters_detailed(averaged_df)
-
-        #save final outputs
+        averaged_df = self.compute_module_average(average_modules=average_modules)
+        
+        # Save final outputs
         cleaned_file = self.results_dir / "pv_cleaned_masked.csv"
         self.df.to_csv(cleaned_file, index=False)
         
@@ -2043,10 +1774,14 @@ class PVValidationPipeline:
         print(f"Rows: {len(self.df):,}, Columns: {len(self.df.columns)}")
         print(f"Modules: {sorted(self.df['Name'].unique())}")
         
-        # Save normalized dataset
-        averaged_file = self.results_dir / "pv_normalized.csv"
+        # Save averaged dataset
+        if average_modules:
+            averaged_file = self.results_dir / "pv_averaged_by_category.csv"
+        else:
+            averaged_file = self.results_dir / "pv_per_module.csv"
+            
         averaged_df.to_csv(averaged_file, index=False)
-        print(f"\nNormalized dataset saved: {averaged_file}")
+        print(f"\nAveraged dataset saved: {averaged_file}")
         print(f"Rows: {len(averaged_df):,}, Columns: {len(averaged_df.columns)}")
                 
-        return self.df, averaged_df
+        return self.df, averaged_df, averaged_file

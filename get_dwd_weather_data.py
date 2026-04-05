@@ -26,7 +26,7 @@ class DWDDownloader:
     }
 
     CONTINUOUS_COLS = ["temp_C", "humidity", "precip_mm", "global_radiation"]
-    CATEGORICAL_COLS = ["cloud_cover", "precip_indicator", "sunshine_duration"]
+    DISCRETE_COLS = ["cloud_cover", "precip_indicator", "sunshine_duration"]
 
     DROP_METADATA_COLS = [
         "STATIONS_ID", "Stations_ID", "Stations_id",
@@ -194,7 +194,7 @@ class DWDDownloader:
             if col in df:
                 df[col] = df[col].interpolate(limit_direction="both")
 
-        for col in self.CATEGORICAL_COLS:
+        for col in self.DISCRETE_COLS:
             if col in df:
                 df[col] = df[col].ffill().bfill()
 

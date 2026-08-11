@@ -111,8 +111,8 @@ FeatureEnggPipeline
 Imports all the files and runs each class. Each run produces a timestamped output folder:
 
 ```
-lstm*run_YYYY_MM_DD_HHMMSS/
-├── data_export*<timestamp>.csv # Raw PV data from InfluxDB
+lstm_run_YYYY_MM_DD_HHMMSS/
+├── data_export_<timestamp>.csv # Raw PV data from InfluxDB
 ├── pv_cleaned_masked.csv # Cleaned per-module PV data
 ├── pv_per_module.csv # Aggregated per-module PV data
 ├── dwd_irradiance_scaling_factors.json # Irradiance scaling factors
@@ -207,3 +207,33 @@ pce_analysis_output/
 ├── daily_loss_bars_valid_only_<dates>.png  # Daily loss decomposition
 └── monthly_loss_bars_with_diffs.png        # Monthly aggregated losses
 ```
+
+# Results
+
+## Forecasting Performance
+
+The LSTM model achieved high forecasting accuracy for silicon modules ($R^2$ > 0.9) and moderate accuracy for perovskite modules ($R^2$ > 0.7). Introducing the **age feature** substantially improved the forecasting performance of the perovskite models (see the figure below) by enabling the LSTM to learn their long-term degradation behaviour directly from operational data. In contrast, the silicon modules showed only marginal improvement because their performance remained comparatively stable over the observation period, providing little additional information through the age feature.
+
+<img width="1564" height="1490" alt="single_module_baselines_1" src="https://github.com/user-attachments/assets/2f143cdc-e930-4094-8138-e68c011a468e" />
+
+## Feature Perturbation Analysis
+
+Feature perturbation analysis was performed to evaluate whether the trained LSTM learned physically meaningful relationships between the input variables and module power output. The results show that **irradiance** is the dominant input feature for all modules and exhibits an approximately linear relationship with predicted power across the investigated perturbation magnitudes. **Temperature** and **relative humidity** produce smaller but physically consistent responses, with silicon modules exhibiting greater temperature sensitivity than perovskite modules, reflecting their larger temperature coefficients. **Cloud cover** displays a nonlinear and asymmetric response, where decreasing cloud cover produces a substantially larger increase in predicted power than the corresponding decrease caused by increasing cloud cover. The **age feature** exhibits the strongest nonlinear behaviour for the perovskite modules, demonstrating that the model has learned their long-term degradation dynamics.
+
+<img width="1578" height="979" alt="normalised_perturbation_positive" src="https://github.com/user-attachments/assets/1e11676f-1331-4943-b69e-a276efb99c24" />
+<img width="1578" height="979" alt="normalised_perturbation_negative" src="https://github.com/user-attachments/assets/1c0b0062-e9a5-4acb-bd57-fb50171a0062" />
+
+## Degradation Analysis
+
+Reversible–irreversible degradation decomposition framework originally developed for laboratory measurements is adapted for outdoor operational data. The predicted power successfully reproduces the temporal evolution of irreversible degradation, demonstrating that the model captures long-term degradation behaviour despite being trained solely on power output. The resulting irreversible degradation component is reproduced with a monthly **$R^2$ ∼ 0.96**, while the faster-varying reversible component is captured with lower precision, reflecting its greater sensitivity to the decomposition framework and to small deviations in the model’s predicted signal
+
+<img width="1312" height="920" alt="monthly_loss_bars_psc_1" src="https://github.com/user-attachments/assets/c31569ac-4076-48c2-8a2f-710944bcaf0c" />
+<img width="1312" height="920" alt="monthly_loss_bars_psc_2" src="https://github.com/user-attachments/assets/0083ccf0-3fdd-4e18-99ef-fbc16fa099c2" />
+
+# Conclusions
+
+This work demonstrates that LSTM-based forecasting models can provide information beyond conventional prediction metrics and serve as practical tools for monitoring degradation in perovskite photovoltaic modules. 
+
+Certain limitations should be considered when interpreting the results:
+- The degradation decomposition framework relies on a reference efficiency surface constructed using irradiance and temperature only. Environmental factors such as humidity, cloud cover, and spectral variations are not explicitly represented.
+- As a consequence, reversible degradation estimates can be systematically overestimated under outdoor conditions.

@@ -10,7 +10,7 @@ from get_dwd_weather_data import DWDDownloader
 from data_validation import PVValidationPipeline
 from merge_pv_and_dwd_data import PVDWDDataMerger
 from create_features_and_scale import FeatureEnggPipeline
-from train_lstm_model import run_lstm_training_multi_output
+from train_lstm_model_MLP import run_lstm_training_multi_output
 
 def create_run_folder(base_name="lstm_run"):
     """
@@ -290,12 +290,13 @@ if __name__ == "__main__":
     try:
         training_results = run_lstm_training_multi_output(
             training_data_dir=training_data_dir,
-            output_dir=os.path.join(run_folder, "lstm_results"),  
+            output_dir=os.path.join(run_folder, "lstm_results"),
+            age_cols=['days_since_install_perovskite'], # defaults to ['days_since_install_<target>', ...] if present  
             window=48,
             horizon=36,
             batch_size=32,
             epochs=150,
-            lr=0.0005, #PSC:0.0005 | si: 0.001
+            lr=0.001, #PSC:0.0005 | si: 0.001
             patience=15,
             hidden_size=64,
             num_layers=4,
@@ -305,7 +306,7 @@ if __name__ == "__main__":
             mask_bad_days=True, #Use bad_day column to mask loss 
             validation_split= 0.15, #if create_val=False, then validation_split=0.15 will select every 7th sequence from traing sequences
             random_seed = 42,
-        )
+        )       
  
         print(f"\nAll results saved in: {run_folder}")
         print(f"Training data: {training_data_dir}")

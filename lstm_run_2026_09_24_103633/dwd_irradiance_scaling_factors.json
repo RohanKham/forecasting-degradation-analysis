@@ -1,0 +1,5484 @@
+{
+  "dayofyear_period": {
+    "001-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "001-midday": {
+      "factor": 1.2674030883939396,
+      "rmse": 80.95295340294582,
+      "mape": 150.0857515174659
+    },
+    "001-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "002-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "002-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "002-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "003-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "003-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "003-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "004-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "004-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "004-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "005-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "005-midday": {
+      "factor": 2.247695918357143,
+      "rmse": 111.35540815000576,
+      "mape": 24.919337217149458
+    },
+    "005-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "006-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "006-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "006-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "007-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "007-midday": {
+      "factor": 2.071056262278481,
+      "rmse": 117.878727357068,
+      "mape": 25.890305309731115
+    },
+    "007-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "008-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "008-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "008-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "009-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "009-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "009-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "010-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "010-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "010-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "011-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "011-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "011-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "012-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "012-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "012-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "013-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "013-midday": {
+      "factor": 1.2714353499456639,
+      "rmse": 103.50113490434576,
+      "mape": 142.47166806751227
+    },
+    "013-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "014-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "014-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "014-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "015-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "015-midday": {
+      "factor": 1.9875355942682926,
+      "rmse": 104.3084813251501,
+      "mape": 26.216121287479048
+    },
+    "015-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "016-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "016-midday": {
+      "factor": 1.945875423387097,
+      "rmse": 105.99759677821304,
+      "mape": 28.23256763920277
+    },
+    "016-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "017-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "017-midday": {
+      "factor": 1.0915880103947366,
+      "rmse": 137.0549733955554,
+      "mape": 63.18701724091657
+    },
+    "017-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "018-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "018-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "018-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "019-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "019-midday": {
+      "factor": 1.9346439355333631,
+      "rmse": 81.0720578894559,
+      "mape": 25.516987822081077
+    },
+    "019-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "020-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "020-midday": {
+      "factor": 1.8594443079582568,
+      "rmse": 115.19573208067884,
+      "mape": 28.329794638899326
+    },
+    "020-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "021-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "021-midday": {
+      "factor": 1.9633691070000001,
+      "rmse": 95.95480683063894,
+      "mape": 21.500116805412567
+    },
+    "021-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "022-morning": {
+      "factor": 0.7172040470495622,
+      "rmse": 163.1729944526719,
+      "mape": 114.99924547573745
+    },
+    "022-midday": {
+      "factor": 1.6788422077840015,
+      "rmse": 40.30392538965142,
+      "mape": 18.29637130421935
+    },
+    "022-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "023-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "023-midday": {
+      "factor": 1.5285203142824073,
+      "rmse": 110.18524073716483,
+      "mape": 205.65352700434883
+    },
+    "023-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "024-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "024-midday": {
+      "factor": 1.7019849478461542,
+      "rmse": 168.52031382984225,
+      "mape": 140.15207572615805
+    },
+    "024-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "025-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "025-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "025-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "026-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "026-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "026-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "027-morning": {
+      "factor": 1.1545842825308443,
+      "rmse": 137.09325964603417,
+      "mape": 150.46139835110813
+    },
+    "027-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "027-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "028-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "028-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "028-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "029-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "029-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "029-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "030-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "030-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "030-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "031-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "031-midday": {
+      "factor": 1.6524954350420167,
+      "rmse": 117.18468717887089,
+      "mape": 26.817681816634238
+    },
+    "031-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "032-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "032-midday": {
+      "factor": 0.2862937824746269,
+      "rmse": 110.81834739809938,
+      "mape": 57.68185170102041
+    },
+    "032-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "033-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "033-midday": {
+      "factor": 0.32554782280373834,
+      "rmse": 88.10458867162181,
+      "mape": 73.03754545494591
+    },
+    "033-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "034-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "034-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "034-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "035-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "035-midday": {
+      "factor": 0.31006582837499996,
+      "rmse": 122.58557080756766,
+      "mape": 59.41072635989026
+    },
+    "035-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "036-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "036-midday": {
+      "factor": 1.7907918845454547,
+      "rmse": 101.04449830957894,
+      "mape": 23.850123735078082
+    },
+    "036-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "037-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "037-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "037-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "038-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "038-midday": {
+      "factor": 0.17666277048212004,
+      "rmse": 241.1036336462315,
+      "mape": 113.09896316099395
+    },
+    "038-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "039-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "039-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "039-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "040-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "040-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "040-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "041-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "041-midday": {
+      "factor": 0.8809021672725139,
+      "rmse": 127.46816082916433,
+      "mape": 198.3859413560384
+    },
+    "041-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "042-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "042-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "042-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "043-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "043-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "043-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "044-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "044-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "044-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "045-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "045-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "045-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "046-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "046-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "046-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "047-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "047-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "047-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "048-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "048-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "048-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "049-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "049-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "049-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "050-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "050-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "050-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "051-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "051-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "051-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "052-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "052-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "052-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "053-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "053-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "053-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "054-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "054-midday": {
+      "factor": 0.4133499989189188,
+      "rmse": 85.6753119489763,
+      "mape": 82.51446370979713
+    },
+    "054-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "055-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "055-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "055-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "056-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "056-midday": {
+      "factor": 1.6329768760907597,
+      "rmse": 89.39976689669234,
+      "mape": 19.348108258340712
+    },
+    "056-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "057-morning": {
+      "factor": 1.0573163371906356,
+      "rmse": 112.83444367865778,
+      "mape": 75.26283240040293
+    },
+    "057-midday": {
+      "factor": 1.5796023989173231,
+      "rmse": 92.21748959751591,
+      "mape": 20.914978831280166
+    },
+    "057-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "058-morning": {
+      "factor": 1.0442204343598234,
+      "rmse": 99.04946569236722,
+      "mape": 25.958233644651894
+    },
+    "058-midday": {
+      "factor": 1.593554329707113,
+      "rmse": 77.50530047572552,
+      "mape": 18.750051358779757
+    },
+    "058-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "059-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "059-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "059-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "060-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "060-midday": {
+      "factor": 0.27824565983606553,
+      "rmse": 259.1195543672475,
+      "mape": 108.85692812098364
+    },
+    "060-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "061-morning": {
+      "factor": 1.0059469243137253,
+      "rmse": 111.23509869052438,
+      "mape": 37.69610521237225
+    },
+    "061-midday": {
+      "factor": 1.5660435847736296,
+      "rmse": 83.00619553216865,
+      "mape": 19.95140602502595
+    },
+    "061-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "062-morning": {
+      "factor": 1.000215009949029,
+      "rmse": 117.90446343721395,
+      "mape": 27.513104726898664
+    },
+    "062-midday": {
+      "factor": 1.2617250781052631,
+      "rmse": 137.69081605005334,
+      "mape": 42.28446231154731
+    },
+    "062-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "063-morning": {
+      "factor": 0.7702804091111111,
+      "rmse": 133.6158253934505,
+      "mape": 45.72214282549668
+    },
+    "063-midday": {
+      "factor": 1.5776018424058318,
+      "rmse": 95.87216478677269,
+      "mape": 19.889738806642296
+    },
+    "063-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "064-morning": {
+      "factor": 0.9387304316545144,
+      "rmse": 121.31265088237953,
+      "mape": 54.366146476747176
+    },
+    "064-midday": {
+      "factor": 1.5285391968595041,
+      "rmse": 80.60068467852417,
+      "mape": 17.831920029077573
+    },
+    "064-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "065-morning": {
+      "factor": 0.7650090998657717,
+      "rmse": 116.80048974083603,
+      "mape": 132.90500765246267
+    },
+    "065-midday": {
+      "factor": 1.30288822025752,
+      "rmse": 62.2158106646894,
+      "mape": 20.62711318567409
+    },
+    "065-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "066-morning": {
+      "factor": 0.7431594294156216,
+      "rmse": 178.40561642294819,
+      "mape": 259.402936857238
+    },
+    "066-midday": {
+      "factor": 1.5677706160564426,
+      "rmse": 97.19910016767757,
+      "mape": 18.685443839215615
+    },
+    "066-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "067-morning": {
+      "factor": 0.848324363169175,
+      "rmse": 110.80817571552556,
+      "mape": 74.9870376943365
+    },
+    "067-midday": {
+      "factor": 1.24443339123503,
+      "rmse": 48.52048277823865,
+      "mape": 14.176674995207433
+    },
+    "067-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "068-morning": {
+      "factor": 0.8905779088888889,
+      "rmse": 117.9973738346438,
+      "mape": 68.60948868636207
+    },
+    "068-midday": {
+      "factor": 1.2074199492283952,
+      "rmse": 100.65342169180985,
+      "mape": 54.925633803633424
+    },
+    "068-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "069-morning": {
+      "factor": 0.8073876279940677,
+      "rmse": 130.66426086952976,
+      "mape": 71.55657397631362
+    },
+    "069-midday": {
+      "factor": 1.2986615807926831,
+      "rmse": 154.51917465702624,
+      "mape": 39.678902848167574
+    },
+    "069-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "070-morning": {
+      "factor": 1.0354819305555556,
+      "rmse": 122.37339535136141,
+      "mape": 42.00716583285529
+    },
+    "070-midday": {
+      "factor": 0.7633945528558699,
+      "rmse": 63.8037218361794,
+      "mape": 35.578685001493945
+    },
+    "070-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "071-morning": {
+      "factor": 1.0005458676265822,
+      "rmse": 169.32082728327893,
+      "mape": 120.96165879412165
+    },
+    "071-midday": {
+      "factor": 1.6431277683825418,
+      "rmse": 185.22099755874046,
+      "mape": 26.438395531249952
+    },
+    "071-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "072-morning": {
+      "factor": 0.8647286773677979,
+      "rmse": 158.63291019241584,
+      "mape": 82.64213691836852
+    },
+    "072-midday": {
+      "factor": 0.6629226972727272,
+      "rmse": 198.20891894360813,
+      "mape": 51.365043661272125
+    },
+    "072-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "073-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "073-midday": {
+      "factor": 0.20680031332384569,
+      "rmse": 72.57358710728238,
+      "mape": 99.64489950662943
+    },
+    "073-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "074-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "074-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "074-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "075-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "075-midday": {
+      "factor": 1.5177321318181818,
+      "rmse": 165.4068924678225,
+      "mape": 187.131132039261
+    },
+    "075-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "076-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "076-midday": {
+      "factor": 0.4260152517583786,
+      "rmse": 186.00305419343678,
+      "mape": 134.71674613442545
+    },
+    "076-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "077-morning": {
+      "factor": 0.8009915688907348,
+      "rmse": 148.39254559125044,
+      "mape": 129.36015880965607
+    },
+    "077-midday": {
+      "factor": 1.2697953629411762,
+      "rmse": 66.93568383292597,
+      "mape": 14.670864858866246
+    },
+    "077-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "078-morning": {
+      "factor": 0.8196131373033707,
+      "rmse": 170.44011724066186,
+      "mape": 276.4523948822617
+    },
+    "078-midday": {
+      "factor": 1.396213905625,
+      "rmse": 128.47042504773813,
+      "mape": 18.642046146471827
+    },
+    "078-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "079-morning": {
+      "factor": 0.8529982768087122,
+      "rmse": 141.27516631365674,
+      "mape": 143.54982798255654
+    },
+    "079-midday": {
+      "factor": 1.410599529775281,
+      "rmse": 70.47375903278633,
+      "mape": 11.35518278591136
+    },
+    "079-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "080-morning": {
+      "factor": 0.2661861893984963,
+      "rmse": 115.00021406850409,
+      "mape": 99.52963180805058
+    },
+    "080-midday": {
+      "factor": 0.8650117496236561,
+      "rmse": 212.0589956919601,
+      "mape": 167.80482585557303
+    },
+    "080-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "081-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "081-midday": {
+      "factor": 1.3656891581818182,
+      "rmse": 112.82066069510071,
+      "mape": 16.099032189553927
+    },
+    "081-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "082-morning": {
+      "factor": 0.38092817411764707,
+      "rmse": 124.93637609025457,
+      "mape": 233.3805133988227
+    },
+    "082-midday": {
+      "factor": 0.9319465653658536,
+      "rmse": 113.2704904390259,
+      "mape": 108.26308777588383
+    },
+    "082-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "083-morning": {
+      "factor": 0.6372262147490855,
+      "rmse": 167.4628413249112,
+      "mape": 155.8745456750939
+    },
+    "083-midday": {
+      "factor": 1.1874820693133048,
+      "rmse": 239.61128611375725,
+      "mape": 176.80799561776809
+    },
+    "083-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "084-morning": {
+      "factor": 0.21163842916589243,
+      "rmse": 195.77486647401545,
+      "mape": 120.7899027298356
+    },
+    "084-midday": {
+      "factor": 0.4304706888888889,
+      "rmse": 235.26670891093872,
+      "mape": 213.1607465480494
+    },
+    "084-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "085-morning": {
+      "factor": 0.24705065333333331,
+      "rmse": 103.06419517426544,
+      "mape": 62.18290634024923
+    },
+    "085-midday": {
+      "factor": 1.0494084957873375,
+      "rmse": 180.66224131702657,
+      "mape": 75.79089623414326
+    },
+    "085-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "086-morning": {
+      "factor": 0.2780511114285714,
+      "rmse": 139.49720132170887,
+      "mape": 156.79384977453498
+    },
+    "086-midday": {
+      "factor": 0.8321776166574704,
+      "rmse": 205.8031200259954,
+      "mape": 181.2789287577408
+    },
+    "086-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "087-morning": {
+      "factor": 0.7393229614285713,
+      "rmse": 162.27386790319196,
+      "mape": 97.3322733375439
+    },
+    "087-midday": {
+      "factor": 0.5841513066763578,
+      "rmse": 256.70239004533056,
+      "mape": 69.10063198899395
+    },
+    "087-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "088-morning": {
+      "factor": 0.3942050095532915,
+      "rmse": 155.43758663323513,
+      "mape": 117.9031798258114
+    },
+    "088-midday": {
+      "factor": 0.3465647520547638,
+      "rmse": 239.5331871600324,
+      "mape": 133.3511470187287
+    },
+    "088-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "089-morning": {
+      "factor": 0.6235510560058458,
+      "rmse": 253.8931531420431,
+      "mape": 138.01779139475522
+    },
+    "089-midday": {
+      "factor": 0.9420106253135593,
+      "rmse": 226.65096551335114,
+      "mape": 151.71572335307508
+    },
+    "089-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "090-morning": {
+      "factor": 0.2138207970104895,
+      "rmse": 65.5187557959659,
+      "mape": 69.97923757208265
+    },
+    "090-midday": {
+      "factor": 0.4510345635690789,
+      "rmse": 130.58353688550199,
+      "mape": 124.22554497901532
+    },
+    "090-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "091-morning": {
+      "factor": 0.287383505,
+      "rmse": 184.05475835579648,
+      "mape": 118.49391946799565
+    },
+    "091-midday": {
+      "factor": 1.1283020972720588,
+      "rmse": 256.9927292481675,
+      "mape": 221.99322039553576
+    },
+    "091-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "092-morning": {
+      "factor": 0.7079164597972973,
+      "rmse": 208.393763010528,
+      "mape": 177.72883239849253
+    },
+    "092-midday": {
+      "factor": 1.6552911509810355,
+      "rmse": 168.4736907541227,
+      "mape": 28.42115774088012
+    },
+    "092-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "093-morning": {
+      "factor": 0.6588586299590163,
+      "rmse": 197.93007813998602,
+      "mape": 247.17473632777848
+    },
+    "093-midday": {
+      "factor": 1.4411712206306306,
+      "rmse": 226.30766595393084,
+      "mape": 52.00066885625082
+    },
+    "093-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "094-morning": {
+      "factor": 0.5575755982750247,
+      "rmse": 202.2249702212708,
+      "mape": 186.12800551467947
+    },
+    "094-midday": {
+      "factor": 1.2554543150063577,
+      "rmse": 178.65523843247396,
+      "mape": 156.49985126934837
+    },
+    "094-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "095-morning": {
+      "factor": 0.529625137076613,
+      "rmse": 218.86135174674448,
+      "mape": 198.88899127192306
+    },
+    "095-midday": {
+      "factor": 1.4961119066878308,
+      "rmse": 226.46663984664713,
+      "mape": 51.5306799300493
+    },
+    "095-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "096-morning": {
+      "factor": 0.7898688010365478,
+      "rmse": 210.20727172125072,
+      "mape": 155.6098829161756
+    },
+    "096-midday": {
+      "factor": 1.468447153106796,
+      "rmse": 188.6962566342198,
+      "mape": 33.97237043369574
+    },
+    "096-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "097-morning": {
+      "factor": 0.7521270952029131,
+      "rmse": 202.10233110356342,
+      "mape": 104.58142530128269
+    },
+    "097-midday": {
+      "factor": 1.555444798872727,
+      "rmse": 153.17683641677573,
+      "mape": 27.362098091330573
+    },
+    "097-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "098-morning": {
+      "factor": 0.6895460940748899,
+      "rmse": 218.19898954024006,
+      "mape": 134.82589159053543
+    },
+    "098-midday": {
+      "factor": 1.529484345346216,
+      "rmse": 150.72508653735977,
+      "mape": 28.997240487050902
+    },
+    "098-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "099-morning": {
+      "factor": 0.649737909532182,
+      "rmse": 201.5033642738239,
+      "mape": 159.60873664755496
+    },
+    "099-midday": {
+      "factor": 1.3265267435513362,
+      "rmse": 189.13308098467272,
+      "mape": 63.48136997932251
+    },
+    "099-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "100-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "100-midday": {
+      "factor": 1.4346434971912179,
+      "rmse": 142.61147909854805,
+      "mape": 54.30660951497549
+    },
+    "100-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "101-morning": {
+      "factor": 0.7142535528631554,
+      "rmse": 211.52930861310085,
+      "mape": 165.1749005941097
+    },
+    "101-midday": {
+      "factor": 1.4543907105100193,
+      "rmse": 210.19585747493628,
+      "mape": 33.269616955820055
+    },
+    "101-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "102-morning": {
+      "factor": 0.7304547634957627,
+      "rmse": 212.00431497553242,
+      "mape": 162.1416553685948
+    },
+    "102-midday": {
+      "factor": 1.2274540245350325,
+      "rmse": 149.70982119808227,
+      "mape": 242.8941518326708
+    },
+    "102-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "103-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "103-midday": {
+      "factor": 0.5217856968270677,
+      "rmse": 190.16817146126982,
+      "mape": 214.594070549999
+    },
+    "103-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "104-morning": {
+      "factor": 0.7827534145490982,
+      "rmse": 211.09137032358373,
+      "mape": 183.55382760120418
+    },
+    "104-midday": {
+      "factor": 0.6018594648360656,
+      "rmse": 318.2359536356039,
+      "mape": 118.60779899840166
+    },
+    "104-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "105-morning": {
+      "factor": 0.42736882000864707,
+      "rmse": 175.2103607427229,
+      "mape": 93.78105763684815
+    },
+    "105-midday": {
+      "factor": 0.5655408725,
+      "rmse": 192.15621658734577,
+      "mape": 126.8448814822433
+    },
+    "105-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "106-morning": {
+      "factor": 0.5975689379665737,
+      "rmse": 220.37059042132347,
+      "mape": 165.9596928959471
+    },
+    "106-midday": {
+      "factor": 0.9149427144956412,
+      "rmse": 270.84465507507844,
+      "mape": 130.10180339827104
+    },
+    "106-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "107-morning": {
+      "factor": 0.5787743230194805,
+      "rmse": 218.38671877027446,
+      "mape": 123.92886408315029
+    },
+    "107-midday": {
+      "factor": 1.2307727662395544,
+      "rmse": 181.47381861749696,
+      "mape": 78.57370613069735
+    },
+    "107-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "108-morning": {
+      "factor": 0.4496974399999999,
+      "rmse": 234.6263424519623,
+      "mape": 184.71812235298933
+    },
+    "108-midday": {
+      "factor": 0.5504933396078432,
+      "rmse": 154.87837741222154,
+      "mape": 77.65338299765435
+    },
+    "108-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "109-morning": {
+      "factor": 0.6922762035641892,
+      "rmse": 213.30840307810854,
+      "mape": 254.14273934538167
+    },
+    "109-midday": {
+      "factor": 1.3071300925353926,
+      "rmse": 268.433474386252,
+      "mape": 238.55113427722142
+    },
+    "109-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "110-morning": {
+      "factor": 0.5834530221234568,
+      "rmse": 260.23983500665526,
+      "mape": 87.6476916531578
+    },
+    "110-midday": {
+      "factor": 1.3270895068038742,
+      "rmse": 255.15576746834472,
+      "mape": 64.94874926539525
+    },
+    "110-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "111-morning": {
+      "factor": 0.6636234140697675,
+      "rmse": 170.320301287278,
+      "mape": 93.10868094021531
+    },
+    "111-midday": {
+      "factor": 0.4084600333054394,
+      "rmse": 161.0565371387388,
+      "mape": 155.05129116348726
+    },
+    "111-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "112-morning": {
+      "factor": 0.6453328654538611,
+      "rmse": 238.36280663134627,
+      "mape": 253.12416245217526
+    },
+    "112-midday": {
+      "factor": 1.214828347072686,
+      "rmse": 232.7604083038404,
+      "mape": 192.22014356713152
+    },
+    "112-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "113-morning": {
+      "factor": 0.5950446615243902,
+      "rmse": 233.25120777756433,
+      "mape": 208.6708093299896
+    },
+    "113-midday": {
+      "factor": 1.4172892676131807,
+      "rmse": 199.85711456676293,
+      "mape": 56.55722585669071
+    },
+    "113-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "114-morning": {
+      "factor": 0.523408744697286,
+      "rmse": 250.48892768185146,
+      "mape": 204.4407004287915
+    },
+    "114-midday": {
+      "factor": 1.3130445415193368,
+      "rmse": 170.738778150851,
+      "mape": 157.65951514436415
+    },
+    "114-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "115-morning": {
+      "factor": 0.577574307938038,
+      "rmse": 225.147793204125,
+      "mape": 136.61541712725588
+    },
+    "115-midday": {
+      "factor": 1.318980890136337,
+      "rmse": 145.904955173433,
+      "mape": 86.38483135228472
+    },
+    "115-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "116-morning": {
+      "factor": 0.6099412107439384,
+      "rmse": 213.59017582651015,
+      "mape": 155.51053849504052
+    },
+    "116-midday": {
+      "factor": 1.0230715802792023,
+      "rmse": 164.97847204136784,
+      "mape": 214.18185180568443
+    },
+    "116-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "117-morning": {
+      "factor": 0.5802082983807441,
+      "rmse": 223.17786915936037,
+      "mape": 103.87914176227918
+    },
+    "117-midday": {
+      "factor": 1.4100335849463292,
+      "rmse": 130.289798022565,
+      "mape": 30.51619432897602
+    },
+    "117-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "118-morning": {
+      "factor": 0.6584064178296146,
+      "rmse": 222.64376893511135,
+      "mape": 218.99513023501095
+    },
+    "118-midday": {
+      "factor": 1.6563711111428574,
+      "rmse": 162.18708792359283,
+      "mape": 22.43996081644411
+    },
+    "118-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "119-morning": {
+      "factor": 0.6446649965473791,
+      "rmse": 214.96050446844745,
+      "mape": 177.2220645137361
+    },
+    "119-midday": {
+      "factor": 1.4376899953179985,
+      "rmse": 127.89473779368822,
+      "mape": 23.009257898651832
+    },
+    "119-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "120-morning": {
+      "factor": 0.6485459637147883,
+      "rmse": 201.73915871686188,
+      "mape": 133.8023545220285
+    },
+    "120-midday": {
+      "factor": 1.42506749642505,
+      "rmse": 132.22817943212138,
+      "mape": 24.459672915964134
+    },
+    "120-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "121-morning": {
+      "factor": 0.6512115147388782,
+      "rmse": 216.0374544136225,
+      "mape": 169.33384568168083
+    },
+    "121-midday": {
+      "factor": 1.4274052735518037,
+      "rmse": 126.69631552729997,
+      "mape": 23.526346163430045
+    },
+    "121-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "122-morning": {
+      "factor": 0.6314243554933333,
+      "rmse": 204.70594883269598,
+      "mape": 121.05924496661969
+    },
+    "122-midday": {
+      "factor": 1.3405759449434296,
+      "rmse": 161.17015301076054,
+      "mape": 23.74843300437675
+    },
+    "122-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "123-morning": {
+      "factor": 0.5380604044763073,
+      "rmse": 258.38617226890193,
+      "mape": 164.91970462736458
+    },
+    "123-midday": {
+      "factor": 1.180195546992119,
+      "rmse": 143.03297702162703,
+      "mape": 55.778950734383756
+    },
+    "123-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "124-morning": {
+      "factor": 0.4829256543858218,
+      "rmse": 173.8688618596121,
+      "mape": 136.64794191553494
+    },
+    "124-midday": {
+      "factor": 0.4436397346026801,
+      "rmse": 338.5974462795043,
+      "mape": 91.33009999742741
+    },
+    "124-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "125-morning": {
+      "factor": 0.2866173588560572,
+      "rmse": 277.7968856528401,
+      "mape": 101.59782006723445
+    },
+    "125-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "125-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "126-morning": {
+      "factor": 0.8601290545312498,
+      "rmse": 278.7861035084676,
+      "mape": 159.06755021246082
+    },
+    "126-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "126-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "127-morning": {
+      "factor": 0.3357382145689655,
+      "rmse": 122.31613125663905,
+      "mape": 128.16283811253305
+    },
+    "127-midday": {
+      "factor": 0.3644180226461744,
+      "rmse": 183.53403543257653,
+      "mape": 116.64167196323345
+    },
+    "127-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "128-morning": {
+      "factor": 0.5592310981165048,
+      "rmse": 220.79698647994528,
+      "mape": 80.96426655792678
+    },
+    "128-midday": {
+      "factor": 0.781685757162162,
+      "rmse": 198.63734527308208,
+      "mape": 101.67090085944734
+    },
+    "128-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "129-morning": {
+      "factor": 0.3891141284942084,
+      "rmse": 261.08557877439966,
+      "mape": 136.65330266275188
+    },
+    "129-midday": {
+      "factor": 1.2332936149191687,
+      "rmse": 212.70461634553652,
+      "mape": 61.14257642095862
+    },
+    "129-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "130-morning": {
+      "factor": 0.549776858172414,
+      "rmse": 186.50661451754218,
+      "mape": 144.95370324008746
+    },
+    "130-midday": {
+      "factor": 1.3217685299520103,
+      "rmse": 174.07298237699658,
+      "mape": 40.48831072715222
+    },
+    "130-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "131-morning": {
+      "factor": 0.32016770446924603,
+      "rmse": 119.20178428390814,
+      "mape": 127.84982628418955
+    },
+    "131-midday": {
+      "factor": 1.5905990971568629,
+      "rmse": 171.98151659931523,
+      "mape": 142.60464731656253
+    },
+    "131-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "132-morning": {
+      "factor": 0.3202513332988358,
+      "rmse": 203.43972767889647,
+      "mape": 71.58923541182769
+    },
+    "132-midday": {
+      "factor": 0.5182796729999999,
+      "rmse": 268.59538071996224,
+      "mape": 93.60410703575678
+    },
+    "132-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "133-morning": {
+      "factor": 0.40481223600000005,
+      "rmse": 317.5721687545211,
+      "mape": 242.41431384436277
+    },
+    "133-midday": {
+      "factor": 0.9753370641462258,
+      "rmse": 215.55975759784403,
+      "mape": 104.55576389115049
+    },
+    "133-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "134-morning": {
+      "factor": 0.6067834973366834,
+      "rmse": 230.50837016660083,
+      "mape": 170.36095161848226
+    },
+    "134-midday": {
+      "factor": 1.2435256669194312,
+      "rmse": 162.82020973058678,
+      "mape": 101.8425427424257
+    },
+    "134-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "135-morning": {
+      "factor": 0.43217149653801723,
+      "rmse": 229.09715469709408,
+      "mape": 171.05857546471205
+    },
+    "135-midday": {
+      "factor": 0.9271125903564729,
+      "rmse": 221.7537729361994,
+      "mape": 183.76843209230535
+    },
+    "135-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "136-morning": {
+      "factor": 0.3895179452672085,
+      "rmse": 270.5273173527847,
+      "mape": 141.08093186821011
+    },
+    "136-midday": {
+      "factor": 0.9542864941379309,
+      "rmse": 212.66404553557985,
+      "mape": 119.98656637708345
+    },
+    "136-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "137-morning": {
+      "factor": 0.6271402314392522,
+      "rmse": 277.594227780343,
+      "mape": 167.74100516797722
+    },
+    "137-midday": {
+      "factor": 0.6453993196235294,
+      "rmse": 185.47617287470382,
+      "mape": 181.86997618524094
+    },
+    "137-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "138-morning": {
+      "factor": 0.31896853000289094,
+      "rmse": 256.0622752166199,
+      "mape": 153.99921765470094
+    },
+    "138-midday": {
+      "factor": 0.9799904913286165,
+      "rmse": 263.6581736451075,
+      "mape": 190.17549607905931
+    },
+    "138-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "139-morning": {
+      "factor": 0.5543593226193839,
+      "rmse": 285.69316393951596,
+      "mape": 287.2314113886368
+    },
+    "139-midday": {
+      "factor": 1.2051363988924444,
+      "rmse": 283.80451026014805,
+      "mape": 238.30704641626465
+    },
+    "139-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "140-morning": {
+      "factor": 0.28303883854166656,
+      "rmse": 179.80200688245327,
+      "mape": 157.7173817359041
+    },
+    "140-midday": {
+      "factor": 0.6297101304796816,
+      "rmse": 176.3748174971518,
+      "mape": 111.2713076053766
+    },
+    "140-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "141-morning": {
+      "factor": 0.43627364911266364,
+      "rmse": 279.5646976807691,
+      "mape": 216.2639193910556
+    },
+    "141-midday": {
+      "factor": 1.0541653502059387,
+      "rmse": 305.88289597652806,
+      "mape": 194.6948423678401
+    },
+    "141-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "142-morning": {
+      "factor": 0.4769947084114053,
+      "rmse": 247.08581364996132,
+      "mape": 302.48252016971566
+    },
+    "142-midday": {
+      "factor": 1.2474164788226254,
+      "rmse": 261.61800106266344,
+      "mape": 137.79761784537442
+    },
+    "142-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "143-morning": {
+      "factor": 0.6139979479700375,
+      "rmse": 264.9421888866238,
+      "mape": 289.8762436464163
+    },
+    "143-midday": {
+      "factor": 1.3152145907207207,
+      "rmse": 209.46611426876873,
+      "mape": 45.31171143036084
+    },
+    "143-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "144-morning": {
+      "factor": 0.4888403620915033,
+      "rmse": 213.0914790002783,
+      "mape": 171.6679476814215
+    },
+    "144-midday": {
+      "factor": 1.462430994165235,
+      "rmse": 267.6978313617482,
+      "mape": 50.08327976407699
+    },
+    "144-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "145-morning": {
+      "factor": 0.5018589767073999,
+      "rmse": 214.3988796166604,
+      "mape": 284.78163733415863
+    },
+    "145-midday": {
+      "factor": 1.2450553509224553,
+      "rmse": 211.03118936986704,
+      "mape": 76.76720198375295
+    },
+    "145-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "146-morning": {
+      "factor": 0.5577569571772144,
+      "rmse": 238.43980835844644,
+      "mape": 114.60287427981521
+    },
+    "146-midday": {
+      "factor": 1.252567072848617,
+      "rmse": 138.67729858817498,
+      "mape": 35.33448423660984
+    },
+    "146-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "147-morning": {
+      "factor": 0.543046901151325,
+      "rmse": 246.35022071728017,
+      "mape": 108.96021565024616
+    },
+    "147-midday": {
+      "factor": 1.2265356862597911,
+      "rmse": 187.44623996249095,
+      "mape": 68.694773373277
+    },
+    "147-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "148-morning": {
+      "factor": 0.3519421310466377,
+      "rmse": 238.94389725539577,
+      "mape": 103.5489316587701
+    },
+    "148-midday": {
+      "factor": 1.2370818901877922,
+      "rmse": 204.1992871112584,
+      "mape": 189.08323069944356
+    },
+    "148-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "149-morning": {
+      "factor": 0.46262144526,
+      "rmse": 203.9437535841926,
+      "mape": 157.74922153086052
+    },
+    "149-midday": {
+      "factor": 1.215775600054054,
+      "rmse": 147.23186327785524,
+      "mape": 91.71131375130551
+    },
+    "149-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "150-morning": {
+      "factor": 0.6374314070526781,
+      "rmse": 219.54635026566874,
+      "mape": 140.7786884127798
+    },
+    "150-midday": {
+      "factor": 1.200462785549598,
+      "rmse": 87.08707965046474,
+      "mape": 15.982929294063997
+    },
+    "150-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "151-morning": {
+      "factor": 0.6388032147926574,
+      "rmse": 254.17754904613014,
+      "mape": 163.99449122571974
+    },
+    "151-midday": {
+      "factor": 1.0978726774193546,
+      "rmse": 260.92604794501807,
+      "mape": 108.3819154605236
+    },
+    "151-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "152-morning": {
+      "factor": 0.6157825685185184,
+      "rmse": 291.6952472820769,
+      "mape": 113.96066588398577
+    },
+    "152-midday": {
+      "factor": 0.8867278158084323,
+      "rmse": 221.67638063968263,
+      "mape": 100.76561991919131
+    },
+    "152-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "153-morning": {
+      "factor": 0.4481435213625,
+      "rmse": 250.3216472050387,
+      "mape": 133.1718427457092
+    },
+    "153-midday": {
+      "factor": 0.7695250850860216,
+      "rmse": 388.51130438108805,
+      "mape": 91.6468134780971
+    },
+    "153-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "154-morning": {
+      "factor": 0.4078798014908257,
+      "rmse": 170.67623534634455,
+      "mape": 130.35162412589443
+    },
+    "154-midday": {
+      "factor": 0.829424161605337,
+      "rmse": 291.4412291459858,
+      "mape": 120.5454327078044
+    },
+    "154-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "155-morning": {
+      "factor": 0.3391432106404727,
+      "rmse": 182.3469699690127,
+      "mape": 126.60082351815716
+    },
+    "155-midday": {
+      "factor": 0.8828349613729506,
+      "rmse": 180.6648921503293,
+      "mape": 160.8129047861603
+    },
+    "155-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "156-morning": {
+      "factor": 0.44121619710937504,
+      "rmse": 278.689267738631,
+      "mape": 303.37205944645336
+    },
+    "156-midday": {
+      "factor": 0.9944760380361772,
+      "rmse": 234.4897022857802,
+      "mape": 154.39587660351083
+    },
+    "156-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "157-morning": {
+      "factor": 0.5029670992682927,
+      "rmse": 235.6963318847853,
+      "mape": 162.08466706303776
+    },
+    "157-midday": {
+      "factor": 0.9123089331943436,
+      "rmse": 262.56583859825747,
+      "mape": 83.24060278985407
+    },
+    "157-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "158-morning": {
+      "factor": 0.4435277763795421,
+      "rmse": 181.68020968747243,
+      "mape": 97.78838237401824
+    },
+    "158-midday": {
+      "factor": 1.1045434731987576,
+      "rmse": 151.07217736690163,
+      "mape": 196.5297630950164
+    },
+    "158-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "159-morning": {
+      "factor": 0.5452454738414634,
+      "rmse": 224.5731876531782,
+      "mape": 132.66260656464422
+    },
+    "159-midday": {
+      "factor": 0.816501317559524,
+      "rmse": 246.15886190539092,
+      "mape": 142.5228937691347
+    },
+    "159-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "160-morning": {
+      "factor": 0.3952360377404038,
+      "rmse": 226.56694275492202,
+      "mape": 148.743440329121
+    },
+    "160-midday": {
+      "factor": 1.2686078150705211,
+      "rmse": 168.551962976524,
+      "mape": 28.174225100460433
+    },
+    "160-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "161-morning": {
+      "factor": 0.3983872426618891,
+      "rmse": 260.54925995610495,
+      "mape": 166.0754005118104
+    },
+    "161-midday": {
+      "factor": 1.1982191637690631,
+      "rmse": 105.54349390825101,
+      "mape": 105.14151746871086
+    },
+    "161-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "162-morning": {
+      "factor": 0.6239985965261272,
+      "rmse": 242.2528033567361,
+      "mape": 253.35307510776693
+    },
+    "162-midday": {
+      "factor": 1.2679492187128714,
+      "rmse": 182.39101755611503,
+      "mape": 53.69419667569433
+    },
+    "162-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "163-morning": {
+      "factor": 0.5220687646108949,
+      "rmse": 196.4278346693826,
+      "mape": 109.72464997776554
+    },
+    "163-midday": {
+      "factor": 1.0595043850895756,
+      "rmse": 114.07197803449426,
+      "mape": 125.98025143076921
+    },
+    "163-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "164-morning": {
+      "factor": 0.6708228667663043,
+      "rmse": 178.53659306294395,
+      "mape": 91.85042354980935
+    },
+    "164-midday": {
+      "factor": 1.25769585794231,
+      "rmse": 112.39907524128807,
+      "mape": 13.597832554885134
+    },
+    "164-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "165-morning": {
+      "factor": 0.6326203785326088,
+      "rmse": 184.42183171411364,
+      "mape": 75.83876407850701
+    },
+    "165-midday": {
+      "factor": 1.18550034680297,
+      "rmse": 177.08319311932135,
+      "mape": 38.284155514982054
+    },
+    "165-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "166-morning": {
+      "factor": 0.4714242747531644,
+      "rmse": 208.33028209329436,
+      "mape": 135.07047073588657
+    },
+    "166-midday": {
+      "factor": 1.1873308626716024,
+      "rmse": 283.4571251521523,
+      "mape": 91.90560329979985
+    },
+    "166-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "167-morning": {
+      "factor": 0.551547076846236,
+      "rmse": 225.96276999319682,
+      "mape": 200.05333274134358
+    },
+    "167-midday": {
+      "factor": 1.1295560034298031,
+      "rmse": 205.03986366273298,
+      "mape": 152.5159867277639
+    },
+    "167-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "168-morning": {
+      "factor": 0.505902199309091,
+      "rmse": 199.54024348911656,
+      "mape": 72.4445969297352
+    },
+    "168-midday": {
+      "factor": 1.2581113120903953,
+      "rmse": 118.14557033983522,
+      "mape": 18.07565458287154
+    },
+    "168-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "169-morning": {
+      "factor": 0.49455583658385094,
+      "rmse": 225.05496431627793,
+      "mape": 154.6707752628918
+    },
+    "169-midday": {
+      "factor": 1.18514618430721,
+      "rmse": 70.75297819949604,
+      "mape": 8.16524437551654
+    },
+    "169-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "170-morning": {
+      "factor": 0.5999279936538462,
+      "rmse": 201.92848339320616,
+      "mape": 151.31072733408186
+    },
+    "170-midday": {
+      "factor": 1.1804087952919018,
+      "rmse": 98.2684232193257,
+      "mape": 17.396245123631974
+    },
+    "170-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "171-morning": {
+      "factor": 0.5895804019246902,
+      "rmse": 191.00880313555655,
+      "mape": 127.92468925487917
+    },
+    "171-midday": {
+      "factor": 1.2512692646688004,
+      "rmse": 100.47225227682104,
+      "mape": 12.366566367754533
+    },
+    "171-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "172-morning": {
+      "factor": 0.6263816370393074,
+      "rmse": 243.99478075187182,
+      "mape": 134.2486617740893
+    },
+    "172-midday": {
+      "factor": 1.2869970728616318,
+      "rmse": 110.06733405116718,
+      "mape": 11.134745714274215
+    },
+    "172-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "173-morning": {
+      "factor": 0.5857383305747127,
+      "rmse": 208.88148871259014,
+      "mape": 179.64909231738315
+    },
+    "173-midday": {
+      "factor": 1.2152937641389963,
+      "rmse": 77.79854555625809,
+      "mape": 12.338774463678227
+    },
+    "173-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "174-morning": {
+      "factor": 0.5796366370424091,
+      "rmse": 196.7858250484565,
+      "mape": 77.60971660873189
+    },
+    "174-midday": {
+      "factor": 0.8483306057142858,
+      "rmse": 296.2898903855207,
+      "mape": 72.00146585709378
+    },
+    "174-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "175-morning": {
+      "factor": 0.6225623698867925,
+      "rmse": 202.95796136061824,
+      "mape": 174.93845123125692
+    },
+    "175-midday": {
+      "factor": 1.2283524966138286,
+      "rmse": 87.57523175379232,
+      "mape": 10.471177425085141
+    },
+    "175-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "176-morning": {
+      "factor": 0.5801490005809711,
+      "rmse": 210.11878512392053,
+      "mape": 241.84384849681857
+    },
+    "176-midday": {
+      "factor": 1.278652042056756,
+      "rmse": 113.00178316107225,
+      "mape": 13.86759912014193
+    },
+    "176-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "177-morning": {
+      "factor": 0.4689291276530968,
+      "rmse": 302.8747285160464,
+      "mape": 359.5453694014366
+    },
+    "177-midday": {
+      "factor": 1.2435185280660148,
+      "rmse": 195.02620270246544,
+      "mape": 41.042854547780586
+    },
+    "177-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "178-morning": {
+      "factor": 0.6287466969737892,
+      "rmse": 160.76188553246328,
+      "mape": 118.31907285958829
+    },
+    "178-midday": {
+      "factor": 0.33524129551743576,
+      "rmse": 101.70347204093184,
+      "mape": 96.13868313430216
+    },
+    "178-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "179-morning": {
+      "factor": 0.5908806259278351,
+      "rmse": 231.59313249926993,
+      "mape": 151.2155497894418
+    },
+    "179-midday": {
+      "factor": 1.2799853134015344,
+      "rmse": 141.24309463864952,
+      "mape": 20.05732546001023
+    },
+    "179-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "180-morning": {
+      "factor": 0.602563378623327,
+      "rmse": 200.24143787348586,
+      "mape": 184.17874176806995
+    },
+    "180-midday": {
+      "factor": 1.2373702347204971,
+      "rmse": 87.38029291598069,
+      "mape": 10.99840613998632
+    },
+    "180-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "181-morning": {
+      "factor": 0.617270249937788,
+      "rmse": 203.01669742380653,
+      "mape": 255.9603981033252
+    },
+    "181-midday": {
+      "factor": 1.1715845263451443,
+      "rmse": 146.0849594974992,
+      "mape": 59.65215031273726
+    },
+    "181-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "182-morning": {
+      "factor": 0.53863171640625,
+      "rmse": 256.13898200050824,
+      "mape": 165.15867504122735
+    },
+    "182-midday": {
+      "factor": 0.30954172725,
+      "rmse": 394.8424067765937,
+      "mape": 85.69529332453281
+    },
+    "182-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "183-morning": {
+      "factor": 0.6053884476831684,
+      "rmse": 200.3422475197922,
+      "mape": 108.29337112704236
+    },
+    "183-midday": {
+      "factor": 1.205670403753582,
+      "rmse": 95.67829085361338,
+      "mape": 26.38484681149103
+    },
+    "183-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "184-morning": {
+      "factor": 0.20018528091591592,
+      "rmse": 97.01011973731069,
+      "mape": 173.2566643708971
+    },
+    "184-midday": {
+      "factor": 0.7380806091724139,
+      "rmse": 172.2871864525124,
+      "mape": 76.61772886129053
+    },
+    "184-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "185-morning": {
+      "factor": 0.6384765093391304,
+      "rmse": 220.8254151056567,
+      "mape": 223.36054730962712
+    },
+    "185-midday": {
+      "factor": 1.273778267957721,
+      "rmse": 191.09025964400627,
+      "mape": 21.787287540541243
+    },
+    "185-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "186-morning": {
+      "factor": 0.5128539226666667,
+      "rmse": 203.41341968603118,
+      "mape": 101.5135592468335
+    },
+    "186-midday": {
+      "factor": 1.295920683333333,
+      "rmse": 150.06334858614076,
+      "mape": 27.34896802648355
+    },
+    "186-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "187-morning": {
+      "factor": 0.5112455100344355,
+      "rmse": 135.79490286285414,
+      "mape": 209.0526439571955
+    },
+    "187-midday": {
+      "factor": 0.5438960135234385,
+      "rmse": 129.6236381989189,
+      "mape": 79.8051065775566
+    },
+    "187-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "188-morning": {
+      "factor": 0.7355556224107744,
+      "rmse": 244.47740476900054,
+      "mape": 458.72522667544774
+    },
+    "188-midday": {
+      "factor": 0.48717718062500004,
+      "rmse": 165.9345276745999,
+      "mape": 80.04679830121728
+    },
+    "188-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "189-morning": {
+      "factor": 0.42927016742268037,
+      "rmse": 168.75570883256546,
+      "mape": 99.56589939527142
+    },
+    "189-midday": {
+      "factor": 0.9027483635647842,
+      "rmse": 169.16548319381008,
+      "mape": 90.83977704750862
+    },
+    "189-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "190-morning": {
+      "factor": 0.5220086986956521,
+      "rmse": 291.60285572590755,
+      "mape": 138.2649073576538
+    },
+    "190-midday": {
+      "factor": 0.7859036749201367,
+      "rmse": 212.7798096612351,
+      "mape": 98.93219245288795
+    },
+    "190-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "191-morning": {
+      "factor": 0.44729816770586933,
+      "rmse": 248.4714697178002,
+      "mape": 160.57364018835037
+    },
+    "191-midday": {
+      "factor": 1.1880490250322582,
+      "rmse": 272.50028215602777,
+      "mape": 84.90686440943148
+    },
+    "191-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "192-morning": {
+      "factor": 0.4251926399749114,
+      "rmse": 254.74332449240742,
+      "mape": 290.2288340035042
+    },
+    "192-midday": {
+      "factor": 1.3186732848868385,
+      "rmse": 252.30310899799977,
+      "mape": 41.99926940735493
+    },
+    "192-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "193-morning": {
+      "factor": 0.46710620860696506,
+      "rmse": 254.01204422322286,
+      "mape": 123.16852227253665
+    },
+    "193-midday": {
+      "factor": 1.339804621063702,
+      "rmse": 235.23391227975426,
+      "mape": 57.18699172322636
+    },
+    "193-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "194-morning": {
+      "factor": 0.5122477461091235,
+      "rmse": 228.38126182366042,
+      "mape": 127.24977897857119
+    },
+    "194-midday": {
+      "factor": 1.2790808647003655,
+      "rmse": 199.32024258021877,
+      "mape": 30.842498504395234
+    },
+    "194-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "195-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "195-midday": {
+      "factor": 0.8636898236703298,
+      "rmse": 162.12938664253832,
+      "mape": 118.76950106845361
+    },
+    "195-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "196-morning": {
+      "factor": 0.31584147294481985,
+      "rmse": 194.74820786407938,
+      "mape": 130.1645266227134
+    },
+    "196-midday": {
+      "factor": 1.0304764565959303,
+      "rmse": 142.90381113526874,
+      "mape": 65.8639936186284
+    },
+    "196-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "197-morning": {
+      "factor": 0.5708360753429452,
+      "rmse": 249.6869163329712,
+      "mape": 247.83487747757795
+    },
+    "197-midday": {
+      "factor": 0.725904760630234,
+      "rmse": 193.76152900816024,
+      "mape": 220.52608856856796
+    },
+    "197-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "198-morning": {
+      "factor": 0.38184201387755107,
+      "rmse": 272.6793188628387,
+      "mape": 158.2254058628252
+    },
+    "198-midday": {
+      "factor": 1.234703566527335,
+      "rmse": 277.77453806670195,
+      "mape": 67.351501088643
+    },
+    "198-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "199-morning": {
+      "factor": 0.5211871029582945,
+      "rmse": 216.89656632020964,
+      "mape": 140.48593043724102
+    },
+    "199-midday": {
+      "factor": 1.3131883987804494,
+      "rmse": 283.25402369219654,
+      "mape": 59.59320231697206
+    },
+    "199-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "200-morning": {
+      "factor": 0.5582151466723584,
+      "rmse": 207.14039454287624,
+      "mape": 142.13929854615517
+    },
+    "200-midday": {
+      "factor": 1.141150436309524,
+      "rmse": 217.380954161058,
+      "mape": 71.67775016205064
+    },
+    "200-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "201-morning": {
+      "factor": 0.5669882780960414,
+      "rmse": 241.95186153812824,
+      "mape": 111.09504554703385
+    },
+    "201-midday": {
+      "factor": 0.6166425931952663,
+      "rmse": 185.3526729323134,
+      "mape": 70.83250129625726
+    },
+    "201-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "202-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "202-midday": {
+      "factor": 0.8295205271672357,
+      "rmse": 312.62955076040043,
+      "mape": 84.26492488736932
+    },
+    "202-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "203-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "203-midday": {
+      "factor": 1.19997714585,
+      "rmse": 215.09232002039332,
+      "mape": 73.6974859568171
+    },
+    "203-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "204-morning": {
+      "factor": 0.7300058097755611,
+      "rmse": 247.97289716075662,
+      "mape": 255.15448560921016
+    },
+    "204-midday": {
+      "factor": 1.1316941338974114,
+      "rmse": 238.76790010787448,
+      "mape": 55.238419301109346
+    },
+    "204-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "205-morning": {
+      "factor": 0.21931760854166668,
+      "rmse": 119.61266965453063,
+      "mape": 116.60122381169218
+    },
+    "205-midday": {
+      "factor": 0.4685083645161292,
+      "rmse": 245.73986906752518,
+      "mape": 92.66287079197805
+    },
+    "205-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "206-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "206-midday": {
+      "factor": 0.5293761742707188,
+      "rmse": 195.44821099179387,
+      "mape": 96.58204184222254
+    },
+    "206-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "207-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "207-midday": {
+      "factor": 1.1359495436151887,
+      "rmse": 334.10423066658154,
+      "mape": 294.49281288701405
+    },
+    "207-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "208-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "208-midday": {
+      "factor": 0.5198334995648264,
+      "rmse": 301.0125610330363,
+      "mape": 161.3788191369221
+    },
+    "208-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "209-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "209-midday": {
+      "factor": 0.8123874410992133,
+      "rmse": 159.02670125173083,
+      "mape": 73.71058641456435
+    },
+    "209-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "210-morning": {
+      "factor": 0.35356621543290045,
+      "rmse": 268.04769814058574,
+      "mape": 192.5771191414805
+    },
+    "210-midday": {
+      "factor": 0.7678124026326862,
+      "rmse": 281.3887973402142,
+      "mape": 67.191407065118
+    },
+    "210-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "211-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "211-midday": {
+      "factor": 1.1154481121178343,
+      "rmse": 347.2483625097859,
+      "mape": 265.82110409656485
+    },
+    "211-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "212-morning": {
+      "factor": 0.7348019420699285,
+      "rmse": 243.9918412791466,
+      "mape": 96.2499244581501
+    },
+    "212-midday": {
+      "factor": 0.8055284138666666,
+      "rmse": 228.45043118487067,
+      "mape": 127.4549399602682
+    },
+    "212-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "213-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "213-midday": {
+      "factor": 0.8364586321050618,
+      "rmse": 318.3372336455652,
+      "mape": 121.7276659109817
+    },
+    "213-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "214-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "214-midday": {
+      "factor": 0.6716043331279621,
+      "rmse": 119.197282083124,
+      "mape": 117.38666355738523
+    },
+    "214-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "215-morning": {
+      "factor": 0.5318694667195767,
+      "rmse": 81.82007383285078,
+      "mape": 63.94143799773404
+    },
+    "215-midday": {
+      "factor": 0.7545008216468254,
+      "rmse": 57.453638933966694,
+      "mape": 44.33188546741651
+    },
+    "215-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "216-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "216-midday": {
+      "factor": 0.34154119189024384,
+      "rmse": 175.86625926968716,
+      "mape": 153.20660427705715
+    },
+    "216-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "217-morning": {
+      "factor": 0.259362246101695,
+      "rmse": 235.95298402464002,
+      "mape": 193.64888013026575
+    },
+    "217-midday": {
+      "factor": 1.1256886973863636,
+      "rmse": 277.139880533498,
+      "mape": 135.70086833150788
+    },
+    "217-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "218-morning": {
+      "factor": 0.5473766459826247,
+      "rmse": 160.24503844566192,
+      "mape": 153.47730992815448
+    },
+    "218-midday": {
+      "factor": 1.337037023740474,
+      "rmse": 126.66517837257862,
+      "mape": 23.549427011662257
+    },
+    "218-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "219-morning": {
+      "factor": 0.6501453160186983,
+      "rmse": 213.94305644380154,
+      "mape": 148.5253634097451
+    },
+    "219-midday": {
+      "factor": 1.3801050646196695,
+      "rmse": 109.12826884737832,
+      "mape": 21.200354559346522
+    },
+    "219-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "220-morning": {
+      "factor": 0.6340418619624216,
+      "rmse": 206.6308546707087,
+      "mape": 104.00859398757076
+    },
+    "220-midday": {
+      "factor": 1.3934247718506017,
+      "rmse": 120.84259854683931,
+      "mape": 21.742692329149914
+    },
+    "220-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "221-morning": {
+      "factor": 0.6535478181156464,
+      "rmse": 220.31510972559408,
+      "mape": 175.5315073925074
+    },
+    "221-midday": {
+      "factor": 1.4887183365360044,
+      "rmse": 189.3316284803483,
+      "mape": 28.86137397672521
+    },
+    "221-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "222-morning": {
+      "factor": 0.6281221066940452,
+      "rmse": 207.87743348725397,
+      "mape": 147.44615528615273
+    },
+    "222-midday": {
+      "factor": 1.4444839806228376,
+      "rmse": 140.6681277007895,
+      "mape": 23.581132630591252
+    },
+    "222-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "223-morning": {
+      "factor": 0.6629031560040982,
+      "rmse": 203.23904537712176,
+      "mape": 113.98880139317056
+    },
+    "223-midday": {
+      "factor": 1.4267563589690722,
+      "rmse": 135.90210666242416,
+      "mape": 24.51624970490901
+    },
+    "223-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "224-morning": {
+      "factor": 0.6641599282954913,
+      "rmse": 198.3948721483905,
+      "mape": 234.3426336581641
+    },
+    "224-midday": {
+      "factor": 1.520483779053221,
+      "rmse": 150.7660814142542,
+      "mape": 24.9680361292859
+    },
+    "224-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "225-morning": {
+      "factor": 0.6200494933974358,
+      "rmse": 197.6794994993337,
+      "mape": 130.10661717261218
+    },
+    "225-midday": {
+      "factor": 1.4786488535332416,
+      "rmse": 142.51522090466486,
+      "mape": 25.58470460683786
+    },
+    "225-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "226-morning": {
+      "factor": 0.6518379770715835,
+      "rmse": 200.57392381454542,
+      "mape": 150.3339601509014
+    },
+    "226-midday": {
+      "factor": 1.3426874000865519,
+      "rmse": 111.7110933996358,
+      "mape": 26.57815032830357
+    },
+    "226-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "227-morning": {
+      "factor": 0.6059027512409301,
+      "rmse": 199.68735419669844,
+      "mape": 88.4180104805035
+    },
+    "227-midday": {
+      "factor": 1.270185438135593,
+      "rmse": 207.36245579417226,
+      "mape": 45.49643913294015
+    },
+    "227-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "228-morning": {
+      "factor": 0.38519074858187125,
+      "rmse": 238.35223923714994,
+      "mape": 110.52897731353424
+    },
+    "228-midday": {
+      "factor": 1.4257657757094682,
+      "rmse": 229.7944432367095,
+      "mape": 42.501641184921404
+    },
+    "228-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "229-morning": {
+      "factor": 0.7038294429938271,
+      "rmse": 287.25695003873955,
+      "mape": 127.19575410245349
+    },
+    "229-midday": {
+      "factor": 1.196657653779274,
+      "rmse": 338.80048274549745,
+      "mape": 120.05563262816814
+    },
+    "229-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "230-morning": {
+      "factor": 0.6686457004227305,
+      "rmse": 198.95097568006267,
+      "mape": 161.47931731475532
+    },
+    "230-midday": {
+      "factor": 1.451024924280822,
+      "rmse": 134.48335548191332,
+      "mape": 25.334658908385343
+    },
+    "230-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "231-morning": {
+      "factor": 0.6554780748486326,
+      "rmse": 209.73402952009172,
+      "mape": 226.98527715199478
+    },
+    "231-midday": {
+      "factor": 1.4488474106616025,
+      "rmse": 132.25242922913017,
+      "mape": 24.886534258381925
+    },
+    "231-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "232-morning": {
+      "factor": 0.40009582878761396,
+      "rmse": 117.34308978292502,
+      "mape": 127.73578462796762
+    },
+    "232-midday": {
+      "factor": 0.7315350932696078,
+      "rmse": 107.26055708817171,
+      "mape": 70.04769553931528
+    },
+    "232-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "233-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "233-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "233-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "234-morning": {
+      "factor": 0.6233452286286982,
+      "rmse": 236.80536615805553,
+      "mape": 169.1521112479996
+    },
+    "234-midday": {
+      "factor": 0.9518153662256208,
+      "rmse": 215.258142040132,
+      "mape": 71.83405257151468
+    },
+    "234-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "235-morning": {
+      "factor": 0.5839109030584321,
+      "rmse": 334.6449949258313,
+      "mape": 223.83933192995755
+    },
+    "235-midday": {
+      "factor": 1.0632584759230772,
+      "rmse": 252.10406444545308,
+      "mape": 63.17191858708077
+    },
+    "235-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "236-morning": {
+      "factor": 0.33180355140350876,
+      "rmse": 267.0239245514044,
+      "mape": 74.5574713713482
+    },
+    "236-midday": {
+      "factor": 1.5774729588255156,
+      "rmse": 269.4339592175855,
+      "mape": 50.69460973734221
+    },
+    "236-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "237-morning": {
+      "factor": 0.5849606343370787,
+      "rmse": 232.27320399172496,
+      "mape": 127.62375371344842
+    },
+    "237-midday": {
+      "factor": 1.5251718513194443,
+      "rmse": 185.21715298186973,
+      "mape": 31.70976665730376
+    },
+    "237-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "238-morning": {
+      "factor": 0.6873005286928103,
+      "rmse": 209.31835112096329,
+      "mape": 176.70521879704958
+    },
+    "238-midday": {
+      "factor": 1.4059449594095665,
+      "rmse": 144.63275128837432,
+      "mape": 29.628428150461016
+    },
+    "238-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "239-morning": {
+      "factor": 0.2724887650873463,
+      "rmse": 299.8741491682605,
+      "mape": 158.6620509196186
+    },
+    "239-midday": {
+      "factor": 0.5260253031284916,
+      "rmse": 85.51609324065288,
+      "mape": 73.16310548229472
+    },
+    "239-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "240-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "240-midday": {
+      "factor": 0.914584102793296,
+      "rmse": 149.09022778386245,
+      "mape": 77.17558013734612
+    },
+    "240-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "241-morning": {
+      "factor": 0.7930109587883203,
+      "rmse": 255.60683919327326,
+      "mape": 101.7475183403685
+    },
+    "241-midday": {
+      "factor": 1.6656684526695524,
+      "rmse": 272.3597377307359,
+      "mape": 52.40268133372359
+    },
+    "241-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "242-morning": {
+      "factor": 0.36441503441671885,
+      "rmse": 375.8174501585768,
+      "mape": 82.40068240984606
+    },
+    "242-midday": {
+      "factor": 0.7785091890939617,
+      "rmse": 283.97211458108796,
+      "mape": 190.33415684609847
+    },
+    "242-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "243-morning": {
+      "factor": 0.539255623522101,
+      "rmse": 139.34146129745469,
+      "mape": 72.43654959728654
+    },
+    "243-midday": {
+      "factor": 0.6453693951459853,
+      "rmse": 231.4246131851206,
+      "mape": 50.60284341401905
+    },
+    "243-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "244-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "244-midday": {
+      "factor": 0.6284503386507937,
+      "rmse": 114.2000855572768,
+      "mape": 72.56492262340272
+    },
+    "244-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "245-morning": {
+      "factor": 0.8164465419767443,
+      "rmse": 280.51039873337874,
+      "mape": 189.9174366444112
+    },
+    "245-midday": {
+      "factor": 0.8879603992108237,
+      "rmse": 233.20068586331146,
+      "mape": 121.05049607328158
+    },
+    "245-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "246-morning": {
+      "factor": 0.5057855175111111,
+      "rmse": 116.10088039774146,
+      "mape": 191.29567248740784
+    },
+    "246-midday": {
+      "factor": 1.012510822087912,
+      "rmse": 313.6903223290694,
+      "mape": 89.50285717341954
+    },
+    "246-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "247-morning": {
+      "factor": 0.5144703599240699,
+      "rmse": 367.4320651028041,
+      "mape": 235.0119905374513
+    },
+    "247-midday": {
+      "factor": 0.3977419583763212,
+      "rmse": 307.7522551199882,
+      "mape": 109.33513276946118
+    },
+    "247-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "248-morning": {
+      "factor": 0.2473032084114858,
+      "rmse": 61.06777661760872,
+      "mape": 87.14175300842882
+    },
+    "248-midday": {
+      "factor": 0.4714371784347403,
+      "rmse": 228.74415437196583,
+      "mape": 83.8624113492001
+    },
+    "248-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "249-morning": {
+      "factor": 0.7331301886486478,
+      "rmse": 198.42515675303838,
+      "mape": 109.01881316862854
+    },
+    "249-midday": {
+      "factor": 1.4184412923931624,
+      "rmse": 204.29732094071932,
+      "mape": 35.7931379547199
+    },
+    "249-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "250-morning": {
+      "factor": 0.596305973052079,
+      "rmse": 199.1003651263039,
+      "mape": 260.6806013339173
+    },
+    "250-midday": {
+      "factor": 1.5467810579584484,
+      "rmse": 158.0596319167797,
+      "mape": 30.270011813406516
+    },
+    "250-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "251-morning": {
+      "factor": 0.15335878172961986,
+      "rmse": 239.22223414244417,
+      "mape": 99.87068634637461
+    },
+    "251-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "251-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "252-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "252-midday": {
+      "factor": 1.3147329112499997,
+      "rmse": 307.50592794175975,
+      "mape": 152.1923048569476
+    },
+    "252-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "253-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "253-midday": {
+      "factor": 0.7552679044669368,
+      "rmse": 200.77265597696268,
+      "mape": 285.3523701071674
+    },
+    "253-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "254-morning": {
+      "factor": 0.5523334760874877,
+      "rmse": 219.9742871369089,
+      "mape": 59.59526782956049
+    },
+    "254-midday": {
+      "factor": 1.523082929756617,
+      "rmse": 373.2161986956237,
+      "mape": 211.473152026029
+    },
+    "254-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "255-morning": {
+      "factor": 0.7648920672738448,
+      "rmse": 240.09881084923683,
+      "mape": 265.14395647374687
+    },
+    "255-midday": {
+      "factor": 1.6584402818172097,
+      "rmse": 337.62788337362537,
+      "mape": 71.44985996200238
+    },
+    "255-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "256-morning": {
+      "factor": 0.6100731683606556,
+      "rmse": 307.3408621127703,
+      "mape": 149.76125433001428
+    },
+    "256-midday": {
+      "factor": 1.747161539366053,
+      "rmse": 249.8499659823315,
+      "mape": 124.21815359722812
+    },
+    "256-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "257-morning": {
+      "factor": 1.2715938902511943,
+      "rmse": 429.8207121581779,
+      "mape": 183.75130346091112
+    },
+    "257-midday": {
+      "factor": 0.5544798105154639,
+      "rmse": 334.6403682118483,
+      "mape": 100.3997937706602
+    },
+    "257-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "258-morning": {
+      "factor": 0.6771991149295775,
+      "rmse": 250.30014765909792,
+      "mape": 96.30778515782144
+    },
+    "258-midday": {
+      "factor": 1.3161648206923076,
+      "rmse": 251.64919921041147,
+      "mape": 82.81874586811253
+    },
+    "258-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "259-morning": {
+      "factor": 0.4877226341117765,
+      "rmse": 227.15872337305208,
+      "mape": 229.81180670466662
+    },
+    "259-midday": {
+      "factor": 0.7002044177988684,
+      "rmse": 274.0668827097215,
+      "mape": 79.1202397225471
+    },
+    "259-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "260-morning": {
+      "factor": 0.8582487018477245,
+      "rmse": 183.61702786279236,
+      "mape": 88.06452350491375
+    },
+    "260-midday": {
+      "factor": 0.8400910389347033,
+      "rmse": 128.08992190060232,
+      "mape": 45.94174832591354
+    },
+    "260-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "261-morning": {
+      "factor": 0.7957638587966653,
+      "rmse": 199.269774052944,
+      "mape": 180.06193467067112
+    },
+    "261-midday": {
+      "factor": 1.6821712191536233,
+      "rmse": 166.80619861914968,
+      "mape": 30.508422060050265
+    },
+    "261-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "262-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "262-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "262-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "263-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "263-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "263-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "264-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "264-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "264-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "265-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "265-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "265-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "266-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "266-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "266-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "267-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "267-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "267-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "268-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "268-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "268-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "269-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "269-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "269-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "270-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "270-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "270-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "271-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "271-midday": {
+      "factor": 1.2345134988333333,
+      "rmse": 141.32331812402867,
+      "mape": 117.0830324465048
+    },
+    "271-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "272-morning": {
+      "factor": 0.5793467533105334,
+      "rmse": 271.98120641147506,
+      "mape": 138.880142160281
+    },
+    "272-midday": {
+      "factor": 1.455900813090484,
+      "rmse": 290.4920014751165,
+      "mape": 121.60090512775845
+    },
+    "272-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "273-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "273-midday": {
+      "factor": 0.4830285045984543,
+      "rmse": 275.6790862769437,
+      "mape": 78.16414248671506
+    },
+    "273-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "274-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "274-midday": {
+      "factor": 1.6699412075757576,
+      "rmse": 326.03140790601435,
+      "mape": 248.12147876418257
+    },
+    "274-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "275-morning": {
+      "factor": 0.6649232325852273,
+      "rmse": 154.45923169813773,
+      "mape": 108.70920472057206
+    },
+    "275-midday": {
+      "factor": 1.5402231740120502,
+      "rmse": 247.81937500877183,
+      "mape": 42.38841656708301
+    },
+    "275-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "276-morning": {
+      "factor": 0.6025616007712418,
+      "rmse": 179.2643889301283,
+      "mape": 188.33422906889476
+    },
+    "276-midday": {
+      "factor": 1.6679333155932206,
+      "rmse": 124.24779436256908,
+      "mape": 101.2736247590644
+    },
+    "276-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "277-morning": {
+      "factor": 0.7129153542316933,
+      "rmse": 286.6204298749573,
+      "mape": 123.36787078862817
+    },
+    "277-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "277-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "278-morning": {
+      "factor": 0.28639745927329424,
+      "rmse": 101.91647988885785,
+      "mape": 91.98431893715639
+    },
+    "278-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "278-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "279-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "279-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "279-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "280-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "280-midday": {
+      "factor": 0.24914854914893625,
+      "rmse": 180.9169282885654,
+      "mape": 64.72102562542605
+    },
+    "280-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "281-morning": {
+      "factor": 0.7515767750076923,
+      "rmse": 252.44865733130717,
+      "mape": 308.50436895546795
+    },
+    "281-midday": {
+      "factor": 1.7282299299158563,
+      "rmse": 222.24593266300636,
+      "mape": 39.59509957072907
+    },
+    "281-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "282-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "282-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "282-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "283-morning": {
+      "factor": 0.34910867458391615,
+      "rmse": 38.91335854591767,
+      "mape": 77.18470228911191
+    },
+    "283-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "283-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "284-morning": {
+      "factor": 0.6874560565495208,
+      "rmse": 266.3845993473549,
+      "mape": 124.87860577171395
+    },
+    "284-midday": {
+      "factor": 1.2304085252870816,
+      "rmse": 266.9593494348634,
+      "mape": 60.27017596217507
+    },
+    "284-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "285-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "285-midday": {
+      "factor": 0.27684512806058037,
+      "rmse": 49.01090463114654,
+      "mape": 46.09260856298703
+    },
+    "285-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "286-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "286-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "286-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "287-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "287-midday": {
+      "factor": 1.4751235937033897,
+      "rmse": 233.12453721843673,
+      "mape": 94.93336137504073
+    },
+    "287-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "288-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "288-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "288-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "289-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "289-midday": {
+      "factor": 0.8054724006060605,
+      "rmse": 146.59661797986305,
+      "mape": 171.48958245004346
+    },
+    "289-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "290-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "290-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "290-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "291-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "291-midday": {
+      "factor": 0.5293217641493664,
+      "rmse": 110.54461172689594,
+      "mape": 201.81107181046812
+    },
+    "291-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "292-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "292-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "292-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "293-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "293-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "293-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "294-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "294-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "294-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "295-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "295-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "295-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "296-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "296-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "296-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "297-morning": {
+      "factor": 0.5055532034364262,
+      "rmse": 247.5043767638979,
+      "mape": 118.3787344867675
+    },
+    "297-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "297-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "298-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "298-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "298-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "299-morning": {
+      "factor": 0.45154952572964674,
+      "rmse": 153.57587180760154,
+      "mape": 151.3557097363783
+    },
+    "299-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "299-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "300-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "300-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "300-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "301-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "301-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "301-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "302-morning": {
+      "factor": 1.1600639942028987,
+      "rmse": 102.36765756977346,
+      "mape": 76.38681700266142
+    },
+    "302-midday": {
+      "factor": 1.0586531725210082,
+      "rmse": 208.89380837675486,
+      "mape": 95.40703222421315
+    },
+    "302-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "303-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "303-midday": {
+      "factor": 1.8625820778123656,
+      "rmse": 137.52797027634458,
+      "mape": 28.707735526384877
+    },
+    "303-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "304-morning": {
+      "factor": 0.9360524741878173,
+      "rmse": 120.78573551052403,
+      "mape": 160.27362679080466
+    },
+    "304-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "304-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "305-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "305-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "305-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "306-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "306-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "306-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "307-morning": {
+      "factor": 0.9228417395541401,
+      "rmse": 236.79406990773566,
+      "mape": 102.94959962846961
+    },
+    "307-midday": {
+      "factor": 1.0129523200111326,
+      "rmse": 227.05237285048264,
+      "mape": 66.1791725844533
+    },
+    "307-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "308-morning": {
+      "factor": 1.1315064648239264,
+      "rmse": 107.93813899997618,
+      "mape": 66.34154975187154
+    },
+    "308-midday": {
+      "factor": 2.1403742641837527,
+      "rmse": 134.91469731272915,
+      "mape": 19.21659636554418
+    },
+    "308-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "309-morning": {
+      "factor": 0.9732027586976745,
+      "rmse": 142.40679495929788,
+      "mape": 104.62292318432877
+    },
+    "309-midday": {
+      "factor": 1.376270042818323,
+      "rmse": 89.63244862450593,
+      "mape": 24.968682400438784
+    },
+    "309-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "310-morning": {
+      "factor": 1.2463991455838057,
+      "rmse": 110.28160264804289,
+      "mape": 79.89519304172204
+    },
+    "310-midday": {
+      "factor": 1.6607637223055554,
+      "rmse": 100.69415100647097,
+      "mape": 26.311578243287563
+    },
+    "310-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "311-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "311-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "311-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "312-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "312-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "312-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "313-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "313-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "313-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "314-morning": {
+      "factor": 1.1654772035294116,
+      "rmse": 101.63583314414628,
+      "mape": 77.21671945317816
+    },
+    "314-midday": {
+      "factor": 1.8365906339622642,
+      "rmse": 112.2876975004807,
+      "mape": 29.68125870287294
+    },
+    "314-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "315-morning": {
+      "factor": 0.9850328516666668,
+      "rmse": 110.48304075397738,
+      "mape": 117.18233905989126
+    },
+    "315-midday": {
+      "factor": 1.1237563776190476,
+      "rmse": 102.8916143528632,
+      "mape": 90.44659275417878
+    },
+    "315-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "316-morning": {
+      "factor": 0.8227487190761877,
+      "rmse": 114.43409223790003,
+      "mape": 41.44416105888731
+    },
+    "316-midday": {
+      "factor": 1.5759173226075185,
+      "rmse": 32.963529102029476,
+      "mape": 17.11070560942658
+    },
+    "316-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "317-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "317-midday": {
+      "factor": 1.4871324253256795,
+      "rmse": 109.71482026289604,
+      "mape": 38.48824016397829
+    },
+    "317-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "318-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "318-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "318-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "319-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "319-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "319-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "320-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "320-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "320-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "321-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "321-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "321-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "322-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "322-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "322-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "323-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "323-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "323-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "324-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "324-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "324-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "325-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "325-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "325-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "326-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "326-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "326-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "327-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "327-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "327-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "328-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "328-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "328-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "329-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "329-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "329-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "330-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "330-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "330-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "331-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "331-midday": {
+      "factor": 0.8968744051857311,
+      "rmse": 169.58004315206654,
+      "mape": 159.9971427174059
+    },
+    "331-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "332-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "332-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "332-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "333-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "333-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "333-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "334-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "334-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "334-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "335-morning": {
+      "factor": 1.380782170689655,
+      "rmse": 95.14336545385163,
+      "mape": 82.72337385493405
+    },
+    "335-midday": {
+      "factor": 2.0894583748176454,
+      "rmse": 77.55308105531441,
+      "mape": 20.533659108856725
+    },
+    "335-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "336-morning": {
+      "factor": 1.381114744915254,
+      "rmse": 92.28657839781785,
+      "mape": 57.64414341764979
+    },
+    "336-midday": {
+      "factor": 1.9729476189156625,
+      "rmse": 96.6241762999903,
+      "mape": 22.538873325985573
+    },
+    "336-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "337-morning": {
+      "factor": 0.41142125660173157,
+      "rmse": 51.56725300038258,
+      "mape": 45.14029482973627
+    },
+    "337-midday": {
+      "factor": 1.49741415050064,
+      "rmse": 138.50219452819988,
+      "mape": 37.843370880501325
+    },
+    "337-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "338-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "338-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "338-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "339-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "339-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "339-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "340-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "340-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "340-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "341-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "341-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "341-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "342-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "342-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "342-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "343-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "343-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "343-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "344-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "344-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "344-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "345-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "345-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "345-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "346-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "346-midday": {
+      "factor": 1.6045526626886673,
+      "rmse": 96.52801396028468,
+      "mape": 40.04489237942364
+    },
+    "346-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "347-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "347-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "347-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "348-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "348-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "348-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "349-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "349-midday": {
+      "factor": 2.1443566134558827,
+      "rmse": 101.68276608283662,
+      "mape": 22.791920477186775
+    },
+    "349-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "350-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "350-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "350-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "351-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "351-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "351-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "352-morning": {
+      "factor": 1.078459724761905,
+      "rmse": 100.36498875130764,
+      "mape": 93.05314813206328
+    },
+    "352-midday": {
+      "factor": 2.055214718762656,
+      "rmse": 90.2305239364811,
+      "mape": 26.06992880368545
+    },
+    "352-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "353-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "353-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "353-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "354-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "354-midday": {
+      "factor": 1.860615529369038,
+      "rmse": 138.28882786706504,
+      "mape": 60.4255223333951
+    },
+    "354-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "355-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "355-midday": {
+      "factor": 2.007070469200969,
+      "rmse": 80.80418474107492,
+      "mape": 22.835845320322825
+    },
+    "355-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "356-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "356-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "356-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "357-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "357-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "357-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "358-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "358-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "358-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "359-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "359-midday": {
+      "factor": 1.4596320881052631,
+      "rmse": 151.41579206714567,
+      "mape": 76.83602421677845
+    },
+    "359-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "360-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "360-midday": {
+      "factor": 2.1607635979616315,
+      "rmse": 110.54769244429421,
+      "mape": 27.810437678956546
+    },
+    "360-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "361-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "361-midday": {
+      "factor": 2.0449376383841984,
+      "rmse": 108.8274036804487,
+      "mape": 28.941984561833163
+    },
+    "361-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "362-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "362-midday": {
+      "factor": 2.1563109850854936,
+      "rmse": 105.28298913059106,
+      "mape": 25.131098258289796
+    },
+    "362-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "363-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "363-midday": {
+      "factor": 2.020629972764901,
+      "rmse": 115.34909913654518,
+      "mape": 28.496007856246724
+    },
+    "363-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "364-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "364-midday": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "364-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "365-morning": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    },
+    "365-midday": {
+      "factor": 2.1306441497916664,
+      "rmse": 181.16122593043815,
+      "mape": 50.751018204155706
+    },
+    "365-evening": {
+      "factor": 0.0,
+      "rmse": null,
+      "mape": null
+    }
+  },
+  "period_fallback": {
+    "morning": 0.577474384380531,
+    "midday": 1.212008645167095,
+    "evening": 1.2004232133636363
+  }
+}

@@ -1,0 +1,5 @@
+Stations_ID;Stations_Name;Parameter;Von_Datum;Bis_Datum;Gesamt_Fehlwerte;Beschreibung;eor;                                                                                                              
+4931;Stuttgart-Echterdingen;V_N;23.03.2025;23.09.2026;50;Gesamt_Messzeitraum;eor;                                                                                                                       
+Stations_ID;Stations_Name;Parameter;Von_Datum;Bis_Datum;Anzahl_Fehlwerte;Beschreibung;eor;                                                                                                              
+4931;Stuttgart-Echterdingen;V_N;09.05.2026-10:00;11.05.2026-11:00;50;;eor;                                                                                                                              
+generiert: 24.09.2026 --  Deutscher Wetterdienst  --                                                                                                                                                    

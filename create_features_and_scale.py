@@ -42,15 +42,15 @@ class FeatureEnggPipeline:
         self.horizon = horizon
 
         self.sensor_cols = ["Irr",
-                            "bad_day_sanyo_2", "bad_day_sanyo_3", "bad_day_sanyo_4", "bad_day_sanyo_5",
-                            "bad_day_solon_1", "bad_day_solon_2", "bad_day_solon_3","bad_day_solon_5", "bad_day_solon_6", "bad_day_solon_7",
-                            "bad_day_perovskite_1", "bad_day_perovskite_2",
+                            #"bad_day_sanyo_2", "bad_day_sanyo_3", "bad_day_sanyo_4", "bad_day_sanyo_5",
+                            #"bad_day_solon_1", "bad_day_solon_2", "bad_day_solon_3","bad_day_solon_5", "bad_day_solon_6", "bad_day_solon_7",
+                            "bad_day_perovskite_1", #"bad_day_perovskite_2",
                             ]
         self.env_cols = ["temp_C", "humidity", "precip_mm", "precip_indicator", "cloud_cover",]
         self.engineered_cyclical = ["hour_sin", "hour_cos", "month_sin", "month_cos", "doy_sin", "doy_cos", "weekday_sin", "weekday_cos",]
-        self.target_cols = ["P_sanyo_2", "P_sanyo_3", "P_sanyo_4", "P_sanyo_5",
-                            "P_solon_1", "P_solon_2", "P_solon_3", "P_solon_5", "P_solon_6", "P_solon_7",
-                            "P_perovskite_1", "P_perovskite_2",
+        self.target_cols = [#"P_sanyo_2", "P_sanyo_3", "P_sanyo_4", "P_sanyo_5",
+                            #"P_solon_1", "P_solon_2", "P_solon_3", "P_solon_5", "P_solon_6", "P_solon_7",
+                            "P_perovskite_1", #"P_perovskite_2",
                             ]
 
         #populated by add_age_features()
@@ -363,7 +363,7 @@ class FeatureEnggPipeline:
         start_date_train: str = "2024-11-28", #"2024-11-28" for psc and #"2024-08-16" for si
         end_date_train: str = "2025-10-28",
         start_date_test: str = "2025-10-29",
-        end_date_test: str = "2025-12-31",
+        end_date_test: str = "2026-06-18", #"2025-12-31", 
     ):
         """
         Fixed date temporal split (train and test only):

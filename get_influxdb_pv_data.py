@@ -12,7 +12,7 @@ class InfluxDBDataExporter:
     MEASUREMENT = "ParkData"
     DEFAULT_BUCKET = "Uni"
     
-    def __init__(self, url: str, token: str, org: str, bucket: str = DEFAULT_BUCKET, verify_ssl: bool = True,) -> None:
+    def __init__(self, url: str, token: str, org: str, bucket: str = DEFAULT_BUCKET, verify_ssl: bool = False,) -> None:
         """
         Args:
             url: InfluxDB server URL

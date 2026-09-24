@@ -1,0 +1,11 @@
+Stations_id;Stationshoehe;Geogr.Breite;Geogr.Laenge;von_datum;bis_datum;Stationsname
+  4931;  413.00; 48.6979;  9.1859;19370215;19400430;Stuttgart-Echterdingen
+  4931;  405.00; 48.6915;  9.1939;19400501;19651231;Stuttgart-Echterdingen
+  4931;  397.50; 48.6907;  9.1981;19660101;19730531;Stuttgart-Echterdingen
+  4931;  373.00; 48.6879;  9.2200;19730601;19950930;Stuttgart-Echterdingen
+  4931;  371.30; 48.6883;  9.2236;19951001;20081116;Stuttgart-Echterdingen
+  4931;  371.30; 48.6883;  9.2236;20081117;20150309;Stuttgart-Echterdingen
+  4931;  371.30; 48.6883;  9.2236;20150310;20190909;Stuttgart-Echterdingen
+  4931;  371.30; 48.6883;  9.2235;20190910;20230702;Stuttgart-Echterdingen
+  4931;  378.00; 48.6849;  9.2201;20230703;20230919;Stuttgart-Echterdingen
+  4931;  371.30; 48.6883;  9.2235;20230920;        ;Stuttgart-Echterdingen

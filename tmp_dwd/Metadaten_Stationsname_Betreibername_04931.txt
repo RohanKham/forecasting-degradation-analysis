@@ -1,0 +1,7 @@
+Stations_ID;Stationsname;Von_Datum;Bis_Datum
+  4931;Stuttgart-Echterdingen;19370215;
+
+Stations_ID;Betreibername;Von_Datum;Bis_Datum
+  4931;Wetterdienst;19370215;19521110
+  4931;DWD;19521111;
+generiert: 24.09.2026 --  Deutscher Wetterdienst  --

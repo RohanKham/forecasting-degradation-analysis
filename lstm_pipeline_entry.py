@@ -153,12 +153,7 @@ def run_pv_validation_pipeline(df_pv, weather_csv, run_folder):
         cleaned_df, averaged_df
     """
     # List all the modules you wish to train for 
-    validation_modules = [
-        "Sanyo_2_1", "Sanyo_3_1", "Sanyo_4_1", "Sanyo_5_1", 
-        "Solon_1_1", "Solon_1_2", "Solon_2_1", "Solon_3_1", "Solon_3_2", "Solon_4_2", 
-        
-        "Perovskite_1_1", "Perovskite_1_2",
-    ]
+    validation_modules = ["Perovskite_1_1"]
     flag_invalid = False
     
     print("\nRunning PV Validation Pipeline.")
@@ -224,8 +219,8 @@ if __name__ == "__main__":
     run_folder = create_run_folder()
 
     #download pv data from influxdb
-    start_date = "2024-08-16" 
-    end_date = "2025-12-31"
+    start_date = "2024-11-28" 
+    end_date = "2026-06-18"
     
     output_csv = os.path.join(run_folder, f"data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
     
@@ -300,15 +295,12 @@ if __name__ == "__main__":
             horizon=36,
             batch_size=32,
             epochs=150,
-            lr=0.001, #PSC:0.0005 | si: 0.001
+            lr=0.0005, #PSC:0.0005 | si: 0.001
             patience=15,
             hidden_size=64,
             num_layers=4,
             dropout=0.2,
-            target_cols=["P_sanyo_2", "P_sanyo_3", "P_sanyo_4", "P_sanyo_5",
-                         "P_solon_1", "P_solon_2", "P_solon_3", "P_solon_5", "P_solon_6", "P_solon_7",
-                         "P_perovskite_1", "P_perovskite_2"
-                         ],  #lst all the targets here
+            target_cols=["P_perovskite_1"],  #lst all the targets here
             use_bad_day=False,   #Include bad_day as input feature
             mask_bad_days=True, #Use bad_day column to mask loss 
             validation_split= 0.15, #if create_val=False, then validation_split=0.15 will select every 7th sequence from traing sequences

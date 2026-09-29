@@ -17,7 +17,7 @@ Pipeline (mirrors the counterfactual-age analyzer script):
      PRED branches (both against the same eta_ref):
         total / reversible / irreversible loss [%], performance ratio, ...
   5. Plots: PCE over time, daily loss bars (+ TRUE-PRED diffs),
-     monthly energy-weighted loss bars (+ diffs).
+     monthly loss bars (+ diffs).
 
 Usage: edit the variables in main() at the bottom and run the file.
 """
@@ -444,25 +444,15 @@ def plot_monthly_loss_bars(daily_df: pd.DataFrame, output_dir: Path, target: str
     dfc["year_month"] = dfc.index.strftime("%Y-%m")
     day_counts = dfc.groupby("year_month").size()
 
-    # Energy-weighted aggregation: ratio of sums, not mean of ratios
+    # Simple mean of daily loss percentages (equal weight per day)
     monthly = dfc.groupby("year_month").agg(
-        e_ref_true_sum=("e_ref_true", "sum"), e_meas_true_sum=("e_meas_true", "sum"),
-        e_adj_true_sum=("e_adj_true", "sum"),
-        e_ref_pred_sum=("e_ref_pred", "sum"), e_meas_pred_sum=("e_meas_pred", "sum"),
-        e_adj_pred_sum=("e_adj_pred", "sum"),
+        total_loss_true_pct=("total_loss_true_pct", "mean"),
+        reversible_loss_true_pct=("reversible_loss_true_pct", "mean"),
+        irreversible_loss_true_pct=("irreversible_loss_true_pct", "mean"),
+        total_loss_pred_pct=("total_loss_pred_pct", "mean"),
+        reversible_loss_pred_pct=("reversible_loss_pred_pct", "mean"),
+        irreversible_loss_pred_pct=("irreversible_loss_pred_pct", "mean"),
     ).reset_index()
-
-    def _ratio(n, d):
-        return np.where(d > 0, n / d * 100.0, np.nan)
-
-    for b in BRANCHES:
-        ref = monthly[f"e_ref_{b}_sum"]
-        monthly[f"total_loss_{b}_pct"] = _ratio(ref - monthly[f"e_meas_{b}_sum"], ref)
-        monthly[f"reversible_loss_{b}_pct"] = _ratio(ref - monthly[f"e_adj_{b}_sum"], ref)
-        monthly[f"irreversible_loss_{b}_pct"] = _ratio(
-            monthly[f"e_adj_{b}_sum"] - monthly[f"e_meas_{b}_sum"], ref)
-        for kind in ("total", "reversible", "irreversible"):
-            monthly[f"{kind}_loss_{b}_pct"] = monthly[f"{kind}_loss_{b}_pct"].clip(lower=0)
 
     monthly["reversible_diff_pct"] = monthly["reversible_loss_true_pct"] - monthly["reversible_loss_pred_pct"]
     monthly["irreversible_diff_pct"] = monthly["irreversible_loss_true_pct"] - monthly["irreversible_loss_pred_pct"]
@@ -479,7 +469,7 @@ def plot_monthly_loss_bars(daily_df: pd.DataFrame, output_dir: Path, target: str
 
     x_pos = np.arange(len(monthly))
     fig, axes = plt.subplots(2, 2, figsize=(18, 12))
-    fig.suptitle(f"Monthly Energy-Weighted Loss Decomposition | {target}",
+    fig.suptitle(f"Monthly Mean Loss Decomposition | {target}",
                  fontsize=24, fontweight="bold", y=1.02)
     axes = axes.flatten()
 
@@ -509,7 +499,7 @@ def plot_monthly_loss_bars(daily_df: pd.DataFrame, output_dir: Path, target: str
         ymin, ymax = ax.get_ylim()
         ax.set_ylim(ymin, ymax * 1.15)
         ax.set_title(title, fontsize=20, fontweight="bold", pad=20)
-        ax.set_ylabel("Energy Loss (%, energy-weighted)", fontsize=16, fontweight="bold")
+        ax.set_ylabel("Energy Loss (%)", fontsize=16, fontweight="bold")
         _month_axis(ax)
 
     for ax_i, dcol, m, title in [
@@ -547,7 +537,7 @@ def plot_monthly_loss_bars(daily_df: pd.DataFrame, output_dir: Path, target: str
     print(f"[SAVED] {fpath}")
 
     monthly.to_csv(output_dir / f"{target}_monthly_loss_summary.csv", index=False)
-    print(f"\n  Monthly Loss Summary (energy-weighted) [{target}]:")
+    print(f"\n  Monthly Loss Summary [{target}]:")
     print(f"  {'Month':<9}{'Days':>5}{'TotTrue':>9}{'RevTrue':>9}{'IrrTrue':>9}"
           f"{'TotPred':>9}{'RevPred':>9}{'IrrPred':>9}{'RevDiff':>9}{'IrrDiff':>9}")
     for _, r in monthly.iterrows():
@@ -567,22 +557,25 @@ def plot_monthly_above_ref_pct(daily_df: pd.DataFrame, output_dir: Path, target:
     """
     Bar chart: % of (post-filter) timestamps per month where PCE was above
     eta_ref (the age=1 signal) -- one bar for TRUE, one for the model's PRED,
-    grouped by month. Uses n_above_ref_<branch> and n_points_after_filter
-    from compute_daily_degradation, aggregated (summed) per month.
+    grouped sequentially by month.
     """
     if daily_df is None or len(daily_df) == 0:
         print("  WARNING: No daily data for above-ref plot")
         return
 
     dfc = daily_df.copy()
-    dfc["year_month"] = dfc.index.strftime("%Y-%m")
-    day_counts = dfc.groupby("year_month").size()
+    
+    dfc["period"] = dfc.index.to_period("M")
+    dfc["year_month"] = dfc.index.strftime("%b")    
+    day_counts = dfc.groupby("period").size()
 
-    monthly = dfc.groupby("year_month").agg(
+    monthly = dfc.groupby(["period", "year_month"]).agg(
         n_points=("n_points_after_filter", "sum"),
         n_above_true=("n_above_ref_true", "sum"),
         n_above_pred=("n_above_ref_pred", "sum"),
     ).reset_index()
+    
+    monthly = monthly.sort_values("period").reset_index(drop=True)
     monthly = monthly[monthly["n_points"] > 0].reset_index(drop=True)
     if monthly.empty:
         print("  WARNING: no valid months for above-ref plot")
@@ -595,38 +588,41 @@ def plot_monthly_above_ref_pct(daily_df: pd.DataFrame, output_dir: Path, target:
     width = 0.35
 
     fig, ax = plt.subplots(figsize=(max(10, len(monthly) * 1.0), 6))
-    ax.bar(x_pos - width / 2, monthly["pct_above_true"], width, label="TRUE",
-           color="black", alpha=0.75, edgecolor="white", linewidth=0.5)
-    ax.bar(x_pos + width / 2, monthly["pct_above_pred"], width, label="Model (Predicted)",
-           color="tab:blue", alpha=0.75, edgecolor="white", linewidth=0.5)
+    ax.bar(x_pos - width / 2, monthly["pct_above_true"], width, 
+           color="#1f77b4", alpha=0.85, edgecolor="black", linewidth=0.5, 
+           label="TRUE (Measured)", zorder=3)
+    ax.bar(x_pos + width / 2, monthly["pct_above_pred"], width, 
+           color="#ff7f0e", alpha=0.85, edgecolor="black", linewidth=0.5, 
+           label="LSTM (Predicted)", zorder=3)
 
     for i, row in monthly.iterrows():
-        n_days = day_counts[row["year_month"]]
+        n_days = day_counts[row["period"]]
         y = max(row["pct_above_true"], row["pct_above_pred"])
-        ax.text(i, y + 1, f"n={n_days}d", ha="center", va="bottom", fontsize=10, alpha=0.7)
+        #ax.text(i, y + 1, f"n={n_days}d", ha="center", va="bottom", fontsize=10, alpha=0.7)
 
-    ax.set_xlabel("Month", fontsize=14, fontweight="bold")
-    ax.set_ylabel("Timestamps with PCE > eta_ref (%)", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Month", fontsize=16, fontweight="bold")
+    ax.set_ylabel("Timestamps with PCE > \u03b7_ref (%)", fontsize=14, fontweight="bold")
     ax.set_title(f"{target}: Monthly % of timestamps above age=1 reference (eta_ref)",
                  fontsize=16, fontweight="bold")
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(monthly["year_month"], rotation=45, ha="right", fontsize=11)
+    ax.set_xticklabels(monthly["year_month"], rotation=90, ha="right", fontsize=14)
+    ax.tick_params(axis="y", labelsize=14)
     ax.set_ylim(0, max(monthly["pct_above_true"].max(), monthly["pct_above_pred"].max(), 1) * 1.2)
-    ax.legend(fontsize=11)
+    ax.legend(fontsize=14)
     ax.grid(True, alpha=0.3, axis="y", linestyle="--")
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     plt.tight_layout()
 
     fpath = output_dir / f"{target}_monthly_above_ref_pct.png"
-    plt.savefig(fpath, dpi=150, bbox_inches="tight")
+    plt.savefig(fpath, dpi=300, bbox_inches="tight")
     plt.close()
     print(f"[SAVED] {fpath}")
 
     print(f"\n  Monthly % timestamps above eta_ref [{target}]:")
     print(f"  {'Month':<9}{'Days':>5}{'N pts':>8}{'%TRUE':>8}{'%Pred':>8}")
     for _, r in monthly.iterrows():
-        print(f"  {r['year_month']:<9}{day_counts[r['year_month']]:>5}{r['n_points']:>8.0f}"
+        print(f"  {r['year_month']:<9}{day_counts[r['period']]:>5}{r['n_points']:>8.0f}"
               f"{r['pct_above_true']:>8.2f}{r['pct_above_pred']:>8.2f}")
 
 # ---------------------------------------------------------------------------
@@ -692,8 +688,8 @@ def run_loss_analysis(
 
 
 def main():
-    CSV_PATH = "/Users/rohansanjaykhamkar/Rohan_Khamkar/Stuttgart University/PhD/Code/lstm_run_2026_09_25_150211/lstm_results/residual_export/residual_export.csv"
-    OUTPUT_DIR = "/Users/rohansanjaykhamkar/Rohan_Khamkar/Stuttgart University/PhD/Code/lstm_run_2026_09_25_150211/lstm_results/loss_decomposition"
+    CSV_PATH = "/Users/rohansanjaykhamkar/Rohan_Khamkar/Stuttgart University/PhD/Code/lstm_run_2026_09_25_150211_MLP_LSTM/lstm_results/residual_export/residual_export.csv"
+    OUTPUT_DIR = "/Users/rohansanjaykhamkar/Rohan_Khamkar/Stuttgart University/PhD/Code/lstm_run_2026_09_25_150211_MLP_LSTM/lstm_results/loss_decomposition"
 
     run_loss_analysis(
         csv_path=CSV_PATH,
